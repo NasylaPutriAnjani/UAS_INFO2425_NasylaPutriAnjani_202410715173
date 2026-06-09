@@ -1,4 +1,4 @@
-<div id="page-catalog" class="page">
+<div id="page-catalog" class="page active">
   <div class="catalog-layout">
     <aside class="catalog-sidebar">
       <div class="filter-group">
@@ -54,14 +54,14 @@
         <div class="book-card"><div class="book-cover-lg bc1">Ikigai<button class="wishlist-btn" onclick="event.stopPropagation();toggleWish(this)">♡</button></div><div class="book-body"><div class="book-genre">Pengembangan Diri</div><div class="book-title">Ikigai</div><div class="book-author">Héctor García</div><div class="book-rating"><span class="stars">★★★★☆</span><span class="rating-count">4.6</span></div><div class="book-footer"><div class="book-price">Rp 78.000</div><button class="btn-add" onclick="addToCart(event,'Ikigai')">+</button></div></div></div>
         <div class="book-card"><div class="book-cover-lg bc2">Sapiens<button class="wishlist-btn" onclick="event.stopPropagation();toggleWish(this)">♡</button></div><div class="book-body"><div class="book-genre">Sejarah & Sains</div><div class="book-title">Sapiens</div><div class="book-author">Yuval Noah Harari</div><div class="book-rating"><span class="stars">★★★★★</span><span class="rating-count">4.8</span></div><div class="book-footer"><div class="book-price">Rp 115.000</div><button class="btn-add" onclick="addToCart(event,'Sapiens')">+</button></div></div></div>
       </div>
-      <div style="display:flex;justify-content:center;gap:8px;margin-top:36px;align-items:center;">
-        <button style="width:38px;height:38px;border-radius:10px;border:1.5px solid var(--border);background:var(--white);color:var(--ink-mid);font-size:14px;display:flex;align-items:center;justify-content:center;">‹</button>
-        <button style="width:38px;height:38px;border-radius:10px;border:1.5px solid var(--rose);background:var(--rose);color:#fff;font-size:13px;font-weight:700;">1</button>
-        <button style="width:38px;height:38px;border-radius:10px;border:1.5px solid var(--border);background:var(--white);color:var(--ink-mid);font-size:13px;font-weight:600;">2</button>
-        <button style="width:38px;height:38px;border-radius:10px;border:1.5px solid var(--border);background:var(--white);color:var(--ink-mid);font-size:13px;font-weight:600;">3</button>
-        <span style="color:var(--ink-muted)">…</span>
-        <button style="width:38px;height:38px;border-radius:10px;border:1.5px solid var(--border);background:var(--white);color:var(--ink-mid);font-size:13px;font-weight:600;">12</button>
-        <button style="width:38px;height:38px;border-radius:10px;border:1.5px solid var(--border);background:var(--white);color:var(--ink-mid);font-size:14px;display:flex;align-items:center;justify-content:center;">›</button>
+      <div class="page-pagination">
+        <button aria-label="Sebelumnya">‹</button>
+        <button class="active">1</button>
+        <button>2</button>
+        <button>3</button>
+        <span class="page-dots">…</span>
+        <button>12</button>
+        <button aria-label="Berikutnya">›</button>
       </div>
     </div>
   </div>
