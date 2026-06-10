@@ -23,6 +23,10 @@ if (!empty($route['role'])) {
     require_role($route['role']);
 }
 
+if (in_array($page, ['login', 'register'], true) && !$action) {
+    redirect('home', ['auth' => $page === 'register' ? 'daftar' : 'masuk']);
+}
+
 $data = page_data($pdo, $page);
 
 require __DIR__ . '/views/layout/header.php';

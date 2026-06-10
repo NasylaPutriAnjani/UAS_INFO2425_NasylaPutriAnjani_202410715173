@@ -6,11 +6,18 @@ function route_config(string $page): array
     return [
         'home' => ['view' => 'public/home.php'],
         'catalog' => ['view' => 'public/catalog.php'],
-        'login' => ['view' => 'public/login.php'],
-        'register' => ['view' => 'public/register.php'],
-        'cart' => ['view' => 'pembeli/cart.php', 'role' => 'buyer'],
+        'login' => ['view' => 'public/home.php'],
+        'register' => ['view' => 'public/home.php'],
+        'buyer' => ['view' => 'pembeli/dashboard.php', 'role' => 'buyer'],
+        'buyer_account' => ['view' => 'pembeli/account.php', 'role' => 'buyer'],
+        'buyer_wishlist' => ['view' => 'pembeli/wishlist.php', 'role' => 'buyer'],
+        'buyer_cart' => ['view' => 'pembeli/cart_page.php', 'role' => 'buyer'],
+        'buyer_orders' => ['view' => 'pembeli/orders.php', 'role' => 'buyer'],
+        'buyer_reviews' => ['view' => 'pembeli/reviews.php', 'role' => 'buyer'],
+        'buyer_notifications' => ['view' => 'pembeli/notifications.php', 'role' => 'buyer'],
+        'cart' => ['view' => 'pembeli/cart_page.php', 'role' => 'buyer'],
         'checkout' => ['view' => 'pembeli/checkout.php', 'role' => 'buyer'],
-        'tracking' => ['view' => 'pembeli/tracking.php', 'role' => 'buyer'],
+        'tracking' => ['view' => 'pembeli/orders.php', 'role' => 'buyer'],
         'seller' => ['view' => 'penjual/dashboard.php', 'role' => 'seller'],
         'seller_products' => ['view' => 'penjual/products.php', 'role' => 'seller'],
         'seller_orders' => ['view' => 'penjual/orders.php', 'role' => 'seller'],
@@ -38,15 +45,40 @@ function page_data(PDO $pdo, string $page): array
         $stmt->execute($params);
         return ['products' => $stmt->fetchAll(), 'categories' => $pdo->query('SELECT * FROM categories ORDER BY name')->fetchAll(), 'cat' => $cat];
     }
-    if ($page === 'cart') {
-        $stmt = $pdo->prepare('SELECT c.id cart_id,c.qty,p.* FROM carts c JOIN products p ON p.id=c.product_id WHERE c.buyer_id=?');
-        $stmt->execute([current_user()['id']]);
-        return ['items' => $stmt->fetchAll()];
-    }
-    if ($page === 'tracking') {
-        $stmt = $pdo->prepare('SELECT * FROM orders WHERE buyer_id=? ORDER BY id DESC');
-        $stmt->execute([current_user()['id']]);
-        return ['orders' => $stmt->fetchAll()];
+    if (in_array($page, ['buyer', 'buyer_account', 'buyer_wishlist', 'buyer_cart', 'buyer_orders', 'buyer_reviews', 'buyer_notifications', 'cart', 'tracking'], true)) {
+        $base = ['buyerSidebar' => buyer_sidebar_data($pdo)];
+        $uid = current_user()['id'];
+
+        if ($page === 'buyer') {
+            $stmt = $pdo->prepare('SELECT * FROM orders WHERE buyer_id=? ORDER BY id DESC LIMIT 5');
+            $stmt->execute([$uid]);
+            return array_merge($base, [
+                'stats' => buyer_stats($pdo),
+                'recentOrders' => $stmt->fetchAll(),
+            ]);
+        }
+        if (in_array($page, ['buyer_cart', 'cart'], true)) {
+            $stmt = $pdo->prepare('SELECT c.id cart_id,c.qty,p.* FROM carts c JOIN products p ON p.id=c.product_id WHERE c.buyer_id=?');
+            $stmt->execute([$uid]);
+            return array_merge($base, ['items' => $stmt->fetchAll()]);
+        }
+        if (in_array($page, ['buyer_orders', 'tracking'], true)) {
+            $stmt = $pdo->prepare('SELECT * FROM orders WHERE buyer_id=? ORDER BY id DESC');
+            $stmt->execute([$uid]);
+            return array_merge($base, ['orders' => $stmt->fetchAll()]);
+        }
+        if ($page === 'buyer_reviews') {
+            $stmt = $pdo->prepare('SELECT r.*, p.name product_name FROM reviews r JOIN products p ON p.id=r.product_id WHERE r.buyer_id=? ORDER BY r.id DESC');
+            $stmt->execute([$uid]);
+            return array_merge($base, ['reviews' => $stmt->fetchAll()]);
+        }
+        if ($page === 'buyer_notifications') {
+            $stmt = $pdo->prepare('SELECT * FROM notifications WHERE user_id=? ORDER BY id DESC');
+            $stmt->execute([$uid]);
+            return array_merge($base, ['notifications' => $stmt->fetchAll()]);
+        }
+
+        return $base;
     }
     if ($page === 'seller') {
         $stmt = $pdo->prepare('SELECT COUNT(*) products, COALESCE(SUM(stock),0) stock FROM products WHERE seller_id=?');

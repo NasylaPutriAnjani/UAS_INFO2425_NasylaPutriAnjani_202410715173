@@ -14,7 +14,7 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         }
         log_activity($pdo, "Registrasi {$role}: {$_POST['email']}");
         flash($role === 'seller' ? 'Akun seller dibuat dan menunggu approval admin.' : 'Registrasi berhasil, silakan login.');
-        redirect('login');
+        redirect('home', ['auth' => 'masuk']);
     }
 
     if ($action === 'login') {
@@ -24,10 +24,10 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         if ($user && password_verify($_POST['password'], $user['password']) && $user['status'] === 'active') {
             $_SESSION['user'] = ['id' => (int) $user['id'], 'name' => $user['name'], 'email' => $user['email'], 'role' => $user['role']];
             log_activity($pdo, "Login {$user['role']}: {$user['email']}");
-            redirect($user['role'] === 'admin' ? 'admin' : ($user['role'] === 'seller' ? 'seller' : 'catalog'));
+            redirect($user['role'] === 'admin' ? 'admin' : ($user['role'] === 'seller' ? 'seller' : 'buyer'));
         }
         flash('Login gagal. Cek email/password atau status akun.', 'error');
-        redirect('login');
+        redirect('home', ['auth' => 'masuk']);
     }
 
     if ($page === 'logout') {

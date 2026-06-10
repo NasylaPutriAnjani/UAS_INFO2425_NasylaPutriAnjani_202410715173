@@ -1,10 +1,10 @@
-<div id="page-admin" class="page">
+<div id="page-admin" class="page active">
   <div class="dash-layout">
 
     <!-- SIDEBAR -->
     <aside class="dash-sidebar admin-sidebar">
       <div class="sidebar-store-profile">
-        <div class="sidebar-store-avatar" style="background:linear-gradient(135deg,#7c3aed,#4c1d95);font-size:18px">🖥️</div>
+        <div class="sidebar-store-avatar" style="background:linear-gradient(135deg,var(--accent),var(--accent-deep));font-size:18px">🖥️</div>
         <div>
           <div class="sidebar-store-name">Control Center</div>
           <div class="sidebar-store-status">Super Admin · v2.0</div>
@@ -122,7 +122,7 @@
               <span class="pkpi-ok">✅ 509 Terverifikasi</span>
               <span class="pkpi-warn">⏳ 3 Pending</span>
             </div>
-            <div class="pkpi-bar"><div class="pkpi-bar-fill" style="width:62%;background:linear-gradient(90deg,#16a34a,#4ade80)"></div></div>
+            <div class="pkpi-bar"><div class="pkpi-bar-fill" style="width:62%;background:linear-gradient(90deg,var(--accent),var(--accent-light))"></div></div>
           </div>
 
           <!-- Verifikasi Seller -->
@@ -154,7 +154,7 @@
               <span class="pkpi-neutral">🚚 38 Dikirim</span>
               <span class="pkpi-warn">⏳ 5 Pending</span>
             </div>
-            <div class="pkpi-bar"><div class="pkpi-bar-fill" style="width:71%;background:linear-gradient(90deg,#7c3aed,#a855f7)"></div></div>
+            <div class="pkpi-bar"><div class="pkpi-bar-fill" style="width:71%;background:linear-gradient(90deg,var(--accent),var(--accent-mid))"></div></div>
           </div>
 
           <!-- Pendapatan Platform -->
@@ -166,10 +166,10 @@
             <div class="pkpi-val">Rp 48jt</div>
             <div class="pkpi-label">Pendapatan Bulan Ini</div>
             <div class="pkpi-breakdown">
-              <span>YTD: <b style="color:#7c3aed">Rp 174jt</b></span>
+              <span>YTD: <b style="color:var(--accent)">Rp 174jt</b></span>
               <span>Fee rata: <b>3.2%</b></span>
             </div>
-            <div class="pkpi-bar"><div class="pkpi-bar-fill" style="width:86%;background:linear-gradient(90deg,#7c3aed,#a855f7)"></div></div>
+            <div class="pkpi-bar"><div class="pkpi-bar-fill" style="width:86%;background:linear-gradient(90deg,var(--accent),var(--accent-mid))"></div></div>
           </div>
 
           <!-- Status Sistem -->
@@ -259,15 +259,15 @@
                 <span class="admin-bar-lbl">Mei</span>
               </div>
               <div class="admin-bar-item admin-bar-current">
-                <div class="admin-bar-fill" style="height:100%;background:linear-gradient(180deg,#a855f7,#7c3aed)">
+                <div class="admin-bar-fill" style="height:100%;background:linear-gradient(180deg,var(--accent-mid),var(--accent))">
                   <div class="admin-bar-tip">Jun: Rp 48jt ✨</div>
                 </div>
-                <span class="admin-bar-lbl" style="color:#7c3aed;font-weight:700">Jun</span>
+                <span class="admin-bar-lbl" style="color:var(--accent);font-weight:700">Jun</span>
               </div>
             </div>
             <div class="admin-chart-summary">
               <div class="admin-rev-item">
-                <div class="admin-rev-dot" style="background:#7c3aed"></div>
+                <div class="admin-rev-dot" style="background:var(--accent)"></div>
                 <div>
                   <div class="admin-rev-label">Bulan Ini</div>
                   <div class="admin-rev-val">Rp 48jt</div>
@@ -283,7 +283,7 @@
               <div class="admin-rev-item" style="margin-left:auto">
                 <div>
                   <div class="admin-rev-label">Total YTD</div>
-                  <div class="admin-rev-val" style="color:#7c3aed">Rp 174jt</div>
+                  <div class="admin-rev-val" style="color:var(--accent)">Rp 174jt</div>
                 </div>
               </div>
             </div>
@@ -305,7 +305,7 @@
                   stroke-dasharray="311" stroke-dashoffset="31.4" stroke-linecap="round"
                   transform="rotate(-90 65 65)"/>
                 <!-- Penjual 0.6% -->
-                <circle cx="65" cy="65" r="50" fill="none" stroke="#7c3aed" stroke-width="18"
+                <circle cx="65" cy="65" r="50" fill="none" stroke="var(--accent)" stroke-width="18"
                   stroke-dasharray="2" stroke-dashoffset="-280" stroke-linecap="round"
                   transform="rotate(-90 65 65)"/>
                 <text x="65" y="60" text-anchor="middle" fill="#0f172a" font-size="16" font-weight="700" font-family="Playfair Display, serif">86K</text>
@@ -324,7 +324,7 @@
                 </div>
                 <div class="admin-donut-row">
                   <div class="admin-donut-row-left">
-                    <div class="admin-donut-dot" style="background:#7c3aed"></div>
+                    <div class="admin-donut-dot" style="background:var(--accent)"></div>
                     <span class="admin-donut-name">Penjual</span>
                   </div>
                   <div>
@@ -434,7 +434,7 @@
                   <tr>
                     <td>
                       <div class="td-user">
-                        <div class="td-user-avatar" style="background:linear-gradient(135deg,#16a34a,#15803d)">SR</div>
+                        <div class="td-user-avatar" style="background:linear-gradient(135deg,var(--accent),var(--accent-deep))">SR</div>
                         <div>
                           <div class="td-user-name">Sari Rahayu</div>
                           <div class="td-user-email">sari@email.com</div>
@@ -515,7 +515,7 @@
                 </div>
                 <div class="activity-item">
                   <div class="activity-dot-wrap">
-                    <div class="activity-dot" style="background:#7c3aed"></div>
+                    <div class="activity-dot" style="background:var(--accent)"></div>
                     <div class="activity-line"></div>
                   </div>
                   <div class="activity-content">

@@ -146,21 +146,6 @@
 
   <div class="sec-divider"></div>
 
-  <!-- PROMO BANNER -->
-  <div style="padding:52px 40px 0">
-    <div class="promo-banner">
-      <div>
-        <div class="promo-label">Promo Spesial</div>
-        <div class="promo-title">📦 Gratis Ongkir Se-Indonesia</div>
-        <div class="promo-sub">Untuk pembelian pertamamu di RubbyBooks — tidak ada minimum pesanan.</div>
-        <div class="promo-code-box" onclick="showToast('✅ Kode RUBBY2025 disalin!')">
-          RUBBY2025 <span class="promo-copy">Klik untuk salin</span>
-        </div>
-      </div>
-      <button class="btn-claim" onclick="showToast('✅ Kode promo berhasil diklaim!')">Klaim Sekarang →</button>
-    </div>
-  </div>
-
   <!-- FEATURED BOOK -->
   <section class="section">
     <div class="sec-head">

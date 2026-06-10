@@ -1,4 +1,4 @@
-<div id="page-tracking" class="page">
+<div id="page-tracking" class="page active">
   <div class="tracking-page">
     <div class="tracking-card">
       <h3>📦 Lacak Pesananmu</h3>

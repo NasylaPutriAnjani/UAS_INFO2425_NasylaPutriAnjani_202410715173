@@ -1,89 +1,88 @@
 <div class="modal-overlay" id="authModal" onclick="if(event.target===this)closeAuth()">
-  <div class="auth-modal" style="max-width:480px">
+  <div class="auth-modal">
+    <button type="button" class="auth-close" onclick="closeAuth()" aria-label="Tutup">✕</button>
 
-    <!-- STEP 1: Pilih Role -->
-    <div id="auth-step-role">
-      <div class="auth-top">
-        <button onclick="closeAuth()" style="position:absolute;top:16px;right:20px;background:rgba(255,255,255,.15);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2">✕</button>
-        <div class="auth-logo">📚 RubbyBooks</div>
-        <div class="auth-tagline">Masuk sebagai siapa?</div>
+    <div class="auth-header">
+      <div class="auth-brand">
+        <span class="auth-brand-icon" aria-hidden="true">
+          <span class="auth-book auth-book--1"></span>
+          <span class="auth-book auth-book--2"></span>
+          <span class="auth-book auth-book--3"></span>
+        </span>
+        <span class="auth-logo">RubbyBooks</span>
       </div>
-      <div style="padding:28px 32px 32px">
-        <div style="font-size:13px;font-weight:700;color:var(--ink-mid);margin-bottom:16px;text-align:center">Pilih peran akun Anda untuk melanjutkan</div>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <button class="role-select-card" onclick="selectAuthRole('buyer')">
-            <div class="rsc-icon" style="background:linear-gradient(135deg,#fff0f7,var(--rose-pale));color:var(--rose)">🛒</div>
-            <div class="rsc-body">
-              <div class="rsc-title">Pembeli</div>
-              <div class="rsc-desc">Jelajahi & beli buku favorit Anda</div>
-            </div>
-            <div class="rsc-arrow">›</div>
-          </button>
-          <button class="role-select-card" onclick="selectAuthRole('seller')">
-            <div class="rsc-icon" style="background:linear-gradient(135deg,#f0fff4,#dcfce7);color:#15803d">📦</div>
-            <div class="rsc-body">
-              <div class="rsc-title">Penjual</div>
-              <div class="rsc-desc">Kelola toko & jual koleksi buku Anda</div>
-            </div>
-            <div class="rsc-arrow">›</div>
-          </button>
-          <button class="role-select-card" onclick="selectAuthRole('admin')">
-            <div class="rsc-icon" style="background:linear-gradient(135deg,#1e1b2e,#2d2547);color:#a78bfa">🔐</div>
-            <div class="rsc-body">
-              <div class="rsc-title">Administrator</div>
-              <div class="rsc-desc">Akses panel kontrol platform</div>
-            </div>
-            <div class="rsc-arrow">›</div>
-          </button>
-        </div>
-        <div style="margin-top:20px;text-align:center;font-size:12px;color:var(--ink-muted)">
-          Belum punya akun? <button onclick="selectAuthRole('buyer');setTimeout(()=>switchTab('daftar'),300)" style="background:none;border:none;color:var(--rose);font-weight:700;cursor:pointer;font-size:12px">Daftar Gratis</button>
-        </div>
-      </div>
+      <p class="auth-tagline">Temukan buku impianmu</p>
     </div>
 
-    <!-- STEP 2: Form Login/Register (tersembunyi awalnya) -->
-    <div id="auth-step-form" style="display:none">
-      <div class="auth-top" id="auth-form-top">
-        <button onclick="backToRoleSelect()" style="position:absolute;top:16px;left:16px;background:rgba(255,255,255,.15);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2">‹</button>
-        <button onclick="closeAuth()" style="position:absolute;top:16px;right:20px;background:rgba(255,255,255,.15);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2">✕</button>
-        <div class="auth-role-badge" id="auth-role-badge">🛒 Masuk sebagai Pembeli</div>
-        <div class="auth-logo">📚 RubbyBooks</div>
-        <div class="auth-tagline" id="auth-form-tagline">Selamat datang kembali!</div>
-      </div>
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="tab-masuk" onclick="switchTab('masuk')">Masuk</button>
-        <button class="auth-tab" id="tab-daftar" onclick="switchTab('daftar')" id="tab-daftar-btn">Daftar Akun</button>
-      </div>
-      <!-- LOGIN FORM -->
-      <div id="body-masuk" class="auth-body">
-        <div class="form-group"><label>Email</label><input class="form-input" type="email" placeholder="kamu@email.com" id="login-email"></div>
-        <div class="form-group"><label>Password</label><input class="form-input" type="password" placeholder="••••••••" id="login-pass"></div>
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab active" id="tab-masuk" onclick="switchTab('masuk')">Masuk</button>
+      <button type="button" class="auth-tab" id="tab-daftar" onclick="switchTab('daftar')">Daftar</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="body-masuk" class="auth-body">
+      <form method="post" action="index.php">
+        <input type="hidden" name="action" value="login">
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <input class="form-input auth-input" type="email" name="email" id="login-email" placeholder="nama@email.com" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="login-pass">Password</label>
+          <input class="form-input auth-input" type="password" name="password" id="login-pass" placeholder="Masukkan password" required autocomplete="current-password">
+        </div>
         <div class="remember-row">
-          <label><input type="checkbox"> Ingat saya</label>
-          <a href="#">Lupa password?</a>
+          <label><input type="checkbox" name="remember"> Ingat saya</label>
+          <a href="#" onclick="showToast('🔐 Fitur reset password segera hadir');return false">Lupa password?</a>
         </div>
-        <button class="btn-submit" onclick="doLogin()">Masuk ke RubbyBooks</button>
-        <div class="divider-text">atau masuk dengan</div>
-        <div style="display:flex;gap:10px">
-          <button style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--white);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px;transition:var(--transition)" onmouseover="this.style.background='var(--rose-blush)'" onmouseout="this.style.background='var(--white)'" onclick="doSocialLogin()">🌐 Google</button>
-          <button style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--white);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px;transition:var(--transition)" onmouseover="this.style.background='var(--rose-blush)'" onmouseout="this.style.background='var(--white)'" onclick="doSocialLogin()">📱 WhatsApp</button>
-        </div>
-      </div>
-      <!-- REGISTER FORM -->
-      <div id="body-daftar" class="auth-body" style="display:none">
-        <div class="form-row">
-          <div class="form-group"><label>Nama Depan</label><input class="form-input" placeholder="Sari" id="reg-firstname"></div>
-          <div class="form-group"><label>Nama Belakang</label><input class="form-input" placeholder="Rahayu" id="reg-lastname"></div>
-        </div>
-        <div class="form-group"><label>Email</label><input class="form-input" type="email" placeholder="kamu@email.com" id="reg-email"></div>
-        <div class="form-group"><label>Password</label><input class="form-input" type="password" placeholder="Min. 8 karakter, huruf & angka" id="reg-pass"></div>
-        <div id="seller-extra" style="display:none">
-          <div class="form-group"><label>Nama Toko</label><input class="form-input" placeholder="contoh: Toko Buku Sari"></div>
-        </div>
-        <button class="btn-submit" onclick="doRegister()">Buat Akun Gratis</button>
-      </div>
+        <button type="submit" class="btn-submit">Masuk</button>
+      </form>
+      <p class="auth-footer">
+        Belum punya akun?
+        <button type="button" class="auth-footer-link" onclick="switchTab('daftar')">Daftar sekarang</button>
+      </p>
     </div>
 
+    <!-- REGISTER -->
+    <div id="body-daftar" class="auth-body" style="display:none">
+      <form method="post" action="index.php" onsubmit="return validateRegister(event)">
+        <input type="hidden" name="action" value="register">
+        <input type="hidden" name="role" id="reg-role" value="buyer">
+        <div class="form-group">
+          <label for="reg-name">Nama Lengkap</label>
+          <input class="form-input auth-input" type="text" name="name" id="reg-name" placeholder="Nama lengkap" required autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label for="reg-email">Email</label>
+          <input class="form-input auth-input" type="email" name="email" id="reg-email" placeholder="nama@email.com" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="reg-pass">Password</label>
+          <input class="form-input auth-input" type="password" name="password" id="reg-pass" placeholder="Min. 6 karakter" required minlength="6" autocomplete="new-password">
+        </div>
+        <div class="form-group">
+          <label for="reg-pass-confirm">Konfirmasi Password</label>
+          <input class="form-input auth-input" type="password" id="reg-pass-confirm" placeholder="Ulangi password" required minlength="6" autocomplete="new-password">
+        </div>
+        <div class="auth-role-label">Pilih tipe akun</div>
+        <div class="auth-role-types">
+          <button type="button" class="auth-role-type active" data-role="buyer" onclick="selectRegRole('buyer')">
+            <span class="auth-role-type-icon">🛒</span>
+            <span class="auth-role-type-title">Pembeli</span>
+            <span class="auth-role-type-desc">Cari &amp; beli buku</span>
+          </button>
+          <button type="button" class="auth-role-type" data-role="seller" onclick="selectRegRole('seller')">
+            <span class="auth-role-type-icon">📦</span>
+            <span class="auth-role-type-title">Penjual</span>
+            <span class="auth-role-type-desc">Jual buku Anda</span>
+          </button>
+        </div>
+        <button type="submit" class="btn-submit btn-submit-arrow">Daftar →</button>
+      </form>
+      <p class="auth-footer">
+        Sudah punya akun?
+        <button type="button" class="auth-footer-link" onclick="switchTab('masuk')">Masuk di sini</button>
+      </p>
+    </div>
   </div>
 </div>

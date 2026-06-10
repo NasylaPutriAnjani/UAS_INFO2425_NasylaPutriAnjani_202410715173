@@ -35,6 +35,15 @@
       <span class="footer-made">Dibuat dengan ❤️ untuk pecinta buku Indonesia</span>
     </div>
   </footer>
+  <?php if (!empty($user)): ?>
+  <script>
+    window.__RB_USER__ = <?= json_encode([
+        'name' => $user['name'],
+        'initials' => initials($user['name']),
+        'role' => $user['role'],
+    ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+  </script>
+  <?php endif; ?>
   <script src="assets/js/main.js"></script>
 </main>
 

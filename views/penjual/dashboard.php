@@ -1,4 +1,4 @@
-<div id="page-seller" class="page">
+<div id="page-seller" class="page active">
   <div class="dash-layout">
 
     <!-- SIDEBAR -->

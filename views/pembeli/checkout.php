@@ -1,4 +1,4 @@
-<div id="page-checkout" class="page">
+<div id="page-checkout" class="page active">
   <div class="checkout-page">
     <div class="checkout-steps">
       <div class="cs-step done"><div class="cs-num">✓</div><div><div class="cs-label">Keranjang</div></div></div>

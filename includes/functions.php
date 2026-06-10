@@ -11,9 +11,10 @@ function rupiah(int|float $value): string
     return 'Rp ' . number_format((float) $value, 0, ',', '.');
 }
 
-function redirect(string $page): never
+function redirect(string $page, array $query = []): never
 {
-    header('Location: index.php?page=' . urlencode($page));
+    $params = array_merge(['page' => $page], $query);
+    header('Location: index.php?' . http_build_query($params));
     exit;
 }
 
@@ -43,7 +44,7 @@ function require_login(): void
 {
     if (!current_user()) {
         flash('Silakan login terlebih dahulu.', 'error');
-        redirect('login');
+        redirect('home', ['auth' => 'masuk']);
     }
 }
 
@@ -61,6 +62,33 @@ function initials(string $name): string
 {
     $parts = preg_split('/\s+/', trim($name));
     return strtoupper(substr($parts[0] ?? 'U', 0, 1) . substr($parts[1] ?? '', 0, 1));
+}
+
+function role_icon(string $role): string
+{
+    return match ($role) {
+        'seller' => '📦',
+        'admin' => '🔐',
+        default => '🛒',
+    };
+}
+
+function role_chip_label(array $user): string
+{
+    return match ($user['role']) {
+        'seller' => 'Seller Dashboard',
+        'admin' => 'Admin Panel',
+        default => explode(' ', trim($user['name']))[0] ?: 'Akun Saya',
+    };
+}
+
+function role_chip_sublabel(string $role): string
+{
+    return match ($role) {
+        'seller' => 'Penjual · RubbyBooks',
+        'admin' => 'Administrator · RubbyBooks',
+        default => 'Pembeli · RubbyBooks',
+    };
 }
 
 function upload_file(string $field, string $dir): ?string
@@ -116,4 +144,62 @@ function cart_count(PDO $pdo): int
     $stmt = $pdo->prepare('SELECT COALESCE(SUM(qty),0) FROM carts WHERE buyer_id = ?');
     $stmt->execute([current_user()['id']]);
     return (int) $stmt->fetchColumn();
+}
+
+function buyer_menu_items(): array
+{
+    return [
+        'buyer' => ['label' => 'Beranda', 'icon' => '🏠', 'page' => 'buyer'],
+        'account' => ['label' => 'Akun', 'icon' => '👤', 'page' => 'buyer_account'],
+        'catalog' => ['label' => 'Katalog Buku', 'icon' => '📚', 'page' => 'catalog'],
+        'wishlist' => ['label' => 'Wishlist', 'icon' => '❤️', 'page' => 'buyer_wishlist'],
+        'cart' => ['label' => 'Keranjang', 'icon' => '🛒', 'page' => 'buyer_cart'],
+        'orders' => ['label' => 'Pesanan Saya', 'icon' => '📦', 'page' => 'buyer_orders'],
+        'reviews' => ['label' => 'Review Saya', 'icon' => '⭐', 'page' => 'buyer_reviews'],
+        'notifications' => ['label' => 'Notifikasi', 'icon' => '🔔', 'page' => 'buyer_notifications'],
+    ];
+}
+
+function buyer_sidebar_data(PDO $pdo): array
+{
+    $user = current_user();
+    if (!$user || $user['role'] !== 'buyer') {
+        return ['cartCount' => 0, 'unreadNotifications' => 0];
+    }
+    $id = (int) $user['id'];
+    $cartStmt = $pdo->prepare('SELECT COALESCE(SUM(qty),0) FROM carts WHERE buyer_id = ?');
+    $cartStmt->execute([$id]);
+    $notifStmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
+    $notifStmt->execute([$id]);
+    return [
+        'cartCount' => (int) $cartStmt->fetchColumn(),
+        'unreadNotifications' => (int) $notifStmt->fetchColumn(),
+    ];
+}
+
+function buyer_stats(PDO $pdo): array
+{
+    $id = (int) current_user()['id'];
+    $stmt = $pdo->prepare(
+        'SELECT
+            (SELECT COUNT(*) FROM orders WHERE buyer_id = ?) orders_total,
+            (SELECT COUNT(*) FROM orders WHERE buyer_id = ? AND status IN ("pending","paid","processing","shipped")) orders_active,
+            (SELECT COUNT(*) FROM reviews WHERE buyer_id = ?) reviews_total,
+            (SELECT COALESCE(SUM(qty),0) FROM carts WHERE buyer_id = ?) cart_items'
+    );
+    $stmt->execute([$id, $id, $id, $id]);
+    return $stmt->fetch() ?: [];
+}
+
+function order_status_label(string $status): string
+{
+    return match ($status) {
+        'pending' => 'Menunggu Pembayaran',
+        'paid' => 'Dibayar',
+        'processing' => 'Diproses',
+        'shipped' => 'Dikirim',
+        'delivered' => 'Selesai',
+        'cancelled' => 'Dibatalkan',
+        default => ucfirst($status),
+    };
 }

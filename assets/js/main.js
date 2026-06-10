@@ -3,34 +3,24 @@
 // ══════════════════════════════════════════
 let cartCount = 3;
 let currentUser = null;   // { name, initials, role: 'buyer'|'seller'|'admin' }
-let selectedRole = null;  // set during auth flow
-
-// Demo users per role
-const DEMO_USERS = {
-  buyer:  { name: 'Sari Rahayu',      initials: 'SR' },
-  seller: { name: 'Budi Santoso',     initials: 'BS' },
-  admin:  { name: 'Admin RubbyBooks', initials: 'AR' }
-};
+let selectedRole = 'buyer';
 
 // Role display config
 const ROLE_CONFIG = {
   buyer: {
+    roleIcon:     '🛒',
     chipLabel:    'Akun Saya',
     chipSublabel: 'Pembeli · RubbyBooks',
-    chipClass:    '',             // default rose chip
-    dotColor:     'var(--rose)',
-    authHeader:   'default',
-    badgeClass:   '',
     badgeText:    '🛒 Masuk sebagai Pembeli',
     tagline:      'Selamat datang kembali, pembaca!',
     navLinks:     ['home', 'catalog', 'tracking'],
     showCart:     true,
     showSearch:   true,
     dropdown: [
-      { icon:'🏠', label:'Beranda',         action:"_showPageDirect('home');closeUserDropdown()" },
+      { icon:'🏠', label:'Dashboard Pembeli', action:"_showPageDirect('buyer');closeUserDropdown()" },
       { icon:'📖', label:'Katalog Buku',    action:"_showPageDirect('catalog');closeUserDropdown()" },
-      { icon:'📦', label:'Lacak Pesanan',   action:"_showPageDirect('tracking');closeUserDropdown()" },
-      { icon:'❤️', label:'Wishlist',        action:"showToast('❤️ Membuka Wishlist...');closeUserDropdown()" },
+      { icon:'📦', label:'Pesanan Saya',    action:"_showPageDirect('buyer_orders');closeUserDropdown()" },
+      { icon:'❤️', label:'Wishlist',        action:"_showPageDirect('buyer_wishlist');closeUserDropdown()" },
       { divider: true },
       { icon:'⚙️', label:'Pengaturan',     action:"showToast('⚙️ Pengaturan akun dibuka!');closeUserDropdown()" },
       { divider: true },
@@ -38,12 +28,9 @@ const ROLE_CONFIG = {
     ]
   },
   seller: {
+    roleIcon:     '📦',
     chipLabel:    'Seller Dashboard',
     chipSublabel: 'Penjual · RubbyBooks',
-    chipClass:    'role-seller',
-    dotColor:     '#16a34a',
-    authHeader:   'seller-theme',
-    badgeClass:   'seller-badge',
     badgeText:    '📦 Masuk sebagai Penjual',
     tagline:      'Kelola toko buku Anda dengan mudah.',
     navLinks:     [],             // sembunyikan semua nav links — seller di dashboard
@@ -61,12 +48,9 @@ const ROLE_CONFIG = {
     ]
   },
   admin: {
+    roleIcon:     '🔐',
     chipLabel:    'Admin Panel',
     chipSublabel: 'Administrator · RubbyBooks',
-    chipClass:    'role-admin',
-    dotColor:     '#7c3aed',
-    authHeader:   'admin-theme',
-    badgeClass:   'admin-badge',
     badgeText:    '🔐 Akses Administrator',
     tagline:      'Masuk dengan kredensial admin.',
     navLinks:     [],             // admin hanya di panel
@@ -91,7 +75,7 @@ const ROLE_CONFIG = {
 // Pages each role is ALLOWED to access
 const PAGE_ACCESS = {
   guest:  ['home', 'catalog'],
-  buyer:  ['home', 'catalog', 'checkout', 'tracking'],
+  buyer:  ['home', 'catalog', 'checkout', 'tracking', 'buyer', 'buyer_account', 'buyer_wishlist', 'buyer_cart', 'buyer_orders', 'buyer_reviews', 'buyer_notifications', 'cart'],
   seller: ['seller'],
   admin:  ['admin']
 };
@@ -102,6 +86,13 @@ const PAGE_NAMES = {
   catalog:  'Katalog Buku',
   checkout: 'Checkout',
   tracking: 'Lacak Pesanan',
+  buyer:    'Dashboard Pembeli',
+  buyer_account: 'Akun Saya',
+  buyer_wishlist: 'Wishlist',
+  buyer_cart: 'Keranjang',
+  buyer_orders: 'Pesanan Saya',
+  buyer_reviews: 'Review Saya',
+  buyer_notifications: 'Notifikasi',
   seller:   'Dashboard Penjual',
   admin:    'Panel Admin'
 };
@@ -119,9 +110,13 @@ function showPage(name) {
     handleAccessDenied(name);
     return;
   }
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const page = document.getElementById('page-' + name);
-  if (page) page.classList.add('active');
+  if (!page) {
+    _showPageDirect(name);
+    return;
+  }
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  page.classList.add('active');
   updateNavActive(name);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -216,59 +211,15 @@ function setActiveByName(name) {
 //  AUTH MODAL
 // ══════════════════════════════════════════
 function openAuth(hint) {
-  document.getElementById('auth-step-role').style.display = 'block';
-  document.getElementById('auth-step-form').style.display = 'none';
-  selectedRole = null;
+  selectRegRole(hint === 'seller' ? 'seller' : 'buyer');
+  switchTab(hint === 'seller' || hint === 'daftar' ? 'daftar' : 'masuk');
   document.getElementById('authModal').classList.add('open');
   document.body.style.overflow = 'hidden';
-  if (hint === 'seller') {
-    selectAuthRole('seller');
-    setTimeout(() => switchTab('daftar'), 250);
-  }
 }
 
 function closeAuth() {
   document.getElementById('authModal').classList.remove('open');
   document.body.style.overflow = '';
-}
-
-function backToRoleSelect() {
-  document.getElementById('auth-step-role').style.display = 'block';
-  document.getElementById('auth-step-form').style.display = 'none';
-  selectedRole = null;
-}
-
-function selectAuthRole(role) {
-  selectedRole = role;
-  const cfg = ROLE_CONFIG[role];
-
-  // Show form step
-  document.getElementById('auth-step-role').style.display = 'none';
-  document.getElementById('auth-step-form').style.display = 'block';
-
-  // Apply theme to auth header
-  const authTop = document.getElementById('auth-form-top');
-  authTop.className = 'auth-top' + (cfg.authHeader !== 'default' ? ' ' + cfg.authHeader : '');
-
-  // Badge
-  const badge = document.getElementById('auth-role-badge');
-  badge.textContent = cfg.badgeText;
-  badge.className = 'auth-role-badge' + (cfg.badgeClass ? ' ' + cfg.badgeClass : '');
-
-  // Tagline
-  document.getElementById('auth-form-tagline').textContent = cfg.tagline;
-
-  // Admin: hide Register tab; Seller: show Register with store field
-  const tabDaftar = document.getElementById('tab-daftar');
-  if (role === 'admin') {
-    tabDaftar.style.display = 'none';
-    switchTab('masuk');
-  } else {
-    tabDaftar.style.display = '';
-    switchTab('masuk');
-  }
-  const sellerExtra = document.getElementById('seller-extra');
-  if (sellerExtra) sellerExtra.style.display = role === 'seller' ? 'block' : 'none';
 }
 
 function switchTab(tab) {
@@ -278,81 +229,65 @@ function switchTab(tab) {
   document.getElementById('body-daftar').style.display = tab === 'daftar' ? 'block' : 'none';
 }
 
-// ══════════════════════════════════════════
-//  LOGIN / REGISTER
-// ══════════════════════════════════════════
-function doLogin() {
-  if (!selectedRole) return;
-  loginSuccess({ ...DEMO_USERS[selectedRole], role: selectedRole });
+function selectRegRole(role) {
+  selectedRole = role;
+  const input = document.getElementById('reg-role');
+  if (input) input.value = role;
+  document.querySelectorAll('.auth-role-type').forEach(el => {
+    el.classList.toggle('active', el.dataset.role === role);
+  });
 }
 
-function doRegister() {
-  if (!selectedRole) return;
-  const first = document.getElementById('reg-firstname').value.trim() || 'Pengguna';
-  const last  = document.getElementById('reg-lastname').value.trim()  || 'Baru';
-  loginSuccess({ name: first + ' ' + last, initials: (first[0] + (last[0] || '')).toUpperCase(), role: selectedRole });
+function validateRegister(e) {
+  const pass = document.getElementById('reg-pass').value;
+  const confirm = document.getElementById('reg-pass-confirm').value;
+  if (pass.length < 6) {
+    e.preventDefault();
+    showToast('❌ Password minimal 6 karakter');
+    return false;
+  }
+  if (pass !== confirm) {
+    e.preventDefault();
+    showToast('❌ Konfirmasi password tidak cocok');
+    return false;
+  }
+  return true;
 }
 
-function doSocialLogin() {
-  if (!selectedRole) return;
-  loginSuccess({ ...DEMO_USERS[selectedRole], role: selectedRole });
+function chipLabelFor(user, cfg) {
+  if (user.role === 'buyer') return user.name.split(' ')[0] || cfg.chipLabel;
+  return cfg.chipLabel;
 }
 
-function loginSuccess(user) {
+function applyNavUser(user) {
+  if (!user || !ROLE_CONFIG[user.role]) return;
   currentUser = user;
   const cfg = ROLE_CONFIG[user.role];
-  closeAuth();
 
-  // ── Apply body theme (swaps all accent CSS vars) ──
-  document.body.className = document.body.className
-    .replace(/\btheme-\w+/g, '').trim();
-  if (user.role !== 'buyer') {
-    document.body.classList.add('theme-' + user.role);
-  }
-
-  // ── Update navbar ──
   document.getElementById('nav-guest').style.display = 'none';
   document.getElementById('nav-loggedin').style.display = 'block';
 
-  // Avatar & labels
-  document.getElementById('nav-avatar-initials').textContent = user.initials;
-  document.getElementById('nav-username').textContent = cfg.chipLabel;
-  document.getElementById('nav-userrole').textContent = cfg.chipSublabel;
+  const avatar = document.getElementById('nav-avatar-icon');
+  avatar.textContent = cfg.roleIcon;
+  avatar.className = 'nav-user-avatar nav-user-avatar--role';
+  avatar.dataset.role = user.role;
 
-  // Chip theme — now just use accent vars via body class; reset any legacy class
   const chip = document.getElementById('nav-user-chip');
   chip.className = 'nav-user-chip';
+  chip.title = user.name;
 
-  // Role dot color (via CSS var now)
-  const dot = document.getElementById('nav-role-dot');
-  if (dot) dot.style.background = '';  // let CSS var handle it
+  document.getElementById('nav-username').textContent = chipLabelFor(user, cfg);
+  document.getElementById('nav-userrole').textContent = cfg.chipSublabel;
 
-  // Cart: show only for buyer
   const cartBtn = document.getElementById('nav-cart-btn');
   if (cartBtn) cartBtn.style.display = cfg.showCart ? 'flex' : 'none';
 
-  // Search: hide for seller/admin
   const search = document.getElementById('nav-search');
   if (search) search.style.display = cfg.showSearch ? '' : 'none';
 
-  // Nav links: switch to the correct nav link set
   renderNavLinks(user.role);
-
-  // Build dynamic dropdown
   buildDropdown(cfg.dropdown);
-
-  // ── Apply role-specific UI restrictions ──
   applyRoleUI(user.role);
-
-  // ── Redirect ──
-  const toastMsg = {
-    buyer:  '✅ Selamat datang, ' + user.name.split(' ')[0] + '!',
-    seller: '🏪 Dashboard Penjual aktif',
-    admin:  '🔐 Panel Admin aktif'
-  };
-  const targetPage = { buyer: 'home', seller: 'seller', admin: 'admin' };
-  showToast(toastMsg[user.role]);
-  _showPageDirect(targetPage[user.role]);
 }
 
 // Internal nav render — switches to the correct nav link group per role
@@ -415,7 +350,7 @@ document.addEventListener('click', e => {
 function goToDashboard() {
   closeUserDropdown();
   if (!currentUser) return;
-  const page = { buyer: 'home', seller: 'seller', admin: 'admin' };
+  const page = { buyer: 'buyer', seller: 'seller', admin: 'admin' };
   _showPageDirect(page[currentUser.role] || 'home');
 }
 
@@ -423,25 +358,8 @@ function goToDashboard() {
 //  LOGOUT
 // ══════════════════════════════════════════
 function doLogout() {
-  currentUser = null;
-  selectedRole = null;
-  // Remove body theme
-  document.body.className = document.body.className
-    .replace(/\btheme-\w+/g, '').trim();
-  // Restore default navbar state
-  document.getElementById('nav-guest').style.display = 'block';
-  document.getElementById('nav-loggedin').style.display = 'none';
-  // Reset chip class
-  document.getElementById('nav-user-chip').className = 'nav-user-chip';
-  // Restore buyer nav links
-  renderNavLinks('buyer');
-  const search = document.getElementById('nav-search');
-  if (search) search.style.display = '';
-  // Restore buyer-only elements
-  document.querySelectorAll('[data-role="buyer"]').forEach(el => el.style.display = '');
   closeUserDropdown();
-  _showPageDirect('home');
-  showToast('👋 Berhasil keluar. Sampai jumpa!');
+  window.location.href = 'index.php?page=logout';
 }
 
 // ══════════════════════════════════════════
@@ -544,4 +462,23 @@ function showToast(msg) {
 // ══════════════════════════════════════════
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeCart(); closeAuth(); closeUserDropdown(); }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const page = params.get('page') || 'home';
+  updateNavActive(page);
+
+  if (window.__RB_USER__) {
+    applyNavUser(window.__RB_USER__);
+  }
+
+  const authTab = params.get('auth');
+  if (authTab === 'daftar') {
+    openAuth('daftar');
+  } else if (authTab === 'masuk' || page === 'login') {
+    openAuth('masuk');
+  } else if (page === 'register') {
+    openAuth('seller');
+  }
 });
