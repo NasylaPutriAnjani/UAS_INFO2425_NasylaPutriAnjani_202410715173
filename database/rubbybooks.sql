@@ -2,7 +2,7 @@ CREATE DATABASE IF NOT EXISTS rubbybooks CHARACTER SET utf8mb4 COLLATE utf8mb4_u
 USE rubbybooks;
 
 SET FOREIGN_KEY_CHECKS=0;
-DROP TABLE IF EXISTS system_logs, seller_verifications, notifications, reviews, payments, order_items, orders, carts, shipping_addresses, products, categories, users;
+DROP TABLE IF EXISTS system_logs, seller_verifications, notifications, reviews, payments, order_items, orders, carts, shipping_addresses, products, categories, users, wishlists;
 SET FOREIGN_KEY_CHECKS=1;
 
 CREATE TABLE users (
@@ -99,6 +99,7 @@ CREATE TABLE reviews (
   buyer_id INT NOT NULL,
   rating TINYINT NOT NULL,
   comment TEXT,
+  seller_reply TEXT NULL,
   photo VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
@@ -122,6 +123,16 @@ CREATE TABLE seller_verifications (
   approved_at TIMESTAMP NULL,
   FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE wishlists (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  buyer_id INT NOT NULL,
+  product_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY user_product (buyer_id, product_id),
+  FOREIGN KEY (buyer_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 );
 
 CREATE TABLE system_logs (

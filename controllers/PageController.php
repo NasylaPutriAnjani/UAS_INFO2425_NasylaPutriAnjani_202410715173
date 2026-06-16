@@ -8,6 +8,7 @@ function route_config(string $page): array
         'catalog' => ['view' => 'public/catalog.php'],
         'login' => ['view' => 'public/home.php'],
         'register' => ['view' => 'public/home.php'],
+        'account_settings' => ['view' => 'shared/account.php'],  // general – no role restriction
         'buyer' => ['view' => 'pembeli/dashboard.php', 'role' => 'buyer'],
         'buyer_account' => ['view' => 'pembeli/account.php', 'role' => 'buyer'],
         'buyer_wishlist' => ['view' => 'pembeli/wishlist.php', 'role' => 'buyer'],
@@ -21,7 +22,9 @@ function route_config(string $page): array
         'seller' => ['view' => 'penjual/dashboard.php', 'role' => 'seller'],
         'seller_products' => ['view' => 'penjual/products.php', 'role' => 'seller'],
         'seller_orders' => ['view' => 'penjual/orders.php', 'role' => 'seller'],
+        'seller_reviews' => ['view' => 'penjual/reviews.php', 'role' => 'seller'],
         'seller_notifications' => ['view' => 'penjual/notifications.php', 'role' => 'seller'],
+        'seller_report' => ['view' => 'penjual/reports.php', 'role' => 'seller'],
         'admin' => ['view' => 'admin/dashboard.php', 'role' => 'admin'],
         'admin_users' => ['view' => 'admin/users.php', 'role' => 'admin'],
         'admin_categories' => ['view' => 'admin/categories.php', 'role' => 'admin'],
@@ -109,6 +112,21 @@ function page_data(PDO $pdo, string $page): array
                 'totalItems' => $totalItems
             ]
         ];
+    }
+    if ($page === 'account_settings') {
+        $uid = current_user()['id'];
+        $stmt = $pdo->prepare('SELECT id, name, email, role, created_at, avatar, phone, dob, alternate_phone, delete_requested FROM users WHERE id = ?');
+        $stmt->execute([$uid]);
+        $freshUser = $stmt->fetch();
+        // Sync session name in case it was updated
+        if ($freshUser) {
+            $_SESSION['user']['name'] = $freshUser['name'];
+        }
+        $data = ['user' => $freshUser ?: current_user()];
+        if (($freshUser['role'] ?? 'buyer') === 'buyer') {
+            $data['buyerSidebar'] = buyer_sidebar_data($pdo);
+        }
+        return $data;
     }
     if (in_array($page, ['buyer', 'buyer_account', 'buyer_wishlist', 'buyer_cart', 'buyer_orders', 'buyer_reviews', 'buyer_notifications', 'cart', 'tracking'], true)) {
         $base = ['buyerSidebar' => buyer_sidebar_data($pdo)];
@@ -229,19 +247,398 @@ function page_data(PDO $pdo, string $page): array
         ];
     }
     if ($page === 'seller_products') {
-        $stmt = $pdo->prepare('SELECT * FROM products WHERE seller_id=? ORDER BY id DESC');
-        $stmt->execute([current_user()['id']]);
-        return ['products' => $stmt->fetchAll(), 'categories' => $pdo->query('SELECT * FROM categories ORDER BY name')->fetchAll()];
+        $sellerId = current_user()['id'];
+        $qStr = $_GET['q'] ?? '';
+        $q = '%' . $qStr . '%';
+        $categoryFilter = $_GET['category'] ?? '';
+        $sort = $_GET['sort'] ?? 'Terbaru';
+
+        $sql = 'SELECT p.*, c.name category,
+                       COALESCE((SELECT SUM(oi.qty) FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE oi.product_id = p.id AND o.status IN ("paid", "processing", "shipped", "delivered")), 0) as sold_count
+                FROM products p
+                JOIN categories c ON c.id = p.category_id
+                WHERE p.seller_id = ? AND p.name LIKE ?';
+        
+        $params = [$sellerId, $q];
+        if (!empty($categoryFilter)) {
+            $sql .= ' AND p.category_id = ?';
+            $params[] = (int)$categoryFilter;
+        }
+
+        $orderBy = match($sort) {
+            'Harga Terendah' => 'p.price ASC',
+            'Harga Tertinggi' => 'p.price DESC',
+            'Stok Terendah' => 'p.stock ASC',
+            'Stok Tertinggi' => 'p.stock DESC',
+            'Terlaris' => 'sold_count DESC',
+            default => 'p.id DESC', // Terbaru
+        };
+
+        $sql .= " ORDER BY $orderBy";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $products = $stmt->fetchAll();
+
+        return [
+            'products' => $products,
+            'categories' => $pdo->query('SELECT * FROM categories ORDER BY name')->fetchAll(),
+            'filters' => [
+                'q' => $qStr,
+                'category' => $categoryFilter,
+                'sort' => $sort
+            ]
+        ];
     }
     if ($page === 'seller_orders') {
-        $stmt = $pdo->prepare('SELECT DISTINCT o.* FROM orders o JOIN order_items oi ON oi.order_id=o.id JOIN products p ON p.id=oi.product_id WHERE p.seller_id=? ORDER BY o.id DESC');
-        $stmt->execute([current_user()['id']]);
-        return ['orders' => $stmt->fetchAll()];
+        $sellerId = current_user()['id'];
+        $qStr = $_GET['q'] ?? '';
+        $q = '%' . $qStr . '%';
+        $statusFilter = $_GET['status'] ?? '';
+        
+        $sql = 'SELECT DISTINCT o.*, u.name buyer_name,
+                       (SELECT SUM(oi.subtotal) FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE oi.order_id = o.id AND p.seller_id = ?) as seller_total
+                FROM orders o
+                JOIN order_items oi ON oi.order_id = o.id
+                JOIN products p ON p.id = oi.product_id
+                JOIN users u ON u.id = o.buyer_id
+                WHERE p.seller_id = ? AND (o.invoice_number LIKE ? OR u.name LIKE ?)';
+        
+        $params = [$sellerId, $sellerId, $q, $q];
+        if (!empty($statusFilter)) {
+            if ($statusFilter === 'pending') {
+                $sql .= ' AND o.status IN ("pending", "paid")';
+            } else {
+                $sql .= ' AND o.status = ?';
+                $params[] = $statusFilter;
+            }
+        }
+        
+        $sql .= ' ORDER BY o.id DESC';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $orders = $stmt->fetchAll();
+        
+        // For each order, fetch the items belonging to this seller
+        $itemsStmt = $pdo->prepare('
+            SELECT oi.*, p.name product_name, c.name category_name
+            FROM order_items oi
+            JOIN products p ON p.id = oi.product_id
+            JOIN categories c ON c.id = p.category_id
+            WHERE oi.order_id = ? AND p.seller_id = ?
+        ');
+        foreach ($orders as &$order) {
+            $itemsStmt->execute([$order['id'], $sellerId]);
+            $order['items'] = $itemsStmt->fetchAll();
+        }
+        unset($order); // break reference
+
+        if (($_GET['export'] ?? '') === 'csv') {
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename=pesanan_masuk_' . date('Ymd_His') . '.csv');
+            $output = fopen('php://output', 'w');
+            fputcsv($output, ['No. Invoice', 'Tanggal', 'Pembeli', 'Item', 'Total Pendapatan', 'Status', 'Nomor Resi']);
+            
+            foreach ($orders as $order) {
+                $itemNames = [];
+                foreach ($order['items'] as $item) {
+                    $itemNames[] = $item['product_name'] . ' (x' . $item['qty'] . ')';
+                }
+                fputcsv($output, [
+                    $order['invoice_number'],
+                    $order['created_at'],
+                    $order['buyer_name'],
+                    implode(', ', $itemNames),
+                    $order['seller_total'],
+                    $order['status'],
+                    $order['receipt_number'] ?? '-'
+                ]);
+            }
+            fclose($output);
+            exit;
+        }
+
+        return [
+            'orders' => $orders,
+            'filters' => [
+                'q' => $qStr,
+                'status' => $statusFilter
+            ]
+        ];
+    }
+    if ($page === 'seller_reviews') {
+        $sellerId   = current_user()['id'];
+        $ratingFilter = isset($_GET['rating']) && $_GET['rating'] !== '' ? (int)$_GET['rating'] : null;
+
+        // Always fetch ALL reviews first for stats calculation
+        $stmtAll = $pdo->prepare(
+            'SELECT r.*, u.name buyer_name, p.name product_name
+             FROM reviews r
+             JOIN products p ON p.id = r.product_id
+             JOIN users u ON u.id = r.buyer_id
+             WHERE p.seller_id = ?
+             ORDER BY r.created_at DESC'
+        );
+        $stmtAll->execute([$sellerId]);
+        $allReviews = $stmtAll->fetchAll();
+
+        // Calculate stats from ALL reviews
+        $totalReviews = count($allReviews);
+        $avgRating    = 0;
+        $breakdown    = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
+        if ($totalReviews > 0) {
+            $sum = 0;
+            foreach ($allReviews as $rev) {
+                $r = (int)$rev['rating'];
+                $sum += $r;
+                if (isset($breakdown[$r])) $breakdown[$r]++;
+            }
+            $avgRating = round($sum / $totalReviews, 1);
+        }
+
+        // Apply rating filter for display list
+        $reviews = $ratingFilter
+            ? array_values(array_filter($allReviews, fn($r) => (int)$r['rating'] === $ratingFilter))
+            : $allReviews;
+
+        return [
+            'reviews' => $reviews,
+            'filters' => ['rating' => $ratingFilter],
+            'stats'   => [
+                'average'   => $avgRating,
+                'total'     => $totalReviews,
+                'breakdown' => $breakdown,
+            ],
+        ];
+    }
+    if ($page === 'seller_report') {
+        $sellerId = current_user()['id'];
+        $period = $_GET['period'] ?? 'week'; // 'week', 'month', 'year'
+        
+        // Setup Date Ranges & Labels
+        $today = date('Y-m-d H:i:s');
+        $labels = [];
+        $dataPoints = []; // ['label' => X, 'revenue' => Y, 'orders' => Z]
+
+        if ($period === 'week') {
+            // Last 7 days including today
+            for ($i = 6; $i >= 0; $i--) {
+                $d = date('Y-m-d', strtotime("-$i days"));
+                $dayLabel = date('D', strtotime("-$i days"));
+                $labels[$d] = match($dayLabel) {
+                    'Mon' => 'Sen', 'Tue' => 'Sel', 'Wed' => 'Rab', 
+                    'Thu' => 'Kam', 'Fri' => 'Jum', 'Sat' => 'Sab', 'Sun' => 'Min',
+                    default => $dayLabel
+                };
+                $dataPoints[$d] = ['label' => $labels[$d], 'revenue' => 0.0, 'orders' => 0];
+            }
+            $startDate = date('Y-m-d 00:00:00', strtotime('-6 days'));
+            $endDate = date('Y-m-d 23:59:59');
+
+            // Previous period for comparing percentage (7 days before that)
+            $prevStartDate = date('Y-m-d 00:00:00', strtotime('-13 days'));
+            $prevEndDate = date('Y-m-d 23:59:59', strtotime('-7 days'));
+            $compareLabel = 'vs minggu lalu';
+        } elseif ($period === 'month') {
+            // Last 30 days grouped in 5-day intervals or just daily
+            for ($i = 29; $i >= 0; $i--) {
+                $d = date('Y-m-d', strtotime("-$i days"));
+                // Format: Date number
+                $labels[$d] = date('j', strtotime("-$i days"));
+                $dataPoints[$d] = ['label' => $labels[$d], 'revenue' => 0.0, 'orders' => 0];
+            }
+            $startDate = date('Y-m-d 00:00:00', strtotime('-29 days'));
+            $endDate = date('Y-m-d 23:59:59');
+
+            $prevStartDate = date('Y-m-d 00:00:00', strtotime('-59 days'));
+            $prevEndDate = date('Y-m-d 23:59:59', strtotime('-30 days'));
+            $compareLabel = 'vs bulan lalu';
+        } else { // 'year'
+            // Last 12 months
+            for ($i = 11; $i >= 0; $i--) {
+                $m = date('Y-m', strtotime("-$i months"));
+                $monthLabel = date('M', strtotime("-$i months"));
+                $labels[$m] = match($monthLabel) {
+                    'Jan' => 'Jan', 'Feb' => 'Feb', 'Mar' => 'Mar', 'Apr' => 'Apr', 'May' => 'Mei', 'Jun' => 'Jun',
+                    'Jul' => 'Jul', 'Aug' => 'Agt', 'Sep' => 'Sep', 'Oct' => 'Okt', 'Nov' => 'Nov', 'Dec' => 'Des',
+                    default => $monthLabel
+                };
+                $dataPoints[$m] = ['label' => $labels[$m], 'revenue' => 0.0, 'orders' => 0];
+            }
+            $startDate = date('Y-m-01 00:00:00', strtotime('-11 months'));
+            $endDate = date('Y-m-d 23:59:59');
+
+            $prevStartDate = date('Y-m-01 00:00:00', strtotime('-23 months'));
+            $prevEndDate = date('Y-m-t 23:59:59', strtotime('-12 months'));
+            $compareLabel = 'vs tahun lalu';
+        }
+
+        // --- Current Period Query ---
+        // Revenue & Orders
+        $stmtCurr = $pdo->prepare('
+            SELECT 
+                o.id as order_id, 
+                o.created_at, 
+                SUM(oi.subtotal) as subtotal, 
+                SUM(oi.qty) as qty
+            FROM order_items oi 
+            JOIN products p ON p.id = oi.product_id 
+            JOIN orders o ON o.id = oi.order_id 
+            WHERE p.seller_id = ? 
+              AND o.created_at BETWEEN ? AND ? 
+              AND o.status IN ("paid", "processing", "shipped", "delivered")
+            GROUP BY o.id, o.created_at
+        ');
+        $stmtCurr->execute([$sellerId, $startDate, $endDate]);
+        $currOrdersData = $stmtCurr->fetchAll();
+
+        $currRevenue = 0.0;
+        $currOrdersCount = 0;
+        $currBooksCount = 0;
+        $orderIdsSeen = [];
+
+        foreach ($currOrdersData as $row) {
+            $currRevenue += (float)$row['subtotal'];
+            $currBooksCount += (int)$row['qty'];
+            if (!in_array($row['order_id'], $orderIdsSeen, true)) {
+                $orderIdsSeen[] = $row['order_id'];
+                $currOrdersCount++;
+            }
+
+            // Map to graph datapoints
+            $time = strtotime($row['created_at']);
+            if ($period === 'year') {
+                $key = date('Y-m', $time);
+            } else {
+                $key = date('Y-m-d', $time);
+            }
+
+            if (isset($dataPoints[$key])) {
+                $dataPoints[$key]['revenue'] += (float)$row['subtotal'];
+                $dataPoints[$key]['orders'] += 1;
+            }
+        }
+
+        // --- Previous Period Query ---
+        $stmtPrev = $pdo->prepare('
+            SELECT 
+                o.id as order_id, 
+                SUM(oi.subtotal) as subtotal, 
+                SUM(oi.qty) as qty
+            FROM order_items oi 
+            JOIN products p ON p.id = oi.product_id 
+            JOIN orders o ON o.id = oi.order_id 
+            WHERE p.seller_id = ? 
+              AND o.created_at BETWEEN ? AND ? 
+              AND o.status IN ("paid", "processing", "shipped", "delivered")
+            GROUP BY o.id
+        ');
+        $stmtPrev->execute([$sellerId, $prevStartDate, $prevEndDate]);
+        $prevOrdersData = $stmtPrev->fetchAll();
+
+        $prevRevenue = 0.0;
+        $prevOrdersCount = 0;
+        $prevBooksCount = 0;
+
+        foreach ($prevOrdersData as $row) {
+            $prevRevenue += (float)$row['subtotal'];
+            $prevBooksCount += (int)$row['qty'];
+            $prevOrdersCount++;
+        }
+
+        // --- Calculate Percentage Change ---
+        $revTrendVal = 0;
+        if ($prevRevenue > 0) {
+            $revTrendVal = round((($currRevenue - $prevRevenue) / $prevRevenue) * 100);
+        } elseif ($currRevenue > 0) {
+            $revTrendVal = 100;
+        }
+
+        $ordTrendVal = 0;
+        if ($prevOrdersCount > 0) {
+            $ordTrendVal = $currOrdersCount - $prevOrdersCount;
+        } else {
+            $ordTrendVal = $currOrdersCount;
+        }
+
+        $bookTrendVal = 0;
+        if ($prevBooksCount > 0) {
+            $bookTrendVal = $currBooksCount - $prevBooksCount;
+        } else {
+            $bookTrendVal = $currBooksCount;
+        }
+
+        // --- Best Sellers Query ---
+        $stmtBest = $pdo->prepare('
+            SELECT 
+                p.id, 
+                p.name as product_name, 
+                c.name as category_name, 
+                SUM(oi.qty) as sold_qty, 
+                SUM(oi.subtotal) as total_rev
+            FROM order_items oi
+            JOIN products p ON p.id = oi.product_id
+            JOIN categories c ON c.id = p.category_id
+            JOIN orders o ON o.id = oi.order_id
+            WHERE p.seller_id = ?
+              AND o.created_at BETWEEN ? AND ?
+              AND o.status IN ("paid", "processing", "shipped", "delivered")
+            GROUP BY p.id, p.name, c.name
+            ORDER BY sold_qty DESC, total_rev DESC
+            LIMIT 5
+        ');
+        $stmtBest->execute([$sellerId, $startDate, $endDate]);
+        $bestSellers = $stmtBest->fetchAll();
+
+        if (($_GET['export'] ?? '') === 'csv') {
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename=laporan_penjualan_' . $period . '_' . date('Ymd_His') . '.csv');
+            $output = fopen('php://output', 'w');
+            fputcsv($output, ['Laporan Penjualan - Periode: ' . strtoupper($period)]);
+            fputcsv($output, []);
+            fputcsv($output, ['Total Pendapatan', 'Rp ' . number_format($currRevenue, 0, ',', '.')]);
+            fputcsv($output, ['Total Pesanan', $currOrdersCount . ' pesanan']);
+            fputcsv($output, ['Buku Terjual', $currBooksCount . ' buku']);
+            fputcsv($output, []);
+            
+            fputcsv($output, ['Label Tren', 'Pendapatan', 'Jumlah Pesanan']);
+            foreach ($dataPoints as $dp) {
+                fputcsv($output, [$dp['label'], $dp['revenue'], $dp['orders']]);
+            }
+            fputcsv($output, []);
+
+            fputcsv($output, ['Produk Terlaris', 'Kategori', 'Jumlah Terjual', 'Pendapatan']);
+            foreach ($bestSellers as $b) {
+                fputcsv($output, [$b['product_name'], $b['category_name'], $b['sold_qty'], $b['total_rev']]);
+            }
+            fclose($output);
+            exit;
+        }
+
+        return [
+            'period' => $period,
+            'compareLabel' => $compareLabel,
+            'kpi' => [
+                'revenue' => $currRevenue,
+                'revenue_trend' => $revTrendVal,
+                'orders' => $currOrdersCount,
+                'orders_trend' => $ordTrendVal,
+                'books' => $currBooksCount,
+                'books_trend' => $bookTrendVal,
+            ],
+            'chartData' => array_values($dataPoints),
+            'bestSellers' => $bestSellers,
+        ];
     }
     if ($page === 'seller_notifications') {
-        $stmt = $pdo->prepare('SELECT * FROM notifications WHERE user_id=? ORDER BY id DESC');
-        $stmt->execute([current_user()['id']]);
-        return ['notifications' => $stmt->fetchAll()];
+        $uid = current_user()['id'];
+        $stmt = $pdo->prepare('SELECT * FROM notifications WHERE user_id = ? ORDER BY is_read ASC, created_at DESC');
+        $stmt->execute([$uid]);
+        $notifications = $stmt->fetchAll();
+        $unreadCount = count(array_filter($notifications, fn($n) => (int)($n['is_read'] ?? 0) === 0));
+        return [
+            'notifications' => $notifications,
+            'unreadCount'   => $unreadCount,
+        ];
     }
     if ($page === 'admin_notifications') {
         $stmt = $pdo->prepare('SELECT * FROM notifications WHERE user_id=? ORDER BY id DESC');

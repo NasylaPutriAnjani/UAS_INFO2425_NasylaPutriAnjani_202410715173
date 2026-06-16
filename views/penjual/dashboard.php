@@ -2,11 +2,16 @@
   <div class="dash-layout">
 
     <!-- SIDEBAR -->
+    <?php
+    $currentSellerPage = $_GET['page'] ?? 'seller';
+    $sellerIdForSidebar = current_user()['id'];
+    $activeProductsCount = (int)$GLOBALS['pdo']->query("SELECT COUNT(*) FROM products WHERE seller_id = $sellerIdForSidebar AND status = 'active'")->fetchColumn();
+    ?>
     <aside class="dash-sidebar seller-sidebar">
       <div class="sidebar-store-profile">
         <div class="sidebar-store-avatar">🏪</div>
         <div>
-          <div class="sidebar-store-name">Toko Buku Sari</div>
+          <div class="sidebar-store-name"><?= e(current_user()['name'] ?? 'Penjual') ?></div>
           <div class="sidebar-store-status">Toko Aktif</div>
         </div>
       </div>
@@ -14,32 +19,33 @@
       <nav class="sidebar-nav">
         <div class="sidebar-group">
           <div class="sidebar-group-label">Menu Utama</div>
-          <button class="sidebar-item active">
+          <button class="sidebar-item<?= $currentSellerPage === 'seller' ? ' active' : '' ?>" onclick="showPage('seller')">
             <span class="si">📊</span> Dashboard
           </button>
-          <button class="sidebar-item" onclick="showToast('📦 Halaman Produk Saya')">
+          <button class="sidebar-item<?= $currentSellerPage === 'seller_products' ? ' active' : '' ?>" onclick="showPage('seller_products')">
             <span class="si">📦</span> Produk Saya
-            <span class="sidebar-badge">24</span>
+            <span class="sidebar-badge"><?= $activeProductsCount ?></span>
           </button>
-          <button class="sidebar-item" onclick="showToast('🛒 Pesanan Masuk')">
+          <button class="sidebar-item<?= $currentSellerPage === 'seller_orders' ? ' active' : '' ?>" onclick="showPage('seller_orders')">
             <span class="si">🛒</span> Pesanan Masuk
-            <span class="sidebar-badge warn">7</span>
           </button>
-          <button class="sidebar-item" onclick="showToast('💬 Ulasan & Rating')">
+          <button class="sidebar-item<?= $currentSellerPage === 'seller_reviews' ? ' active' : '' ?>" onclick="showPage('seller_reviews')">
             <span class="si">💬</span> Ulasan & Rating
+          </button>
+          <button class="sidebar-item<?= $currentSellerPage === 'seller_notifications' ? ' active' : '' ?>" onclick="showPage('seller_notifications')">
+            <span class="si">🔔</span> Notifikasi
           </button>
         </div>
         <div class="sidebar-group">
           <div class="sidebar-group-label">Keuangan</div>
-          <button class="sidebar-item" onclick="showToast('💰 Laporan Penjualan')">
+          <button class="sidebar-item<?= $currentSellerPage === 'seller_report' ? ' active' : '' ?>" onclick="showPage('seller_report')">
             <span class="si">💰</span> Laporan Penjualan
           </button>
-
         </div>
         <div class="sidebar-group">
           <div class="sidebar-group-label">Pengaturan</div>
-          <button class="sidebar-item" onclick="showToast('⚙️ Pengaturan Toko')">
-            <span class="si">⚙️</span> Pengaturan Toko
+          <button class="sidebar-item" onclick="showPage('account_settings')">
+            <span class="si">⚙️</span> Pengaturan Akun
           </button>
         </div>
       </nav>
@@ -64,7 +70,7 @@
           <select class="dash-period-select">
             <option>Semua Waktu</option>
           </select>
-          <button class="btn-dash-primary" onclick="showToast('📦 Form tambah produk dibuka!')">
+          <button class="btn-dash-primary" onclick="showPage('seller_products')">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Tambah Produk
           </button>
@@ -79,7 +85,7 @@
         <div class="alert-strip">
           <span class="alert-strip-icon">⚠️</span>
           <div class="alert-strip-text"><b><?= count($lowStockProducts) ?> produk</b> hampir kehabisan stok. Segera lakukan restock agar tidak kehilangan pembeli.</div>
-          <button class="alert-strip-action" onclick="showToast('📦 Menuju halaman stok...')">Lihat Produk →</button>
+          <button class="alert-strip-action" onclick="showPage('seller_products')">Lihat Produk →</button>
         </div>
         <?php endif; ?>
 
@@ -113,7 +119,7 @@
               <div class="metric-icon-wrap" style="background:#fdf4ff">📚</div>
               <div class="metric-trend trend-neutral"><?= count($lowStockProducts) ?> ⚠️</div>
             </div>
-            <div class="metric-val"><?= (int)$activeProducts ?></div>
+            <div class="metric-val"><?= (int)$activeProductsCount ?></div>
             <div class="metric-label">Produk Aktif</div>
             <div class="metric-sub"><?= count($lowStockProducts) ?> stok hampir habis</div>
             <div class="metric-bar"><div class="metric-bar-fill" style="width:100%;background:linear-gradient(90deg,#a855f7,#c084fc)"></div></div>
@@ -261,7 +267,7 @@
               <div>
                 <h4>Pesanan Terbaru</h4>
               </div>
-              <a href="#" onclick="showToast('📋 Semua pesanan')">Lihat semua →</a>
+              <a href="#" onclick="event.preventDefault();showPage('seller_orders')">Lihat semua →</a>
             </div>
             <table class="data-table">
               <thead>
@@ -305,7 +311,7 @@
                     ?>
                     <span class="status <?= $s[1] ?>">● <?= $s[0] ?></span>
                   </td>
-                  <td><button class="action-btn" onclick="showToast('📋 Detail pesanan')">Detail</button></td>
+                  <td><button class="action-btn" onclick="showPage('seller_orders')">Detail</button></td>
                 </tr>
                 <?php endforeach; ?>
                 <?php endif; ?>
@@ -320,7 +326,7 @@
                 <h4>Aksi Cepat</h4>
               </div>
               <div class="quick-actions-list">
-                <button class="quick-action-item" onclick="showToast('📦 Form tambah produk')">
+                <button class="quick-action-item" onclick="showPage('seller_products')">
                   <div class="qa-icon" style="background:#f0fdf4">📦</div>
                   <div>
                     <div class="qa-title">Tambah Produk</div>
@@ -330,7 +336,7 @@
                 </button>
 
 
-                <button class="quick-action-item" onclick="showToast('💬 Balas ulasan pembeli')">
+                <button class="quick-action-item" onclick="showPage('seller_reviews')">
                   <div class="qa-icon" style="background:#fdf4ff">💬</div>
                   <div>
                     <div class="qa-title">Balas Ulasan</div>
@@ -348,7 +354,7 @@
         <div class="lowstock-card">
           <div class="lowstock-card-head">
             <h4>⚠️ Stok Rendah</h4>
-            <a href="#" style="font-size:12px;color:var(--accent);font-weight:600" onclick="showToast('📦 Halaman produk')">Kelola produk →</a>
+            <a href="#" style="font-size:12px;color:var(--accent);font-weight:600" onclick="event.preventDefault();showPage('seller_products')">Kelola produk →</a>
           </div>
           <?php foreach ($lowStockProducts as $ls): ?>
           <div class="lowstock-row">
@@ -360,7 +366,7 @@
             <div class="ls-stock-indicator">
               <div class="ls-stock-bar"><div class="ls-stock-bar-fill" style="width:<?= min(100, (int)$ls['stock'] * 10) ?>%;background:<?= $ls['stock'] <= 3 ? '#ef4444' : '#f59e0b' ?>"></div></div>
               <div class="ls-stock-num" <?= $ls['stock'] > 3 ? 'style="background:#fff7ed;color:#d97706"' : '' ?>><?= (int)$ls['stock'] ?></div>
-              <button class="action-btn warn" onclick="showToast('📦 Form restock <?= e($ls['name']) ?>')">+ Restock</button>
+              <button class="action-btn warn" onclick="showPage('seller_products')">+ Restock</button>
             </div>
           </div>
           <?php endforeach; ?>

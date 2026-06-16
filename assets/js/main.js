@@ -18,7 +18,7 @@ const ROLE_CONFIG = {
       { icon:'📦', label:'Pesanan Saya',    action:"_showPageDirect('buyer_orders');closeUserDropdown()" },
       { icon:'❤️', label:'Wishlist',        action:"_showPageDirect('buyer_wishlist');closeUserDropdown()" },
       { divider: true },
-      { icon:'⚙️', label:'Pengaturan',     action:"showToast('⚙️ Pengaturan akun dibuka!');closeUserDropdown()" },
+      { icon:'⚙️', label:'Pengaturan Akun', action:"_showPageDirect('account_settings');closeUserDropdown()" },
       { divider: true },
       { icon:'🚪', label:'Keluar',          action:'doLogout()', danger: true }
     ]
@@ -31,11 +31,12 @@ const ROLE_CONFIG = {
     showSearch:   false,
     dropdown: [
       { icon:'📊', label:'Dashboard Penjual', action:"_showPageDirect('seller');closeUserDropdown()" },
-      { icon:'📦', label:'Kelola Produk',    action:"_showPageDirect('seller');closeUserDropdown()" },
-      { icon:'📋', label:'Pesanan Masuk',    action:"showToast('📋 Membuka pesanan masuk...');closeUserDropdown()" },
-      { icon:'📈', label:'Laporan Penjualan',action:"showToast('📈 Membuka laporan...');closeUserDropdown()" },
+      { icon:'📦', label:'Kelola Produk',    action:"_showPageDirect('seller_products');closeUserDropdown()" },
+      { icon:'📋', label:'Pesanan Masuk',    action:"_showPageDirect('seller_orders');closeUserDropdown()" },
+      { icon:'💬', label:'Ulasan & Rating',   action:"_showPageDirect('seller_reviews');closeUserDropdown()" },
+      { icon:'📈', label:'Laporan Penjualan',action:"_showPageDirect('seller_report');closeUserDropdown()" },
       { divider: true },
-      { icon:'⚙️', label:'Pengaturan Toko', action:"showToast('⚙️ Pengaturan toko dibuka!');closeUserDropdown()" },
+      { icon:'⚙️', label:'Pengaturan Akun', action:"_showPageDirect('account_settings');closeUserDropdown()" },
       { divider: true },
       { icon:'🚪', label:'Keluar',           action:'doLogout()', danger: true }
     ]
@@ -48,10 +49,10 @@ const ROLE_CONFIG = {
     showSearch:   false,
     dropdown: [
       { icon:'🖥️', label:'Panel Admin',     action:"_showPageDirect('admin');closeUserDropdown()" },
-      { icon:'👥', label:'Manajemen User',  action:"showToast('👥 Membuka manajemen user...');closeUserDropdown()" },
-      { icon:'🏪', label:'Manajemen Toko',  action:"showToast('🏪 Membuka manajemen toko...');closeUserDropdown()" },
-      { icon:'📊', label:'Laporan Platform',action:"showToast('📊 Membuka laporan platform...');closeUserDropdown()" },
-      { icon:'🛡️', label:'Keamanan',        action:"showToast('🛡️ Membuka pengaturan keamanan...');closeUserDropdown()" },
+      { icon:'👥', label:'Manajemen User',  action:"_showPageDirect('admin_users');closeUserDropdown()" },
+      { icon:'🏷️', label:'Kategori',        action:"_showPageDirect('admin_categories');closeUserDropdown()" },
+      { divider: true },
+      { icon:'⚙️', label:'Pengaturan Akun', action:"_showPageDirect('account_settings');closeUserDropdown()" },
       { divider: true },
       { icon:'🚪', label:'Keluar',          action:'doLogout()', danger: true }
     ]
@@ -65,10 +66,11 @@ const ROLE_CONFIG = {
 // Pages each role is ALLOWED to access
 const PAGE_ACCESS = {
   guest:  ['home', 'catalog'],
-  buyer:  ['home', 'catalog', 'checkout', 'tracking', 'buyer', 'buyer_account', 'buyer_wishlist', 'buyer_cart', 'buyer_orders', 'buyer_reviews', 'buyer_notifications', 'cart'],
-  seller: ['home', 'catalog', 'seller', 'seller_products', 'seller_orders', 'seller_notifications'],
-  admin:  ['home', 'catalog', 'admin', 'admin_users', 'admin_categories', 'admin_notifications']
+  buyer:  ['home', 'catalog', 'checkout', 'tracking', 'buyer', 'buyer_account', 'buyer_wishlist', 'buyer_cart', 'buyer_orders', 'buyer_reviews', 'buyer_notifications', 'cart', 'account_settings'],
+  seller: ['home', 'catalog', 'seller', 'seller_products', 'seller_orders', 'seller_reviews', 'seller_notifications', 'seller_report', 'account_settings'],
+  admin:  ['home', 'catalog', 'admin', 'admin_users', 'admin_categories', 'admin_notifications', 'account_settings']
 };
+
 
 // Human-readable page names for error messages
 const PAGE_NAMES = {
@@ -76,15 +78,25 @@ const PAGE_NAMES = {
   catalog:  'Katalog Buku',
   checkout: 'Checkout',
   tracking: 'Lacak Pesanan',
+  account_settings: 'Pengaturan Akun',
   buyer:    'Dashboard Pembeli',
   buyer_account: 'Akun Saya',
   buyer_wishlist: 'Wishlist',
   buyer_cart: 'Keranjang',
   buyer_orders: 'Pesanan Saya',
   buyer_reviews: 'Review Saya',
-  buyer_notifications: 'Notifikasi',
+  buyer_notifications: 'Notifikasi Pembeli',
+  cart:     'Keranjang',
   seller:   'Dashboard Penjual',
-  admin:    'Panel Admin'
+  seller_products:      'Produk Saya',
+  seller_orders:        'Pesanan Masuk',
+  seller_reviews:       'Ulasan & Rating',
+  seller_notifications: 'Notifikasi Penjual',
+  seller_report:        'Laporan Penjualan',
+  admin:    'Panel Admin',
+  admin_users:          'Manajemen User',
+  admin_categories:     'Manajemen Kategori',
+  admin_notifications:  'Notifikasi Admin'
 };
 
 function canAccess(pageName) {

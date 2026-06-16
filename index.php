@@ -23,6 +23,11 @@ if (!empty($route['role'])) {
     require_role($route['role']);
 }
 
+// account_settings needs login but no specific role
+if ($page === 'account_settings') {
+    require_login();
+}
+
 if (in_array($page, ['login', 'register'], true) && !$action) {
     redirect('home', ['auth' => $page === 'register' ? 'daftar' : 'masuk']);
 }

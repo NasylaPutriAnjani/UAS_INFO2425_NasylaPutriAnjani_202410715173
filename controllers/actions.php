@@ -81,20 +81,126 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
     if ($action === 'update_account') {
         require_login();
         $userId = current_user()['id'];
-        $name = trim($_POST['name'] ?? '');
-        $password = $_POST['password'] ?? '';
         
-        if ($name) {
-            if (!empty($password)) {
-                $hash = password_hash($password, PASSWORD_DEFAULT);
-                $pdo->prepare('UPDATE users SET name = ?, password = ? WHERE id = ?')->execute([$name, $hash, $userId]);
-            } else {
-                $pdo->prepare('UPDATE users SET name = ? WHERE id = ?')->execute([$name, $userId]);
-            }
-            $_SESSION['user']['name'] = $name;
-            flash('Profil berhasil disimpan.');
+        $actionType = $_POST['action_type'] ?? 'save';
+        
+        if ($actionType === 'request_delete_account') {
+            $pdo->prepare('UPDATE users SET delete_requested = 1 WHERE id = ?')->execute([$userId]);
+            log_activity($pdo, "User #{$userId} mengirim permintaan penghapusan akun.");
+            flash('Permintaan penghapusan akun telah dikirim ke Admin. ⏳');
+            redirect('account_settings');
+            return;
         }
-        redirect(current_user()['role'] . '_account');
+
+        if ($actionType === 'cancel_delete_account') {
+            $pdo->prepare('UPDATE users SET delete_requested = 0 WHERE id = ?')->execute([$userId]);
+            log_activity($pdo, "User #{$userId} membatalkan permintaan penghapusan akun.");
+            flash('Permintaan penghapusan akun dibatalkan.');
+            redirect('account_settings');
+            return;
+        }
+
+        // Fetch fresh current user data from DB (specifically password hash and current avatar)
+        $stmt = $pdo->prepare('SELECT password, avatar FROM users WHERE id = ?');
+        $stmt->execute([$userId]);
+        $dbUser = $stmt->fetch();
+
+        // 1. Basic Info Fields
+        $firstName = trim($_POST['first_name'] ?? '');
+        $lastName = trim($_POST['last_name'] ?? '');
+        $name = trim($firstName . ' ' . $lastName);
+        $phone = trim($_POST['phone'] ?? '');
+        $dob = !empty($_POST['dob']) ? $_POST['dob'] : null;
+        $alternatePhone = trim($_POST['alternate_phone'] ?? '');
+
+        if (empty($firstName)) {
+            flash('First Name tidak boleh kosong.', 'error');
+            redirect('account_settings');
+            return;
+        }
+
+        // 2. Profile Picture Upload / Delete
+        $avatarPath = $dbUser['avatar'] ?? null;
+        
+        // Delete avatar if requested
+        if (($_POST['delete_avatar'] ?? '0') === '1') {
+            if ($avatarPath && file_exists(__DIR__ . '/../' . $avatarPath)) {
+                @unlink(__DIR__ . '/../' . $avatarPath);
+            }
+            $avatarPath = null;
+        }
+
+        // Upload new avatar if provided
+        if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+            $fileTmpPath = $_FILES['avatar']['tmp_name'];
+            $fileName = $_FILES['avatar']['name'];
+            $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            
+            $allowedExtensions = ['png', 'jpg', 'jpeg', 'webp'];
+            if (in_array($fileExtension, $allowedExtensions, true)) {
+                $uploadDir = __DIR__ . '/../uploads/avatars/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                
+                // Delete old avatar if uploading a new one
+                if ($avatarPath && file_exists(__DIR__ . '/../' . $avatarPath)) {
+                    @unlink(__DIR__ . '/../' . $avatarPath);
+                }
+                
+                $newFileName = 'avatar_' . $userId . '_' . time() . '.' . $fileExtension;
+                $destPath = $uploadDir . $newFileName;
+                
+                if (move_uploaded_file($fileTmpPath, $destPath)) {
+                    $avatarPath = 'uploads/avatars/' . $newFileName;
+                }
+            } else {
+                flash('Format gambar avatar harus PNG, JPG, JPEG, atau WEBP.', 'error');
+                redirect('account_settings');
+                return;
+            }
+        }
+
+        // Update basic info in DB
+        $stmt = $pdo->prepare('UPDATE users SET name = ?, phone = ?, dob = ?, alternate_phone = ?, avatar = ? WHERE id = ?');
+        $stmt->execute([$name, $phone, $dob, $alternatePhone, $avatarPath, $userId]);
+        $_SESSION['user']['name'] = $name;
+
+        // 3. Password Update (if entered)
+        $password = trim($_POST['password'] ?? '');
+        $confirm = trim($_POST['password_confirm'] ?? '');
+        $currentPassword = trim($_POST['current_password'] ?? '');
+
+        if (!empty($password)) {
+            if (empty($currentPassword)) {
+                flash('Masukkan password saat ini untuk mengganti password.', 'error');
+                redirect('account_settings');
+                return;
+            }
+            if (!password_verify($currentPassword, $dbUser['password'])) {
+                flash('Password saat ini salah.', 'error');
+                redirect('account_settings');
+                return;
+            }
+            if (strlen($password) < 6) {
+                flash('Password baru minimal 6 karakter.', 'error');
+                redirect('account_settings');
+                return;
+            }
+            if ($password !== $confirm) {
+                flash('Konfirmasi password baru tidak cocok.', 'error');
+                redirect('account_settings');
+                return;
+            }
+            
+            $hash = password_hash($password, PASSWORD_DEFAULT);
+            $pdo->prepare('UPDATE users SET password = ? WHERE id = ?')->execute([$hash, $userId]);
+        }
+
+        log_activity($pdo, "Update akun user #{$userId}");
+        flash('Pengaturan profil berhasil disimpan. ✅');
+        redirect('account_settings');
+        return;
     }
 
     if ($action === 'submit_review') {
@@ -149,10 +255,25 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
 
     if ($action === 'save_product') {
         require_role('seller');
+        $id = isset($_POST['id']) && $_POST['id'] !== '' ? (int)$_POST['id'] : null;
         $image = upload_file('image', 'products');
-        $pdo->prepare('INSERT INTO products (seller_id,category_id,name,description,price,stock,image,status) VALUES (?,?,?,?,?,?,?,?)')
-            ->execute([current_user()['id'], $_POST['category_id'], $_POST['name'], $_POST['description'], $_POST['price'], $_POST['stock'], $image, $_POST['status']]);
-        flash('Produk ditambahkan.');
+
+        if ($id) {
+            // Update
+            if ($image) {
+                $stmt = $pdo->prepare('UPDATE products SET category_id=?, name=?, description=?, price=?, stock=?, image=?, status=? WHERE id=? AND seller_id=?');
+                $stmt->execute([$_POST['category_id'], $_POST['name'], $_POST['description'], $_POST['price'], $_POST['stock'], $image, $_POST['status'], $id, current_user()['id']]);
+            } else {
+                $stmt = $pdo->prepare('UPDATE products SET category_id=?, name=?, description=?, price=?, stock=?, status=? WHERE id=? AND seller_id=?');
+                $stmt->execute([$_POST['category_id'], $_POST['name'], $_POST['description'], $_POST['price'], $_POST['stock'], $_POST['status'], $id, current_user()['id']]);
+            }
+            flash('Produk berhasil diperbarui.');
+        } else {
+            // Create
+            $pdo->prepare('INSERT INTO products (seller_id,category_id,name,description,price,stock,image,status) VALUES (?,?,?,?,?,?,?,?)')
+                ->execute([current_user()['id'], $_POST['category_id'], $_POST['name'], $_POST['description'], $_POST['price'], $_POST['stock'], $image ?: '', $_POST['status']]);
+            flash('Produk ditambahkan.');
+        }
         redirect('seller_products');
     }
 
@@ -163,12 +284,54 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         redirect('seller_products');
     }
 
+    if ($action === 'reply_review') {
+        require_role('seller');
+        $reviewId = (int)$_POST['review_id'];
+        $sellerReply = trim($_POST['seller_reply']);
+        
+        // Verify that the review is for a product owned by this seller
+        $stmt = $pdo->prepare('
+            SELECT r.id 
+            FROM reviews r
+            JOIN products p ON p.id = r.product_id
+            WHERE r.id = ? AND p.seller_id = ?
+        ');
+        $stmt->execute([$reviewId, current_user()['id']]);
+        
+        if ($stmt->fetch()) {
+            $update = $pdo->prepare('UPDATE reviews SET seller_reply = ? WHERE id = ?');
+            $update->execute([$sellerReply, $reviewId]);
+            flash('Balasan ulasan berhasil dikirim.');
+        } else {
+            flash('Gagal membalas ulasan. Akses ditolak.', 'error');
+        }
+        redirect('seller_reviews');
+    }
+
     if ($action === 'seller_order_status') {
         require_role('seller');
         $stmt = $pdo->prepare('UPDATE orders o SET o.status=?, o.receipt_number=COALESCE(?,o.receipt_number) WHERE o.id=? AND EXISTS (SELECT 1 FROM order_items oi JOIN products p ON p.id=oi.product_id WHERE oi.order_id=o.id AND p.seller_id=?)');
         $stmt->execute([$_POST['status'], $_POST['receipt_number'] ?: null, $_POST['order_id'], current_user()['id']]);
         flash('Status pesanan diperbarui.');
         redirect('seller_orders');
+    }
+
+    if ($action === 'mark_read_seller') {
+        require_role('seller');
+        $notifId = (int)($_POST['notification_id'] ?? 0);
+        if ($notifId > 0) {
+            $pdo->prepare('UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?')
+                ->execute([$notifId, current_user()['id']]);
+        }
+        redirect('seller_notifications');
+    }
+
+    if ($action === 'mark_all_read_seller') {
+        require_role('seller');
+        $pdo->prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0')
+            ->execute([current_user()['id']]);
+        flash('Semua notifikasi ditandai sudah dibaca.');
+        redirect('seller_notifications');
     }
 
     if ($action === 'approve_seller') {
@@ -183,6 +346,30 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         require_role('admin');
         $pdo->prepare("UPDATE users SET status='banned' WHERE id=? AND role<>'admin'")->execute([$_POST['user_id']]);
         flash('User diban.');
+        redirect('admin_users');
+    }
+
+    if ($action === 'approve_delete_user') {
+        require_role('admin');
+        $userId = $_POST['user_id'];
+        
+        // Delete user's avatar if exists
+        $stmt = $pdo->prepare('SELECT avatar FROM users WHERE id = ?');
+        $stmt->execute([$userId]);
+        $avatar = $stmt->fetchColumn();
+        if ($avatar && file_exists(__DIR__ . '/../' . $avatar)) {
+            @unlink(__DIR__ . '/../' . $avatar);
+        }
+        
+        $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$userId]);
+        flash('Permintaan hapus akun disetujui. Akun telah dihapus.');
+        redirect('admin_users');
+    }
+
+    if ($action === 'reject_delete_user') {
+        require_role('admin');
+        $pdo->prepare('UPDATE users SET delete_requested = 0 WHERE id = ?')->execute([$_POST['user_id']]);
+        flash('Permintaan hapus akun ditolak.');
         redirect('admin_users');
     }
 
