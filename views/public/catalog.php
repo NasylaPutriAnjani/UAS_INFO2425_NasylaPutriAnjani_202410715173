@@ -83,16 +83,26 @@ $totalItems = $f['totalItems'] ?? 0;
             $bcClass = 'bc' . (($book['id'] % 6) + 1);
           ?>
             <div class="book-card">
-              <div class="book-cover-lg <?= $bcClass ?>">
-                <?php if ($isNew): ?>
-                  <span class="badge badge-new">Baru</span>
-                <?php endif; ?>
-                <?= e($book['name']) ?>
-                <form method="POST" action="index.php?action=toggle_wishlist" style="display:inline;position:absolute;top:12px;right:12px;" onclick="event.stopPropagation()">
-                  <input type="hidden" name="product_id" value="<?= $book['id'] ?>">
-                  <button type="submit" class="wishlist-btn" style="position:static" title="Tambah ke wishlist">♡</button>
-                </form>
-              </div>
+              <?php if (!empty($book['image'])): ?>
+                <div class="book-cover-lg" style="background-image: url('<?= e(asset($book['image'])) ?>'); background-size: cover; background-position: center; font-size:0;">
+                  <?php if ($isNew): ?><span class="badge badge-new">Baru</span><?php endif; ?>
+                  <form method="POST" action="index.php?action=toggle_wishlist" style="display:inline;position:absolute;top:12px;right:12px;" onclick="event.stopPropagation()">
+                    <input type="hidden" name="product_id" value="<?= $book['id'] ?>">
+                    <button type="submit" class="wishlist-btn" style="position:static" title="Tambah ke wishlist">♡</button>
+                  </form>
+                </div>
+              <?php else: ?>
+                <div class="book-cover-lg <?= $bcClass ?>">
+                  <?php if ($isNew): ?>
+                    <span class="badge badge-new">Baru</span>
+                  <?php endif; ?>
+                  <?= e($book['name']) ?>
+                  <form method="POST" action="index.php?action=toggle_wishlist" style="display:inline;position:absolute;top:12px;right:12px;" onclick="event.stopPropagation()">
+                    <input type="hidden" name="product_id" value="<?= $book['id'] ?>">
+                    <button type="submit" class="wishlist-btn" style="position:static" title="Tambah ke wishlist">♡</button>
+                  </form>
+                </div>
+              <?php endif; ?>
               <div class="book-body">
                 <div class="book-genre"><?= e($book['category']) ?></div>
                 <div class="book-title"><?= e($book['name']) ?></div>
@@ -103,7 +113,7 @@ $totalItems = $f['totalItems'] ?? 0;
                 </div>
                 <div class="book-footer">
                   <div class="book-price"><?= rupiah($book['price']) ?></div>
-                  <button type="button" class="btn-add" onclick="event.preventDefault(); addToCartDirect(event, <?= $book['id'] ?>, '<?= e(addslashes($book['name'])) ?>')">+</button>
+                  <button type="button" class="btn-add" onclick="event.preventDefault(); addToCart(event, <?= $book['id'] ?>, '<?= e(addslashes($book['name'])) ?>')">+</button>
                 </div>
               </div>
             </div>
@@ -138,33 +148,5 @@ $totalItems = $f['totalItems'] ?? 0;
 function changePage(page) {
     document.getElementById('page-input').value = page;
     document.getElementById('catalog-form').submit();
-}
-
-function addToCartDirect(e, productId, name) {
-    e.stopPropagation();
-    // Simulate a form post to actions.php?action=add_cart
-    if (window.__RB_USER__ && window.__RB_USER__.role !== 'buyer') {
-        showToast('⛔ Fitur keranjang hanya tersedia untuk Pembeli');
-        return;
-    }
-    if (!window.__RB_USER__) {
-        showToast('🔐 Masuk sebagai Pembeli untuk menambahkan ke keranjang');
-        setTimeout(openAuth, 400);
-        return;
-    }
-    
-    // Create hidden form to post
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = 'index.php?action=add_cart';
-    
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'product_id';
-    input.value = productId;
-    
-    form.appendChild(input);
-    document.body.appendChild(form);
-    form.submit();
 }
 </script>

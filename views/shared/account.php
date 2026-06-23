@@ -25,7 +25,7 @@ $backPage = match($role) {
     <!-- SIDEBAR SELECTION BASED ON ROLE -->
     <?php if ($role === 'buyer'): ?>
       <?php 
-      $buyerMenu = 'account'; 
+      $buyerMenu = 'account_settings'; 
       require __DIR__ . '/../pembeli/partials/sidebar.php'; 
       ?>
     <?php elseif ($role === 'seller'): ?>
@@ -87,7 +87,7 @@ $backPage = match($role) {
           <div class="sidebar-store-avatar" style="background:linear-gradient(135deg,var(--accent),var(--accent-deep));font-size:18px">🖥️</div>
           <div>
             <div class="sidebar-store-name">Control Center</div>
-            <div class="sidebar-store-status">Super Admin</div>
+            <div class="sidebar-store-status">Super Admin · v2.0</div>
           </div>
         </div>
         <nav class="sidebar-nav" style="flex:1">
@@ -105,11 +105,14 @@ $backPage = match($role) {
             <button class="sidebar-item" onclick="showPage('admin_users')">
               <span class="si">👥</span> Kelola User
             </button>
+            <button class="sidebar-item" onclick="showPage('admin_categories')">
+              <span class="si">🏷️</span> Kelola Kategori
+            </button>
             <button class="sidebar-item" onclick="showToast('📚 Kelola Produk')">
               <span class="si">📚</span> Kelola Produk
             </button>
-            <button class="sidebar-item" onclick="showPage('admin_categories')">
-              <span class="si">🗂️</span> Kategori
+            <button class="sidebar-item" onclick="showToast('🛒 Semua Pesanan')">
+              <span class="si">🛒</span> Semua Pesanan
             </button>
           </div>
           <div class="sidebar-group">
@@ -148,29 +151,13 @@ $backPage = match($role) {
             <!-- Profile Picture Section -->
             <div class="avatar-section">
               <div class="avatar-container">
-                <?php if (!empty($user['avatar'])): ?>
-                  <img src="<?= e($user['avatar']) ?>" id="avatar-preview" class="profile-avatar-img" alt="Avatar">
-                <?php else: ?>
-                  <div id="avatar-placeholder" class="profile-avatar-placeholder">
-                    <?= e($initials) ?>
-                  </div>
-                  <img src="" id="avatar-preview" class="profile-avatar-img" style="display:none;" alt="Avatar">
-                <?php endif; ?>
+                <div id="avatar-placeholder" class="profile-avatar-placeholder">
+                  <?= e($initials) ?>
+                </div>
               </div>
               <div class="avatar-details">
                 <h3>Profile picture</h3>
-                <p>PNG or JPG no bigger than 1000px wide and tall.</p>
-                <div class="avatar-actions">
-                  <input type="file" name="avatar" id="avatar-file" accept="image/*" style="display:none;" onchange="previewAvatar(event)">
-                  <button type="button" class="btn-upload" onclick="document.getElementById('avatar-file').click()">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                    Upload New Photo
-                  </button>
-                  <button type="button" class="btn-delete-photo" onclick="deletePhoto()">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    Delete Photo
-                  </button>
-                </div>
+                <p>Foto profil default menggunakan inisial nama Anda.</p>
               </div>
             </div>
 
@@ -532,45 +519,4 @@ function switchTab(e, tabId) {
   document.getElementById(tabId).classList.add('active');
 }
 
-function previewAvatar(event) {
-  const file = event.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const img = document.getElementById('avatar-preview');
-      const placeholder = document.getElementById('avatar-placeholder');
-      
-      img.src = e.target.result;
-      img.style.display = 'block';
-      if (placeholder) placeholder.style.display = 'none';
-      
-      // Reset delete status
-      document.getElementById('delete-avatar-input').value = '0';
-    };
-    reader.readAsDataURL(file);
-  }
-}
-
-function deletePhoto() {
-  const img = document.getElementById('avatar-preview');
-  const placeholder = document.getElementById('avatar-placeholder');
-  
-  img.src = '';
-  img.style.display = 'none';
-  
-  if (placeholder) {
-    placeholder.style.display = 'flex';
-  } else {
-    // Dynamically create temporary placeholder if needed
-    const container = document.querySelector('.avatar-container');
-    const ph = document.createElement('div');
-    ph.id = 'avatar-placeholder';
-    ph.className = 'profile-avatar-placeholder';
-    ph.textContent = '<?= e($initials) ?>';
-    container.appendChild(ph);
-  }
-  
-  document.getElementById('avatar-file').value = '';
-  document.getElementById('delete-avatar-input').value = '1';
-}
 </script>

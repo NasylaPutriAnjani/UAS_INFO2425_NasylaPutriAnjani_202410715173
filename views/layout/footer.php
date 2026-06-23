@@ -1,3 +1,11 @@
+  <?php 
+  $isDashboardPage = in_array($activePage, [
+      'buyer', 'buyer_account', 'buyer_wishlist', 'buyer_cart', 'buyer_orders', 'buyer_reviews', 'buyer_notifications',
+      'seller', 'seller_products', 'seller_orders', 'seller_reviews', 'seller_notifications', 'seller_report',
+      'admin', 'admin_users', 'admin_categories', 'admin_notifications', 'admin_settings',
+      'account_settings'
+  ], true);
+  if (!$isDashboardPage): ?>
   <footer class="site-footer">
     <div class="footer-grid">
       <div class="footer-brand">
@@ -35,6 +43,7 @@
       <span class="footer-made">Dibuat dengan ❤️ untuk pecinta buku Indonesia</span>
     </div>
   </footer>
+  <?php endif; ?>
   <?php if (!empty($user)): ?>
   <script>
     window.__RB_USER__ = <?= json_encode([
@@ -44,6 +53,16 @@
   </script>
   <?php endif; ?>
   <script src="assets/js/main.js?v=<?= time() ?>"></script>
+  <?php
+  $roleScriptMap = [
+    'admin'  => 'assets/js/admin/admin.js',
+    'buyer'  => 'assets/js/pembeli/pembeli.js',
+    'seller' => 'assets/js/penjual/penjual.js',
+  ];
+  $roleScript = $roleScriptMap[$user['role'] ?? ''] ?? null;
+  if ($roleScript): ?>
+  <script src="<?= $roleScript ?>?v=<?= time() ?>"></script>
+  <?php endif; ?>
 </main>
 
 </body>

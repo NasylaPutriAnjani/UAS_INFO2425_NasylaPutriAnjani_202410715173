@@ -334,6 +334,22 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         redirect('seller_notifications');
     }
 
+    if ($action === 'mark_all_read_admin') {
+        require_role('admin');
+        $pdo->prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0')
+            ->execute([current_user()['id']]);
+        flash('Semua notifikasi admin ditandai sudah dibaca.');
+        redirect('admin_notifications');
+    }
+
+    if ($action === 'mark_all_read_buyer') {
+        require_role('buyer');
+        $pdo->prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0')
+            ->execute([current_user()['id']]);
+        flash('Semua notifikasi pembeli ditandai sudah dibaca.');
+        redirect('buyer_notifications');
+    }
+
     if ($action === 'approve_seller') {
         require_role('admin');
         $pdo->prepare("UPDATE users SET status='active' WHERE id=? AND role='seller'")->execute([$_POST['seller_id']]);
@@ -379,4 +395,6 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         flash('Kategori tersimpan.');
         redirect('admin_categories');
     }
+
+
 }

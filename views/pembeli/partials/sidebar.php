@@ -1,13 +1,12 @@
 <?php
 $buyerMenu = $buyerMenu ?? 'buyer';
-$menuItems = buyer_menu_items();
 $user = current_user();
 $sidebar = $buyerSidebar ?? ['cartCount' => 0, 'unreadNotifications' => 0];
 $firstName = explode(' ', trim($user['name'] ?? 'Pembeli'))[0];
 ?>
 <aside class="dash-sidebar buyer-sidebar">
   <div class="sidebar-store-profile">
-    <div class="sidebar-store-avatar"><?= role_icon('buyer') ?></div>
+    <div class="sidebar-store-avatar">🛒</div>
     <div>
       <div class="sidebar-store-name"><?= e($firstName) ?></div>
       <div class="sidebar-store-status">Pembeli Aktif</div>
@@ -17,26 +16,43 @@ $firstName = explode(' ', trim($user['name'] ?? 'Pembeli'))[0];
   <nav class="sidebar-nav">
     <div class="sidebar-group">
       <div class="sidebar-group-label">Menu Pembeli</div>
-      <?php foreach ($menuItems as $key => $item): ?>
-        <?php
-        $isActive = $buyerMenu === $key;
-        $href = 'index.php?page=' . urlencode($item['page']);
-        $badge = null;
-        if ($key === 'cart' && $sidebar['cartCount'] > 0) {
-            $badge = $sidebar['cartCount'];
-        }
-        if ($key === 'notifications' && $sidebar['unreadNotifications'] > 0) {
-            $badge = $sidebar['unreadNotifications'];
-        }
-        ?>
-        <a href="<?= e($href) ?>" class="sidebar-item<?= $isActive ? ' active' : '' ?>">
-          <span class="si"><?= $item['icon'] ?></span>
-          <?= e($item['label']) ?>
-          <?php if ($badge): ?>
-            <span class="sidebar-badge<?= $key === 'notifications' ? ' warn' : '' ?>"><?= (int) $badge ?></span>
-          <?php endif; ?>
-        </a>
-      <?php endforeach; ?>
+      
+      <a href="index.php?page=buyer" class="sidebar-item<?= $buyerMenu === 'buyer' ? ' active' : '' ?>">
+        <span class="si">🏠</span> Beranda
+      </a>
+      
+      <a href="index.php?page=buyer_wishlist" class="sidebar-item<?= $buyerMenu === 'wishlist' ? ' active' : '' ?>">
+        <span class="si">❤️</span> Wishlist
+      </a>
+      
+      <a href="index.php?page=buyer_cart" class="sidebar-item<?= $buyerMenu === 'cart' ? ' active' : '' ?>">
+        <span class="si">🛒</span> Keranjang
+        <?php if ($sidebar['cartCount'] > 0): ?>
+          <span class="sidebar-badge"><?= (int)$sidebar['cartCount'] ?></span>
+        <?php endif; ?>
+      </a>
+      
+      <a href="index.php?page=buyer_orders" class="sidebar-item<?= $buyerMenu === 'orders' ? ' active' : '' ?>">
+        <span class="si">📦</span> Pesanan Saya
+      </a>
+      
+      <a href="index.php?page=buyer_reviews" class="sidebar-item<?= $buyerMenu === 'reviews' ? ' active' : '' ?>">
+        <span class="si">⭐</span> Review Saya
+      </a>
+      
+      <a href="index.php?page=buyer_notifications" class="sidebar-item<?= $buyerMenu === 'notifications' ? ' active' : '' ?>">
+        <span class="si">🔔</span> Notifikasi
+        <?php if ($sidebar['unreadNotifications'] > 0): ?>
+          <span class="sidebar-badge warn"><?= (int)$sidebar['unreadNotifications'] ?></span>
+        <?php endif; ?>
+      </a>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Pengaturan</div>
+      <a href="index.php?page=account_settings" class="sidebar-item<?= $buyerMenu === 'account_settings' ? ' active' : '' ?>">
+        <span class="si">⚙️</span> Pengaturan Akun
+      </a>
     </div>
   </nav>
 

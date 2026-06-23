@@ -16,6 +16,16 @@ $navGroup = match ($user['role'] ?? 'guest') {
   <title>RubbyBooks</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/main.css?v=<?= time() ?>">
+  <?php
+  $roleStylesheetMap = [
+    'admin'  => 'assets/css/admin/admin.css',
+    'buyer'  => 'assets/css/pembeli/pembeli.css',
+    'seller' => 'assets/css/penjual/penjual.css',
+  ];
+  $roleStylesheet = $roleStylesheetMap[$user['role'] ?? ''] ?? null;
+  if ($roleStylesheet): ?>
+  <link rel="stylesheet" href="<?= $roleStylesheet ?>?v=<?= time() ?>">
+  <?php endif; ?>
 </head>
 
 <body>

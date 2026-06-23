@@ -52,7 +52,7 @@ const ROLE_CONFIG = {
       { icon:'👥', label:'Manajemen User',  action:"_showPageDirect('admin_users');closeUserDropdown()" },
       { icon:'🏷️', label:'Kategori',        action:"_showPageDirect('admin_categories');closeUserDropdown()" },
       { divider: true },
-      { icon:'⚙️', label:'Pengaturan Akun', action:"_showPageDirect('account_settings');closeUserDropdown()" },
+      { icon:'⚙️', label:'Pengaturan Sistem', action:"_showPageDirect('admin_settings');closeUserDropdown()" },
       { divider: true },
       { icon:'🚪', label:'Keluar',          action:'doLogout()', danger: true }
     ]
@@ -68,7 +68,7 @@ const PAGE_ACCESS = {
   guest:  ['home', 'catalog'],
   buyer:  ['home', 'catalog', 'checkout', 'tracking', 'buyer', 'buyer_account', 'buyer_wishlist', 'buyer_cart', 'buyer_orders', 'buyer_reviews', 'buyer_notifications', 'cart', 'account_settings'],
   seller: ['home', 'catalog', 'seller', 'seller_products', 'seller_orders', 'seller_reviews', 'seller_notifications', 'seller_report', 'account_settings'],
-  admin:  ['home', 'catalog', 'admin', 'admin_users', 'admin_categories', 'admin_notifications', 'account_settings']
+  admin:  ['home', 'catalog', 'admin', 'admin_users', 'admin_categories', 'admin_notifications', 'account_settings', 'admin_settings']
 };
 
 
@@ -96,7 +96,8 @@ const PAGE_NAMES = {
   admin:    'Panel Admin',
   admin_users:          'Manajemen User',
   admin_categories:     'Manajemen Kategori',
-  admin_notifications:  'Notifikasi Admin'
+  admin_notifications:  'Notifikasi Admin',
+  admin_settings:       'Pengaturan Sistem'
 };
 
 function canAccess(pageName) {
@@ -404,7 +405,7 @@ function closeCart() {
 // ══════════════════════════════════════════
 //  ADD TO CART
 // ══════════════════════════════════════════
-function addToCart(e, name) {
+function addToCart(e, productId, name) {
   e.stopPropagation();
   // Only buyers (and guests who will be prompted to login) can add to cart
   if (currentUser && currentUser.role !== 'buyer') {
@@ -416,16 +417,20 @@ function addToCart(e, name) {
     setTimeout(openAuth, 400);
     return;
   }
-  cartCount++;
-  document.getElementById('cart-badge').textContent = cartCount;
-  const cb = document.getElementById('cart-badge-auth');
-  if (cb) cb.textContent = cartCount;
-  const btn = e.currentTarget;
-  btn.style.background = 'var(--rose)';
-  btn.style.color = '#fff';
-  btn.textContent = '✓';
-  setTimeout(() => { btn.style.background=''; btn.style.color=''; btn.textContent='+ Keranjang'; }, 1500);
-  showToast('🛒 ' + name + ' ditambahkan ke keranjang!');
+  
+  // Create hidden form to post to backend
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = 'index.php?action=add_cart';
+  
+  const input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = 'product_id';
+  input.value = productId;
+  
+  form.appendChild(input);
+  document.body.appendChild(form);
+  form.submit();
 }
 
 // ══════════════════════════════════════════

@@ -8,6 +8,16 @@
           <h2>🔔 Notifikasi</h2>
           <p>Pembaruan pesanan dan info penting untukmu</p>
         </div>
+        <div class="dash-topbar-right">
+          <?php if (!empty($notifications)): ?>
+          <form method="POST" action="index.php?page=buyer_notifications">
+            <input type="hidden" name="action" value="mark_all_read_buyer">
+            <button type="submit" class="btn-dash-ghost">
+              <span>✅</span> Tandai Semua Dibaca
+            </button>
+          </form>
+          <?php endif; ?>
+        </div>
       </div>
       <div class="dash-body">
         <div class="buyer-panel">

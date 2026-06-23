@@ -29,13 +29,19 @@ function route_config(string $page): array
         'admin_users' => ['view' => 'admin/users.php', 'role' => 'admin'],
         'admin_categories' => ['view' => 'admin/categories.php', 'role' => 'admin'],
         'admin_notifications' => ['view' => 'admin/notifications.php', 'role' => 'admin'],
+
     ][$page] ?? ['view' => 'errors/404.php', 'status' => 404];
 }
 
 function page_data(PDO $pdo, string $page): array
 {
     if ($page === 'home') {
-        return ['products' => $pdo->query('SELECT p.*, c.name category FROM products p JOIN categories c ON c.id=p.category_id WHERE p.status="active" ORDER BY p.id DESC LIMIT 4')->fetchAll()];
+        $products = $pdo->query('SELECT p.*, c.name category FROM products p JOIN categories c ON c.id=p.category_id WHERE p.status="active" ORDER BY (SELECT SUM(qty) FROM order_items WHERE product_id=p.id) DESC, p.id DESC LIMIT 6')->fetchAll();
+        $featured = $pdo->query('SELECT p.*, c.name category FROM products p JOIN categories c ON c.id=p.category_id WHERE p.status="active" ORDER BY RAND() LIMIT 1')->fetch();
+        return [
+            'products' => $products,
+            'featured' => $featured
+        ];
     }
     if ($page === 'catalog') {
         $qStr = $_GET['q'] ?? '';
@@ -646,7 +652,87 @@ function page_data(PDO $pdo, string $page): array
         return ['notifications' => $stmt->fetchAll()];
     }
     if ($page === 'admin') {
-        return ['stats' => $pdo->query("SELECT (SELECT COUNT(*) FROM users) users,(SELECT COUNT(*) FROM users WHERE role='seller') sellers,(SELECT COUNT(*) FROM orders) orders,(SELECT COALESCE(SUM(total),0) FROM orders) revenue")->fetch()];
+        // 1. KPI Stats
+        $totalSellers = (int) $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'seller'")->fetchColumn();
+        $verifiedSellers = (int) $pdo->query("SELECT COUNT(*) FROM users u JOIN seller_verifications sv ON sv.seller_id = u.id WHERE u.role = 'seller' AND sv.status = 'approved'")->fetchColumn();
+        $pendingSellers = (int) $pdo->query("SELECT COUNT(*) FROM users u JOIN seller_verifications sv ON sv.seller_id = u.id WHERE u.role = 'seller' AND sv.status = 'pending'")->fetchColumn();
+        $sellersThisMonth = (int) $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'seller' AND created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')")->fetchColumn();
+
+        $verificationQueue = (int) $pdo->query("SELECT COUNT(*) FROM seller_verifications WHERE status = 'pending'")->fetchColumn();
+
+        $totalOrders = (int) $pdo->query("SELECT COUNT(*) FROM orders")->fetchColumn();
+        $completedOrders = (int) $pdo->query("SELECT COUNT(*) FROM orders WHERE status = 'delivered'")->fetchColumn();
+        $shippedOrders = (int) $pdo->query("SELECT COUNT(*) FROM orders WHERE status = 'shipped'")->fetchColumn();
+        $paidOrders = (int) $pdo->query("SELECT COUNT(*) FROM orders WHERE status = 'paid'")->fetchColumn();
+        $pendingOrders = (int) $pdo->query("SELECT COUNT(*) FROM orders WHERE status = 'pending'")->fetchColumn();
+        $ordersToday = (int) $pdo->query("SELECT COUNT(*) FROM orders WHERE created_at >= CURDATE()")->fetchColumn();
+
+        $revenueMonth = (int) $pdo->query("SELECT COALESCE(SUM(total), 0) FROM orders WHERE status != 'cancelled' AND created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')")->fetchColumn();
+        $revenueYTD = (int) $pdo->query("SELECT COALESCE(SUM(total), 0) FROM orders WHERE status != 'cancelled' AND created_at >= DATE_FORMAT(NOW(), '%Y-01-01')")->fetchColumn();
+
+        // 2. Pending Sellers (Alert Banner)
+        $pendingSellersList = $pdo->query("SELECT u.name FROM users u JOIN seller_verifications sv ON sv.seller_id = u.id WHERE u.role = 'seller' AND sv.status = 'pending' ORDER BY sv.id ASC")->fetchAll(PDO::FETCH_COLUMN);
+
+        // 3. Monthly Revenue (Last 6 Months)
+        $monthlyRevenue = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $monthStart = date('Y-m-01 00:00:00', strtotime("-$i months"));
+            $monthEnd = date('Y-m-t 23:59:59', strtotime("-$i months"));
+            $monthLabel = date('M', strtotime("-$i months"));
+            
+            $stmt = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM orders WHERE status != 'cancelled' AND created_at BETWEEN ? AND ?");
+            $stmt->execute([$monthStart, $monthEnd]);
+            $totalVal = (int) $stmt->fetchColumn();
+            
+            $monthlyRevenue[] = [
+                'label' => $monthLabel,
+                'total' => $totalVal
+            ];
+        }
+
+        // 4. Recent Orders
+        $recentOrders = $pdo->query("SELECT o.*, u.name as buyer_name, p.method as payment_method FROM orders o JOIN users u ON u.id = o.buyer_id LEFT JOIN payments p ON p.order_id = o.id ORDER BY o.id DESC LIMIT 5")->fetchAll();
+        $stmtSellers = $pdo->prepare("
+            SELECT DISTINCT u.name 
+            FROM order_items oi 
+            JOIN products p ON p.id = oi.product_id 
+            JOIN users u ON u.id = p.seller_id 
+            WHERE oi.order_id = ?
+        ");
+        foreach ($recentOrders as &$o) {
+            $stmtSellers->execute([$o['id']]);
+            $o['seller_names'] = implode(', ', $stmtSellers->fetchAll(PDO::FETCH_COLUMN));
+        }
+        unset($o);
+
+        // 5. Recent Users
+        $recentUsers = $pdo->query("SELECT * FROM users ORDER BY id DESC LIMIT 5")->fetchAll();
+
+        // 6. Recent Logs
+        $recentLogs = $pdo->query("SELECT * FROM system_logs ORDER BY id DESC LIMIT 5")->fetchAll();
+
+        return [
+            'stats' => [
+                'total_sellers' => $totalSellers,
+                'verified_sellers' => $verifiedSellers,
+                'pending_sellers' => $pendingSellers,
+                'sellers_this_month' => $sellersThisMonth,
+                'verification_queue' => $verificationQueue,
+                'total_orders' => $totalOrders,
+                'completed_orders' => $completedOrders,
+                'shipped_orders' => $shippedOrders,
+                'paid_orders' => $paidOrders,
+                'pending_orders' => $pendingOrders,
+                'orders_today' => $ordersToday,
+                'revenue_month' => $revenueMonth,
+                'revenue_ytd' => $revenueYTD
+            ],
+            'pendingSellersList' => $pendingSellersList,
+            'monthlyRevenue' => $monthlyRevenue,
+            'recentOrders' => $recentOrders,
+            'recentUsers' => $recentUsers,
+            'recentLogs' => $recentLogs
+        ];
     }
     if ($page === 'admin_users') {
         return ['users' => $pdo->query('SELECT * FROM users ORDER BY id DESC')->fetchAll()];
@@ -654,6 +740,7 @@ function page_data(PDO $pdo, string $page): array
     if ($page === 'admin_categories') {
         return ['categories' => $pdo->query('SELECT * FROM categories ORDER BY id DESC')->fetchAll()];
     }
+
     return [];
 }
 

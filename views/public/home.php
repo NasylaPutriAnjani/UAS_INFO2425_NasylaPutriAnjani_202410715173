@@ -100,84 +100,38 @@
         </svg></a>
     </div>
     <div class="book-grid">
+      <?php foreach ($products as $book): 
+        $rating = 5.0; // default rating or calculate from db
+        $stars = '★★★★★';
+        $bcClass = 'bc' . (($book['id'] % 6) + 1);
+      ?>
       <div class="book-card">
-        <div class="book-cover-lg bc1"><span class="badge badge-new">Baru</span>Atomic<br>Habits<button class="wishlist-btn" onclick="event.stopPropagation();toggleWish(this)">♡</button></div>
+        <?php if (!empty($book['image'])): ?>
+          <div class="book-cover-lg" style="background-image: url('<?= e(asset($book['image'])) ?>'); background-size: cover; background-position: center; font-size:0;">
+            <?php if ($book['book_condition'] === 'new'): ?><span class="badge badge-new">Baru</span><?php endif; ?>
+            <button class="wishlist-btn" onclick="event.stopPropagation();toggleWish(this)">♡</button>
+          </div>
+        <?php else: ?>
+          <div class="book-cover-lg <?= $bcClass ?>">
+            <?php if ($book['book_condition'] === 'new'): ?>
+              <span class="badge badge-new">Baru</span>
+            <?php endif; ?>
+            <?= e($book['name']) ?>
+            <button class="wishlist-btn" onclick="event.stopPropagation();toggleWish(this)">♡</button>
+          </div>
+        <?php endif; ?>
         <div class="book-body">
-          <div class="book-genre">Pengembangan Diri</div>
-          <div class="book-title">Atomic Habits</div>
-          <div class="book-author">James Clear</div>
-          <div class="book-rating"><span class="stars">★★★★★</span><span class="rating-count">4.9 (2.1k)</span></div>
+          <div class="book-genre"><?= e($book['category']) ?></div>
+          <div class="book-title"><?= e($book['name']) ?></div>
+          <div class="book-author">Stok: <?= (int)$book['stock'] ?></div>
+          <div class="book-rating"><span class="stars"><?= $stars ?></span><span class="rating-count"><?= number_format($rating, 1) ?></span></div>
           <div class="book-footer">
-            <div class="book-price">Rp 89.000<span class="orig">Rp 120.000</span></div>
-            <button class="btn-add" onclick="addToCart(event,'Atomic Habits')">+ Keranjang</button>
+            <div class="book-price"><?= rupiah($book['price']) ?></div>
+            <button class="btn-add" onclick="event.preventDefault(); addToCart(event, <?= $book['id'] ?>, '<?= e(addslashes($book['name'])) ?>')">+ Keranjang</button>
           </div>
         </div>
       </div>
-      <div class="book-card">
-        <div class="book-cover-lg bc2">Laskar<br>Pelangi<button class="wishlist-btn" onclick="event.stopPropagation();toggleWish(this)">♡</button></div>
-        <div class="book-body">
-          <div class="book-genre">Roman Indonesia</div>
-          <div class="book-title">Laskar Pelangi</div>
-          <div class="book-author">Andrea Hirata</div>
-          <div class="book-rating"><span class="stars">★★★★★</span><span class="rating-count">4.9 (3.4k)</span></div>
-          <div class="book-footer">
-            <div class="book-price">Rp 65.000</div>
-            <button class="btn-add" onclick="addToCart(event,'Laskar Pelangi')">+ Keranjang</button>
-          </div>
-        </div>
-      </div>
-      <div class="book-card">
-        <div class="book-cover-lg bc3"><span class="badge badge-sale">-20%</span>The Midnight<br>Library<button class="wishlist-btn" onclick="event.stopPropagation();toggleWish(this)">♡</button></div>
-        <div class="book-body">
-          <div class="book-genre">Fiksi Internasional</div>
-          <div class="book-title">The Midnight Library</div>
-          <div class="book-author">Matt Haig</div>
-          <div class="book-rating"><span class="stars">★★★★☆</span><span class="rating-count">4.7 (1.8k)</span></div>
-          <div class="book-footer">
-            <div class="book-price">Rp 76.000<span class="orig">Rp 95.000</span></div>
-            <button class="btn-add" onclick="addToCart(event,'Midnight Library')">+ Keranjang</button>
-          </div>
-        </div>
-      </div>
-      <div class="book-card">
-        <div class="book-cover-lg bc4">Rich Dad<br>Poor Dad<button class="wishlist-btn" onclick="event.stopPropagation();toggleWish(this)">♡</button></div>
-        <div class="book-body">
-          <div class="book-genre">Keuangan</div>
-          <div class="book-title">Rich Dad Poor Dad</div>
-          <div class="book-author">Robert Kiyosaki</div>
-          <div class="book-rating"><span class="stars">★★★★★</span><span class="rating-count">4.8 (4.2k)</span></div>
-          <div class="book-footer">
-            <div class="book-price">Rp 75.000</div>
-            <button class="btn-add" onclick="addToCart(event,'Rich Dad Poor Dad')">+ Keranjang</button>
-          </div>
-        </div>
-      </div>
-      <div class="book-card">
-        <div class="book-cover-lg bc5">Bumi<br>Manusia<button class="wishlist-btn" onclick="event.stopPropagation();toggleWish(this)">♡</button></div>
-        <div class="book-body">
-          <div class="book-genre">Sastra Klasik</div>
-          <div class="book-title">Bumi Manusia</div>
-          <div class="book-author">Pramoedya A. Toer</div>
-          <div class="book-rating"><span class="stars">★★★★★</span><span class="rating-count">5.0 (5.6k)</span></div>
-          <div class="book-footer">
-            <div class="book-price">Rp 85.000</div>
-            <button class="btn-add" onclick="addToCart(event,'Bumi Manusia')">+ Keranjang</button>
-          </div>
-        </div>
-      </div>
-      <div class="book-card">
-        <div class="book-cover-lg bc6"><span class="badge badge-new">Baru</span>Psychology<br>of Money<button class="wishlist-btn" onclick="event.stopPropagation();toggleWish(this)">♡</button></div>
-        <div class="book-body">
-          <div class="book-genre">Psikologi & Keuangan</div>
-          <div class="book-title">The Psychology of Money</div>
-          <div class="book-author">Morgan Housel</div>
-          <div class="book-rating"><span class="stars">★★★★★</span><span class="rating-count">4.9 (2.7k)</span></div>
-          <div class="book-footer">
-            <div class="book-price">Rp 92.000</div>
-            <button class="btn-add" onclick="addToCart(event,'Psychology of Money')">+ Keranjang</button>
-          </div>
-        </div>
-      </div>
+      <?php endforeach; ?>
     </div>
   </section>
 
@@ -188,31 +142,35 @@
     <div class="sec-head">
       <h2 class="sec-title">⭐ Pilihan <span>Editor</span></h2>
     </div>
+    <?php if ($featured): ?>
     <div class="featured-book">
-      <div class="featured-cover">Bumi<br>Manusia</div>
+      <?php if (!empty($featured['image'])): ?>
+        <div class="featured-cover" style="background-image: url('<?= e(asset($featured['image'])) ?>'); background-size: cover; background-position: center; color: transparent;"></div>
+      <?php else: ?>
+        <div class="featured-cover bc1"><?= e($featured['name']) ?></div>
+      <?php endif; ?>
       <div>
         <div class="featured-tags">
-          <span class="tag-chip">📚 Sastra Klasik</span>
-          <span class="tag-chip">🇮🇩 Karya Indonesia</span>
-          <span class="tag-chip">🏆 Award Winning</span>
+          <span class="tag-chip">📚 <?= e($featured['category']) ?></span>
+          <span class="tag-chip">⭐ Pilihan Editor</span>
         </div>
-        <div class="featured-title">Bumi Manusia</div>
-        <div class="featured-author">oleh <b>Pramoedya Ananta Toer</b> · Lentera Dipantara, 2005</div>
-        <p class="featured-desc">Sebuah roman historis yang menggambarkan kehidupan Minke di era kolonial Belanda. Novel pertama dari Tetralogi Buru ini menghadirkan kisah cinta yang mengharukan dan perjuangan hak asasi manusia yang tak lekang oleh waktu.</p>
+        <div class="featured-title"><?= e($featured['name']) ?></div>
+        <div class="featured-author">Stok tersedia: <b><?= (int)$featured['stock'] ?></b></div>
+        <p class="featured-desc"><?= e($featured['description'] ?? 'Sebuah karya luar biasa yang wajib Anda baca.') ?></p>
         <div class="featured-rating">
           <span class="stars">★★★★★</span>
-          <span>5.0 (5,612 ulasan)</span>
+          <span>5.0</span>
           <span>·</span>
-          <span>🛒 12.400 terjual</span>
+          <span>🛒 Terlaris</span>
         </div>
-        <div class="big-price">Rp 85.000</div>
-        <div class="orig-price">Rp 120.000 · Hemat 29%</div>
+        <div class="big-price"><?= rupiah($featured['price']) ?></div>
         <div class="price-actions">
-          <button class="btn-primary" onclick="addToCart(event,'Bumi Manusia')">🛒 Tambah ke Keranjang</button>
+          <button class="btn-primary" onclick="event.preventDefault(); addToCart(event, <?= $featured['id'] ?>, '<?= e(addslashes($featured['name'])) ?>')">🛒 Tambah ke Keranjang</button>
           <button class="btn-secondary" onclick="toggleWishFeatured(this)">♡ Wishlist</button>
         </div>
       </div>
     </div>
+    <?php endif; ?>
   </section>
 
   <!-- SELLER CTA -->
