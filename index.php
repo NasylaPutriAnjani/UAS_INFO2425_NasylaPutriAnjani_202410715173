@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 session_start();
 
-require __DIR__ . '/config/database.php';
-require __DIR__ . '/includes/functions.php';
-require __DIR__ . '/controllers/actions.php';
-require __DIR__ . '/controllers/PageController.php';
+require __DIR__ . '/src/config/database.php';
+require __DIR__ . '/src/includes/functions.php';
+require __DIR__ . '/src/controllers/actions.php';
+require __DIR__ . '/src/controllers/PageController.php';
 
 $page = $_GET['page'] ?? 'home';
 $action = $_POST['action'] ?? $_GET['action'] ?? null;
@@ -34,6 +34,6 @@ if (in_array($page, ['login', 'register'], true) && !$action) {
 
 $data = page_data($pdo, $page);
 
-require __DIR__ . '/views/layout/header.php';
+require __DIR__ . '/src/views/layout/header.php';
 render_view($route['view'], $data);
-require __DIR__ . '/views/layout/footer.php';
+require __DIR__ . '/src/views/layout/footer.php';
