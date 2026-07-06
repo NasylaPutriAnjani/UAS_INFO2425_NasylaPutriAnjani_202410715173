@@ -11,7 +11,7 @@ function route_config(string $page): array
         'register' => ['view' => 'public/home.php'],
         'account_settings' => ['view' => 'shared/account.php'],  // general – no role restriction
         'buyer' => ['view' => 'buyer/dashboard.php', 'role' => 'buyer'],
-        'buyer_account' => ['view' => 'buyer/account.php', 'role' => 'buyer'],
+        'buyer_account' => ['view' => 'shared/account.php', 'role' => 'buyer'],
         'buyer_wishlist' => ['view' => 'buyer/wishlist.php', 'role' => 'buyer'],
         'buyer_cart' => ['view' => 'buyer/cart_page.php', 'role' => 'buyer'],
         'buyer_orders' => ['view' => 'buyer/orders.php', 'role' => 'buyer'],
@@ -28,8 +28,10 @@ function route_config(string $page): array
         'seller_report' => ['view' => 'seller/reports.php', 'role' => 'seller'],
         'admin' => ['view' => 'admin/dashboard.php', 'role' => 'admin'],
         'admin_users' => ['view' => 'admin/users.php', 'role' => 'admin'],
+        'admin_analytics' => ['view' => 'admin/analytics.php', 'role' => 'admin'],
         'admin_categories' => ['view' => 'admin/categories.php', 'role' => 'admin'],
         'admin_notifications' => ['view' => 'admin/notifications.php', 'role' => 'admin'],
+        'admin_settings' => ['view' => 'admin/settings.php', 'role' => 'admin'],
 
     ][$page] ?? ['view' => 'errors/404.php', 'status' => 404];
 }
@@ -210,7 +212,7 @@ function page_data(PDO $pdo, string $page): array
             ]
         ];
     }
-    if ($page === 'account_settings') {
+    if ($page === 'account_settings' || $page === 'buyer_account') {
         $uid = current_user()['id'];
         $stmt = $pdo->prepare('SELECT id, name, email, role, created_at, avatar, phone, dob, alternate_phone, delete_requested FROM users WHERE id = ?');
         $stmt->execute([$uid]);
@@ -826,10 +828,160 @@ function page_data(PDO $pdo, string $page): array
         ];
     }
     if ($page === 'admin_users') {
-        return ['users' => $pdo->query('SELECT * FROM users ORDER BY id DESC')->fetchAll()];
+        $q = trim($_GET['q'] ?? '');
+        if ($q !== '') {
+            $stmt = $pdo->prepare('SELECT * FROM users WHERE name LIKE ? OR email LIKE ? ORDER BY id DESC');
+            $stmt->execute(["%$q%", "%$q%"]);
+            return ['users' => $stmt->fetchAll(), 'q' => $q];
+        }
+        return ['users' => $pdo->query('SELECT * FROM users ORDER BY id DESC')->fetchAll(), 'q' => ''];
     }
     if ($page === 'admin_categories') {
-        return ['categories' => $pdo->query('SELECT * FROM categories ORDER BY id DESC')->fetchAll()];
+        $q = trim($_GET['q'] ?? '');
+        if ($q !== '') {
+            $stmt = $pdo->prepare('SELECT * FROM categories WHERE name LIKE ? OR description LIKE ? ORDER BY id DESC');
+            $stmt->execute(["%$q%", "%$q%"]);
+            return ['categories' => $stmt->fetchAll(), 'q' => $q];
+        }
+        return ['categories' => $pdo->query('SELECT * FROM categories ORDER BY id DESC')->fetchAll(), 'q' => ''];
+    }
+    if ($page === 'admin_analytics') {
+        // ── PERIOD FILTER (4 options only) ──
+        $period = in_array($_GET['period'] ?? '', ['daily','30days','1year','all']) ? ($_GET['period'] ?? 'daily') : 'daily';
+
+        switch ($period) {
+            case 'daily':
+                // Current week Mon–Sun
+                $periodLabel = 'Daily (Minggu Ini)';
+                $periodStart = date('Y-m-d', strtotime('monday this week'));
+                break;
+            case '30days':
+                $periodLabel = 'Last 30 Days';
+                $periodStart = date('Y-m-d', strtotime('-30 days'));
+                break;
+            case '1year':
+                $periodLabel = 'Last 1 Year';
+                $periodStart = date('Y-m-d', strtotime('-1 year'));
+                break;
+            case 'all':
+            default:
+                $periodLabel = 'All Time';
+                $periodStart = '2000-01-01';
+                break;
+        }
+
+        // ── KPI within period ──
+        $stmtRev = $pdo->prepare("SELECT COALESCE(SUM(total),0) FROM orders WHERE status<>'cancelled' AND created_at>=?");
+        $stmtRev->execute([$periodStart]);
+        $totalRevenue = (int)$stmtRev->fetchColumn();
+
+        $stmtOrd = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE status<>'cancelled' AND created_at>=?");
+        $stmtOrd->execute([$periodStart]);
+        $totalOrdersPeriod = (int)$stmtOrd->fetchColumn();
+
+        $avgOrderVal = $totalOrdersPeriod > 0 ? (int)($totalRevenue / $totalOrdersPeriod) : 0;
+        $activeUsers = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE status='active'")->fetchColumn();
+
+        // Month-over-month badge comparisons (fixed, always vs last month)
+        $revenueThisMonth = (int)$pdo->query("SELECT COALESCE(SUM(total),0) FROM orders WHERE status<>'cancelled' AND created_at>=DATE_FORMAT(NOW(),'%Y-%m-01')")->fetchColumn();
+        $revenueLastMonth = (int)$pdo->query("SELECT COALESCE(SUM(total),0) FROM orders WHERE status<>'cancelled' AND created_at>=DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 1 MONTH),'%Y-%m-01') AND created_at<DATE_FORMAT(NOW(),'%Y-%m-01')")->fetchColumn();
+        $ordersThisMonth  = (int)$pdo->query("SELECT COUNT(*) FROM orders WHERE status<>'cancelled' AND created_at>=DATE_FORMAT(NOW(),'%Y-%m-01')")->fetchColumn();
+        $ordersLastMonth  = (int)$pdo->query("SELECT COUNT(*) FROM orders WHERE status<>'cancelled' AND created_at>=DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 1 MONTH),'%Y-%m-01') AND created_at<DATE_FORMAT(NOW(),'%Y-%m-01')")->fetchColumn();
+        $revTrend   = $revenueLastMonth > 0 ? round(($revenueThisMonth - $revenueLastMonth) / $revenueLastMonth * 100, 1) : 0;
+        $orderTrend = $ordersLastMonth  > 0 ? round(($ordersThisMonth  - $ordersLastMonth)  / $ordersLastMonth  * 100, 1) : 0;
+
+        // ── CHART DATA (auto granularity by period) ──
+        $chartData = [];
+        if ($period === 'daily') {
+            // Mon–Sun of current week, label = Senin/Selasa/…
+            $dayNames = ['Sen','Sel','Rab','Kam','Jum','Sab','Min'];
+            for ($d = 0; $d < 7; $d++) {
+                $day  = date('Y-m-d', strtotime('monday this week +' . $d . ' days'));
+                $stmt = $pdo->prepare("SELECT COALESCE(SUM(total),0) FROM orders WHERE status<>'cancelled' AND DATE(created_at)=?");
+                $stmt->execute([$day]);
+                $chartData[] = ['label' => $dayNames[$d], 'total' => (int)$stmt->fetchColumn()];
+            }
+        } elseif ($period === '30days') {
+            // Daily for last 30 days
+            for ($i = 29; $i >= 0; $i--) {
+                $day  = date('Y-m-d', strtotime("-$i days"));
+                $stmt = $pdo->prepare("SELECT COALESCE(SUM(total),0) FROM orders WHERE status<>'cancelled' AND DATE(created_at)=?");
+                $stmt->execute([$day]);
+                // Show every other label for readability
+                $chartData[] = ['label' => ($i % 5 === 0 ? date('d/m', strtotime($day)) : ''), 'total' => (int)$stmt->fetchColumn()];
+            }
+        } elseif ($period === '1year') {
+            // Monthly for last 12 months
+            for ($i = 11; $i >= 0; $i--) {
+                $mStart = date('Y-m-01 00:00:00', strtotime("-$i months"));
+                $mEnd   = date('Y-m-t 23:59:59',  strtotime("-$i months"));
+                $stmt = $pdo->prepare("SELECT COALESCE(SUM(total),0) FROM orders WHERE status<>'cancelled' AND created_at BETWEEN ? AND ?");
+                $stmt->execute([$mStart, $mEnd]);
+                $chartData[] = ['label' => date('M', strtotime("-$i months")), 'total' => (int)$stmt->fetchColumn()];
+            }
+        } else {
+            // All time: monthly last 18 months max
+            for ($i = 17; $i >= 0; $i--) {
+                $mStart = date('Y-m-01 00:00:00', strtotime("-$i months"));
+                $mEnd   = date('Y-m-t 23:59:59',  strtotime("-$i months"));
+                $stmt = $pdo->prepare("SELECT COALESCE(SUM(total),0) FROM orders WHERE status<>'cancelled' AND created_at BETWEEN ? AND ?");
+                $stmt->execute([$mStart, $mEnd]);
+                $chartData[] = ['label' => date('M y', strtotime("-$i months")), 'total' => (int)$stmt->fetchColumn()];
+            }
+        }
+
+        // ── TOP CATEGORIES (within period) ──
+        $stmtCat = $pdo->prepare("
+            SELECT c.name, COALESCE(SUM(oi.qty),0) as sold
+            FROM order_items oi
+            JOIN products p ON p.id = oi.product_id
+            JOIN categories c ON c.id = p.category_id
+            JOIN orders o ON o.id = oi.order_id AND o.status<>'cancelled' AND o.created_at>=?
+            GROUP BY c.id, c.name ORDER BY sold DESC LIMIT 5
+        ");
+        $stmtCat->execute([$periodStart]);
+        $topCategories = $stmtCat->fetchAll();
+        $totalCatSold  = array_sum(array_column($topCategories, 'sold')) ?: 1;
+
+        // ── TOP SELLERS (within period) ──
+        $stmtSell = $pdo->prepare("
+            SELECT u.name, u.id,
+                   COALESCE(SUM(oi.subtotal),0) as revenue,
+                   COALESCE(SUM(oi.qty),0) as sold
+            FROM users u
+            JOIN products p ON p.seller_id = u.id
+            JOIN order_items oi ON oi.product_id = p.id
+            JOIN orders o ON o.id = oi.order_id AND o.status<>'cancelled' AND o.created_at>=?
+            WHERE u.role='seller'
+            GROUP BY u.id, u.name ORDER BY revenue DESC LIMIT 3
+        ");
+        $stmtSell->execute([$periodStart]);
+        $topSellers = $stmtSell->fetchAll();
+
+        // ── TOP PRODUCTS (within period) ──
+        $stmtProd = $pdo->prepare("
+            SELECT p.name, c.name as category,
+                   COALESCE(SUM(oi.qty),0) as sold_this_month
+            FROM products p
+            JOIN categories c ON c.id = p.category_id
+            JOIN order_items oi ON oi.product_id = p.id
+            JOIN orders o ON o.id = oi.order_id AND o.status<>'cancelled' AND o.created_at>=?
+            GROUP BY p.id, p.name, c.name ORDER BY sold_this_month DESC LIMIT 5
+        ");
+        $stmtProd->execute([$periodStart]);
+        $topProducts = $stmtProd->fetchAll();
+
+        return compact(
+            'period','periodLabel',
+            'totalRevenue','avgOrderVal','activeUsers',
+            'revTrend','orderTrend',
+            'ordersThisMonth','revenueThisMonth',
+            'chartData','topCategories','totalCatSold',
+            'topSellers','topProducts'
+        );
+    }
+    if ($page === 'admin_settings') {
+        return ['sysSettings' => get_system_settings($pdo)];
     }
 
     return [];

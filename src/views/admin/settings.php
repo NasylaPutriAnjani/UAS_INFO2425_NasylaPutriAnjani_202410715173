@@ -1,3 +1,7 @@
+<?php
+// $sysSettings is injected by page_data()
+$s = $sysSettings ?? [];
+?>
 <div id="page-admin_settings" class="page active">
   <div class="dash-layout">
 
@@ -17,7 +21,7 @@
           <button class="sidebar-item" onclick="showPage('admin')">
             <span class="si">📊</span> Dashboard
           </button>
-          <button class="sidebar-item" onclick="showToast('📈 Halaman Analitik')">
+          <button class="sidebar-item" onclick="showPage('admin_analytics')">
             <span class="si">📈</span> Analitik
           </button>
         </div>
@@ -36,12 +40,15 @@
             <span class="si">🛒</span> Semua Pesanan
           </button>
         </div>
-          <div class="sidebar-group">
-            <div class="sidebar-group-label">Sistem</div>
-            <button class="sidebar-item" onclick="showPage('account_settings')">
-              <span class="si">⚙️</span> Pengaturan Akun
-            </button>
-          </div>
+        <div class="sidebar-group">
+          <div class="sidebar-group-label">Sistem</div>
+          <button class="sidebar-item" onclick="showPage('account_settings')">
+            <span class="si">⚙️</span> Pengaturan Akun
+          </button>
+          <button class="sidebar-item active" onclick="showPage('admin_settings')">
+            <span class="si">🛠️</span> Pengaturan Sistem
+          </button>
+        </div>
       </nav>
 
       <div class="sidebar-footer">
@@ -53,239 +60,202 @@
 
     <!-- MAIN CONTENT -->
     <div class="dash-content">
-
-      <!-- Admin topbar with Tabs -->
       <div class="admin-topbar">
-        <div class="admin-topbar-left" style="display:flex; align-items:center; gap:32px;">
+        <div class="admin-topbar-left">
           <div class="admin-topbar-title">
-            <h2>⚙️ Pengaturan Sistem</h2>
-          </div>
-          <!-- Navigation Tabs -->
-          <div class="admin-settings-tabs">
-            <span class="settings-tab active">Umum</span>
-            <span class="settings-tab" onclick="showToast('🛡️ Halaman Keamanan')">Keamanan</span>
-            <span class="settings-tab" onclick="showToast('🔌 Halaman Integrasi')">Integrasi</span>
+            <h2 style="font-size: 24px; color: var(--ink-dark); margin-bottom: 4px;">Pengaturan Sistem</h2>
+            <p style="color: var(--ink-muted); font-size: 14px; margin: 0;">Konfigurasi preferensi global, transaksi, dan logistik untuk toko Anda.</p>
           </div>
         </div>
       </div>
 
-      <!-- Admin body -->
       <div class="admin-body">
-        
-        <form action="index.php?action=update_admin_settings" method="POST" class="settings-grid">
-          
-          <!-- LEFT COLUMN: Forms -->
-          <div class="settings-left-col">
-            
-            <!-- Profil Administrator Card -->
-            <div class="settings-card">
-              <div class="settings-card-head">
-                <div>
-                  <h3 class="settings-card-title">Profil Administrator</h3>
-                  <p class="settings-card-subtitle">Kelola informasi identitas akun utama Anda.</p>
-                </div>
-                <button type="submit" class="btn-admin-primary btn-save-profile">
-                  Simpan Profil <span style="margin-left:4px">→</span>
-                </button>
-              </div>
-              
-              <div class="settings-card-body">
-                <div class="profile-setup-section">
-                  <!-- Avatar area -->
-                  <div class="avatar-setup-wrap">
-                    <div class="avatar-default-box">
-                      <!-- Standard admin emoji icon placeholder -->
-                      <span class="avatar-default-icon">👤</span>
-                    </div>
-                    <div class="avatar-edit-badge" onclick="showToast('📸 Fitur ganti foto profil')">
-                      ✏️
-                    </div>
-                  </div>
-                  
-                  <!-- Form Fields Right of Avatar -->
-                  <div class="profile-fields-inline">
-                    <div class="form-row">
-                      <div class="form-group">
-                        <label>Nama Lengkap</label>
-                        <input type="text" name="name" class="settings-input" value="<?= e($admin['name'] ?? 'Administrator Utama') ?>" required>
-                      </div>
-                      <div class="form-group">
-                        <label>Jabatan</label>
-                        <input type="text" name="title" class="settings-input" value="<?= e($admin['title'] ?? 'Super Admin Rubby') ?>">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="form-row" style="margin-top: 16px;">
-                  <div class="form-group">
-                    <label>Email Administrator</label>
-                    <input type="email" name="email" class="settings-input" value="<?= e($admin['email'] ?? 'admin@rubbybooks.id') ?>" required>
-                  </div>
-                  <div class="form-group">
-                    <label>Telepon</label>
-                    <input type="text" name="phone" class="settings-input" value="<?= e($admin['phone'] ?? '+62 812-3456-7890') ?>">
-                  </div>
-                </div>
+        <form method="POST" action="index.php?action=save_system_settings">
+
+          <div style="display: flex; gap: 24px; align-items: flex-start; max-width: 960px; width: 100%;">
+
+            <!-- LEFT SETTINGS SIDEBAR (category nav) -->
+            <div style="flex: 0 0 220px; background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 12px; display: flex; flex-direction: column; gap: 4px;">
+              <div style="padding: 12px 16px; border-radius: 8px; background: var(--rose-blush); color: var(--rose-deep); font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px;">
+                <span>🏪</span> Pengaturan Toko
               </div>
             </div>
-            
-            <!-- Konfigurasi Platform Card -->
-            <div class="settings-card" style="margin-top: 20px;">
-              <div class="settings-card-head" style="border-bottom: 1px solid var(--border-soft); padding-bottom: 12px; margin-bottom: 16px;">
-                <div>
-                  <h3 class="settings-card-title">Konfigurasi Platform</h3>
-                  <p class="settings-card-subtitle">Pengaturan global untuk identitas toko buku digital.</p>
+
+            <!-- RIGHT CONTENT -->
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
+
+              <!-- ─── CARD 1: Mata Uang & Lokalisasi ─── -->
+              <div style="background:#fff; border-radius:12px; border:1px solid var(--border-soft); overflow:hidden;">
+                <div style="padding:16px 24px; border-bottom:1px solid var(--border-soft); border-top:3px solid var(--rose-deep); display:flex; align-items:center; gap:12px;">
+                  <span style="font-size:20px">🌐</span>
+                  <h3 style="margin:0; font-size:16px; color:var(--ink-dark);">Mata Uang & Lokalisasi</h3>
                 </div>
-              </div>
-              
-              <div class="settings-card-body">
-                <div class="form-group">
-                  <label>Nama Situs / Brand</label>
-                  <input type="text" name="site_name" class="settings-input" value="<?= e($settings['site_name'] ?? 'Rubby Books Official') ?>" required>
-                </div>
-                
-                <div class="form-row" style="margin-top: 16px;">
-                  <div class="form-group">
-                    <label>Email Kontak Support</label>
-                    <input type="email" name="support_email" class="settings-input" value="<?= e($settings['support_email'] ?? 'support@rubbybooks.id') ?>" required>
+                <div style="padding:24px; display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                  <div>
+                    <label style="display:block; font-size:11px; font-weight:600; color:var(--ink-muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">MATA UANG UTAMA</label>
+                    <select name="currency" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:6px; color:var(--ink-dark); font-size:14px; outline:none; background:#fff;">
+                      <option value="IDR" <?= ($s['currency'] ?? 'IDR') === 'IDR' ? 'selected' : '' ?>>IDR - Rupiah Indonesia</option>
+                      <option value="USD" <?= ($s['currency'] ?? '') === 'USD' ? 'selected' : '' ?>>USD - US Dollar</option>
+                    </select>
                   </div>
-                  <div class="form-group">
-                    <label>Zona Waktu</label>
-                    <select name="timezone" class="settings-select">
-                      <option value="Asia/Jakarta (WIB)" <?= ($settings['timezone'] ?? '') === 'Asia/Jakarta (WIB)' ? 'selected' : '' ?>>Asia/Jakarta (WIB)</option>
-                      <option value="Asia/Makassar (WITA)" <?= ($settings['timezone'] ?? '') === 'Asia/Makassar (WITA)' ? 'selected' : '' ?>>Asia/Makassar (WITA)</option>
-                      <option value="Asia/Jayapura (WIT)" <?= ($settings['timezone'] ?? '') === 'Asia/Jayapura (WIT)' ? 'selected' : '' ?>>Asia/Jayapura (WIT)</option>
+                  <div>
+                    <label style="display:block; font-size:11px; font-weight:600; color:var(--ink-muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">ZONA WAKTU</label>
+                    <select name="timezone" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:6px; color:var(--ink-dark); font-size:14px; outline:none; background:#fff;">
+                      <option value="Asia/Jakarta"  <?= ($s['timezone'] ?? 'Asia/Jakarta')  === 'Asia/Jakarta'  ? 'selected' : '' ?>>(GMT+07:00) WIB - Jakarta</option>
+                      <option value="Asia/Makassar" <?= ($s['timezone'] ?? '') === 'Asia/Makassar' ? 'selected' : '' ?>>(GMT+08:00) WITA - Makassar</option>
+                      <option value="Asia/Jayapura" <?= ($s['timezone'] ?? '') === 'Asia/Jayapura' ? 'selected' : '' ?>>(GMT+09:00) WIT - Jayapura</option>
                     </select>
                   </div>
                 </div>
-                
-                <!-- Toggle Switches -->
-                <div class="toggle-list" style="margin-top: 24px;">
-                  <div class="toggle-item">
-                    <div class="toggle-text">
-                      <div class="toggle-label">Mode Maintenance</div>
-                      <div class="toggle-sub">Hanya admin yang bisa mengakses platform saat aktif.</div>
-                    </div>
-                    <label class="switch-control">
-                      <input type="checkbox" name="maintenance_mode" value="1" <?= ($settings['maintenance_mode'] ?? '0') === '1' ? 'checked' : '' ?>>
-                      <span class="switch-slider"></span>
-                    </label>
-                  </div>
-                  
-                  <div class="toggle-item" style="margin-top: 16px;">
-                    <div class="toggle-text">
-                      <div class="toggle-label">Registrasi User Baru</div>
-                      <div class="toggle-sub">Izinkan pengunjung baru untuk mendaftar akun.</div>
-                    </div>
-                    <label class="switch-control">
-                      <input type="checkbox" name="user_registration" value="1" <?= ($settings['user_registration'] ?? '1') === '1' ? 'checked' : '' ?>>
-                      <span class="switch-slider"></span>
-                    </label>
-                  </div>
-                </div>
-                
               </div>
-            </div>
-            
-          </div>
-          
-          <!-- RIGHT COLUMN: System Notifications -->
-          <div class="settings-right-col">
-            
-            <div class="settings-card right-notif-card" style="height: 100%; display: flex; flex-direction: column;">
-              <div class="settings-card-head" style="border-bottom: 1px solid var(--border-soft); padding-bottom: 12px; margin-bottom: 16px;">
-                <h3 class="settings-card-title">Notifikasi Sistem</h3>
-                <span class="notif-count-badge">5 Baru</span>
-              </div>
-              
-              <div class="settings-notif-list" style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
-                
-                <!-- Notif 1 -->
-                <div class="sys-notif-item">
-                  <div class="sys-notif-icon-wrap green">
-                    💾
-                  </div>
-                  <div class="sys-notif-content">
-                    <div class="sys-notif-meta">
-                      <span class="sys-notif-title">Vendor Baru Terdaftar</span>
-                      <span class="sys-notif-time">2 Menit</span>
-                    </div>
-                    <p class="sys-notif-text">"Pustaka Ilmu" baru saja mendaftar sebagai vendor buku. Perlu verifikasi.</p>
-                    <span class="sys-notif-status-pill">Pending</span>
-                  </div>
-                </div>
-                
-                <!-- Notif 2 -->
-                <div class="sys-notif-item red-highlight">
-                  <div class="sys-notif-icon-wrap red">
-                    ⚠
-                  </div>
-                  <div class="sys-notif-content">
-                    <div class="sys-notif-meta">
-                      <span class="sys-notif-title">Database Latency</span>
-                      <span class="sys-notif-time">15 Menit</span>
-                    </div>
-                    <p class="sys-notif-text">Terdeteksi lonjakan beban pada server database US-West-1. Monitoring aktif.</p>
-                  </div>
-                </div>
-                
-                <!-- Notif 3 -->
-                <div class="sys-notif-item">
-                  <div class="sys-notif-icon-wrap blue">
-                    📦
-                  </div>
-                  <div class="sys-notif-content">
-                    <div class="sys-notif-meta">
-                      <span class="sys-notif-title">Pesanan Besar Masuk</span>
-                      <span class="sys-notif-time">1 Jam</span>
-                    </div>
-                    <p class="sys-notif-text">ID #78292: Pembelian 150 eks. "Sejarah Nusantara" telah dibayar.</p>
-                  </div>
-                </div>
-                
-                <!-- Notif 4 -->
-                <div class="sys-notif-item">
-                  <div class="sys-notif-icon-wrap orange">
-                    📅
-                  </div>
-                  <div class="sys-notif-content">
-                    <div class="sys-notif-meta">
-                      <span class="sys-notif-title">Stok Menipis</span>
-                      <span class="sys-notif-time">3 Jam</span>
-                    </div>
-                    <p class="sys-notif-text">Buku "Algoritma Pemrograman" tersisa 5 eks. Hubungi vendor.</p>
-                  </div>
-                </div>
-                
-                <!-- Notif 5 -->
-                <div class="sys-notif-item">
-                  <div class="sys-notif-icon-wrap green-light">
-                    ✅
-                  </div>
-                  <div class="sys-notif-content">
-                    <div class="sys-notif-meta">
-                      <span class="sys-notif-title">Backup Sukses</span>
-                      <span class="sys-notif-time">Kemarin</span>
-                    </div>
-                    <p class="sys-notif-text">Cadangan database mingguan telah berhasil disimpan ke Cloud Storage.</p>
-                  </div>
-                </div>
-                
-              </div>
-              
-              <!-- Footer Action -->
-              <div class="sys-notif-footer" style="margin-top: auto; padding-top: 16px; text-align: center; border-top: 1px solid var(--border-soft);">
-                <a href="#" class="sys-notif-link" onclick="showPage('admin_notifications'); return false;">Lihat Semua Riwayat</a>
-              </div>
-              
-            </div>
-            
-          </div>
-          
-        </form>
 
+              <!-- ─── CARD 2: Manajemen Stok ─── -->
+              <div style="background:#fff; border-radius:12px; border:1px solid var(--border-soft); overflow:hidden;">
+                <div style="padding:16px 24px; border-bottom:1px solid var(--border-soft); display:flex; align-items:center; gap:12px;">
+                  <span style="font-size:20px">📦</span>
+                  <h3 style="margin:0; font-size:16px; color:var(--ink-dark);">Manajemen Stok</h3>
+                </div>
+                <div style="padding:24px; display:flex; flex-direction:column; gap:24px;">
+
+                  <!-- Toggle: low stock alert -->
+                  <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                      <div style="font-size:14px; font-weight:600; color:var(--ink-dark); margin-bottom:4px;">Peringatan Stok Rendah Otomatis</div>
+                      <div style="font-size:13px; color:var(--ink-muted);">Kirim notifikasi ke admin ketika stok produk mencapai batas minimum.</div>
+                    </div>
+                    <label class="sys-toggle">
+                      <input type="checkbox" name="low_stock_alert" value="1" <?= ($s['low_stock_alert'] ?? '1') === '1' ? 'checked' : '' ?>>
+                      <span class="sys-toggle-track"></span>
+                    </label>
+                  </div>
+
+                  <!-- Threshold input -->
+                  <div style="max-width:280px;">
+                    <label style="display:block; font-size:11px; font-weight:600; color:var(--ink-muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">AMBANG BATAS STOK RENDAH</label>
+                    <div style="position:relative; display:flex; align-items:center;">
+                      <input type="number" name="low_stock_threshold" min="1" value="<?= (int)($s['low_stock_threshold'] ?? 10) ?>"
+                        style="width:100%; padding:10px 50px 10px 14px; border:1px solid var(--border); border-radius:6px; color:var(--ink-dark); font-size:14px; outline:none;">
+                      <span style="position:absolute; right:14px; color:var(--ink-muted); font-size:13px; pointer-events:none;">unit</span>
+                    </div>
+                  </div>
+
+                  <div style="border-top:1px solid var(--border-soft); padding-top:24px;">
+                    <!-- Toggle: show stock display -->
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                      <div>
+                        <div style="font-size:14px; font-weight:600; color:var(--ink-dark); margin-bottom:4px;">Tampilkan Sisa Stok di Toko</div>
+                        <div style="font-size:13px; color:var(--ink-muted);">Pelanggan dapat melihat jumlah sisa buku saat stok menipis (dibawah 5 unit).</div>
+                      </div>
+                      <label class="sys-toggle">
+                        <input type="checkbox" name="show_stock_display" value="1" <?= ($s['show_stock_display'] ?? '1') === '1' ? 'checked' : '' ?>>
+                        <span class="sys-toggle-track"></span>
+                      </label>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- ─── CARD 3: Pengaturan Transaksi ─── -->
+              <div style="background:#fff; border-radius:12px; border:1px solid var(--border-soft); overflow:hidden;">
+                <div style="padding:16px 24px; border-bottom:1px solid var(--border-soft); display:flex; align-items:center; gap:12px;">
+                  <span style="font-size:20px">🧾</span>
+                  <h3 style="margin:0; font-size:16px; color:var(--ink-dark);">Pengaturan Transaksi</h3>
+                </div>
+                <div style="padding:24px; display:flex; flex-direction:column; gap:24px;">
+
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                    <div>
+                      <label style="display:block; font-size:11px; font-weight:600; color:var(--ink-muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">MINIMUM NILAI PESANAN</label>
+                      <div style="position:relative;">
+                        <span style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--ink-muted); font-size:14px; pointer-events:none;">Rp</span>
+                        <input type="number" name="min_order" min="0" value="<?= (int)($s['min_order'] ?? 50000) ?>"
+                          style="width:100%; padding:10px 14px 10px 38px; border:1px solid var(--border); border-radius:6px; color:var(--ink-dark); font-size:14px; outline:none;">
+                      </div>
+                      <div style="font-size:12px; color:var(--ink-muted); margin-top:6px;">Set 0 untuk menonaktifkan.</div>
+                    </div>
+                    <div>
+                      <label style="display:block; font-size:11px; font-weight:600; color:var(--ink-muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">PAJAK PERTAMBAHAN NILAI (PPN)</label>
+                      <div style="position:relative;">
+                        <input type="number" name="ppn_rate" min="0" max="100" value="<?= (int)($s['ppn_rate'] ?? 11) ?>"
+                          style="width:100%; padding:10px 40px 10px 14px; border:1px solid var(--border); border-radius:6px; color:var(--ink-dark); font-size:14px; outline:none;">
+                        <span style="position:absolute; right:14px; top:50%; transform:translateY(-50%); color:var(--ink-muted); font-size:14px; pointer-events:none;">%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style="border-top:1px solid var(--border-soft); padding-top:24px;">
+                    <!-- Toggle: ppn included -->
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                      <div>
+                        <div style="font-size:14px; font-weight:600; color:var(--ink-dark); margin-bottom:4px;">Harga Termasuk Pajak</div>
+                        <div style="font-size:13px; color:var(--ink-muted);">Jika diaktifkan, harga produk di etalase sudah meliputi kalkulasi PPN.</div>
+                      </div>
+                      <label class="sys-toggle">
+                        <input type="checkbox" name="ppn_included" value="1" <?= ($s['ppn_included'] ?? '0') === '1' ? 'checked' : '' ?>>
+                        <span class="sys-toggle-track"></span>
+                      </label>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- ─── SAVE BUTTON ─── -->
+              <div style="display:flex; gap:12px; padding:4px 0 32px;">
+                <button type="submit"
+                  style="background: var(--rose-deep); color:#fff; border:none; padding:12px 28px; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px; transition:0.2s; box-shadow:0 2px 8px rgba(var(--rose-rgb,200,50,80),0.25);"
+                  onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  Simpan Perubahan
+                </button>
+                <a href="index.php?page=admin_settings"
+                  style="background:#fff; color:var(--ink-mid); border:1px solid var(--border); padding:12px 22px; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; text-decoration:none; display:flex; align-items:center; gap:8px;">
+                  ✕ Reset
+                </a>
+              </div>
+
+            </div><!-- /RIGHT -->
+          </div><!-- /flex -->
+
+        </form>
       </div>
     </div>
   </div>
 </div>
+
+<style>
+/* Toggle switch */
+.sys-toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.sys-toggle input { opacity: 0; width: 0; height: 0; }
+.sys-toggle-track {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--border);
+  border-radius: 24px;
+  transition: 0.3s;
+}
+.sys-toggle input:checked + .sys-toggle-track {
+  background: var(--rose-deep);
+}
+.sys-toggle-track::before {
+  content: '';
+  position: absolute;
+  height: 18px; width: 18px;
+  left: 3px; bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.3s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.sys-toggle input:checked + .sys-toggle-track::before {
+  transform: translateX(20px);
+}
+</style>

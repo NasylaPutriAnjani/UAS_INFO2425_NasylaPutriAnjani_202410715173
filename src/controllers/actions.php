@@ -114,10 +114,14 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         $stmt->execute([$userId, $productId]);
         if ($stmt->fetch()) {
             $pdo->prepare('DELETE FROM wishlists WHERE buyer_id = ? AND product_id = ?')->execute([$userId, $productId]);
-            flash('Buku dihapus dari wishlist.');
+            flash('Buku dihapus dari wishlist. ✅');
         } else {
             $pdo->prepare('INSERT INTO wishlists (buyer_id, product_id) VALUES (?, ?)')->execute([$userId, $productId]);
-            flash('Buku ditambahkan ke wishlist.');
+            flash('Buku ditambahkan ke wishlist. ❤️');
+        }
+        if (!empty($_SERVER['HTTP_REFERER'])) {
+            header('Location: ' . $_SERVER['HTTP_REFERER']);
+            exit;
         }
         redirect('buyer_wishlist');
     }
@@ -140,6 +144,43 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
             $pdo->prepare('UPDATE users SET delete_requested = 0 WHERE id = ?')->execute([$userId]);
             log_activity($pdo, "User #{$userId} membatalkan permintaan penghapusan akun.");
             flash('Permintaan penghapusan akun dibatalkan.');
+            redirect('account_settings');
+            return;
+        }
+
+        if ($actionType === 'password_update') {
+            $stmt = $pdo->prepare('SELECT password FROM users WHERE id = ?');
+            $stmt->execute([$userId]);
+            $dbUser = $stmt->fetch();
+
+            $currentPwd = trim($_POST['password_current'] ?? '');
+            $newPwd     = trim($_POST['password'] ?? '');
+            $confirmPwd = trim($_POST['password_confirm'] ?? '');
+
+            if (empty($currentPwd) || empty($newPwd)) {
+                flash('Harap isi semua kolom password.', 'error');
+                redirect('account_settings');
+                return;
+            }
+            if (!password_verify($currentPwd, $dbUser['password'])) {
+                flash('Password saat ini tidak sesuai.', 'error');
+                redirect('account_settings');
+                return;
+            }
+            if (strlen($newPwd) < 8) {
+                flash('Password baru minimal 8 karakter.', 'error');
+                redirect('account_settings');
+                return;
+            }
+            if ($newPwd !== $confirmPwd) {
+                flash('Konfirmasi password baru tidak cocok.', 'error');
+                redirect('account_settings');
+                return;
+            }
+            $pdo->prepare('UPDATE users SET password = ? WHERE id = ?')
+                ->execute([password_hash($newPwd, PASSWORD_DEFAULT), $userId]);
+            log_activity($pdo, "User #{$userId} mengganti password.");
+            flash('Password berhasil diperbarui. ✅');
             redirect('account_settings');
             return;
         }
@@ -402,13 +443,36 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         redirect('admin_users');
     }
 
-    if ($action === 'ban_user') {
+    if ($action === 'suspend_user') {
         require_role('admin');
-        $pdo->prepare("UPDATE users SET status='banned' WHERE id=? AND role<>'admin'")->execute([$_POST['user_id']]);
-        flash('User diban.');
+        $pdo->prepare("UPDATE users SET status='suspended' WHERE id=? AND role<>'admin'")->execute([$_POST['user_id']]);
+        flash('User berhasil di-suspend.');
         redirect('admin_users');
     }
 
+    if ($action === 'activate_user') {
+        require_role('admin');
+        $pdo->prepare("UPDATE users SET status='active' WHERE id=?")->execute([$_POST['user_id']]);
+        flash('User berhasil diaktifkan.');
+        redirect('admin_users');
+    }
+
+    if ($action === 'delete_user') {
+        require_role('admin');
+        $userId = $_POST['user_id'];
+        
+        // Delete user's avatar if exists
+        $stmt = $pdo->prepare('SELECT avatar FROM users WHERE id = ? AND role<>"admin"');
+        $stmt->execute([$userId]);
+        $avatar = $stmt->fetchColumn();
+        if ($avatar && file_exists(__DIR__ . '/../' . $avatar)) {
+            @unlink(__DIR__ . '/../' . $avatar);
+        }
+        
+        $pdo->prepare('DELETE FROM users WHERE id = ? AND role<>"admin"')->execute([$userId]);
+        flash('User telah dihapus permanen.');
+        redirect('admin_users');
+    }
     if ($action === 'approve_delete_user') {
         require_role('admin');
         $userId = $_POST['user_id'];
@@ -440,5 +504,36 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         redirect('admin_categories');
     }
 
+    if ($action === 'delete_category') {
+        require_role('admin');
+        try {
+            $pdo->prepare('DELETE FROM categories WHERE id = ?')->execute([$_POST['category_id']]);
+            flash('Kategori berhasil dihapus.');
+        } catch (PDOException $e) {
+            flash('Gagal menghapus kategori. Pastikan tidak ada produk yang masih menggunakan kategori ini.', 'error');
+        }
+        redirect('admin_categories');
+    }
+
+    if ($action === 'save_system_settings') {
+        require_role('admin');
+
+        $allowed = [
+            'currency', 'timezone', 'min_order', 'ppn_rate',
+            'ppn_included', 'low_stock_alert', 'low_stock_threshold', 'show_stock_display',
+        ];
+
+        $stmt = $pdo->prepare('INSERT INTO system_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)');
+
+        foreach ($allowed as $key) {
+            // Checkboxes send nothing when unchecked, so default to '0'
+            $value = $_POST[$key] ?? '0';
+            $stmt->execute([$key, trim((string)$value)]);
+        }
+
+        log_activity($pdo, 'Admin memperbarui pengaturan sistem.');
+        flash('Pengaturan sistem berhasil disimpan! ✅');
+        redirect('admin_settings');
+    }
 
 }

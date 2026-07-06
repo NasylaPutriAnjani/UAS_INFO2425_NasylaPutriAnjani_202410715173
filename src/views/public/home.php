@@ -113,12 +113,13 @@ $bcColors = ['bc1','bc2','bc3','bc4','bc5','bc6'];
         $bcClass = 'bc' . (($book['id'] % 6) + 1);
       ?>
       <div class="book-card" onclick="window.location='index.php?page=product&id=<?= $book['id'] ?>'" style="cursor:pointer">
+        <?php $inWishlist = is_in_wishlist($GLOBALS['pdo'], $book['id']); ?>
         <?php if (!empty($book['image'])): ?>
           <div class="book-cover-lg" style="background-image: url('<?= e(asset($book['image'])) ?>'); background-size: cover; background-position: center; font-size:0;">
             <?php if ($book['book_condition'] === 'new'): ?><span class="badge badge-new">Baru</span><?php endif; ?>
             <form method="POST" action="index.php?action=toggle_wishlist" style="position: absolute; top: 12px; right: 12px; z-index: 10; margin: 0;" onclick="event.stopPropagation()">
               <input type="hidden" name="product_id" value="<?= $book['id'] ?>">
-              <button type="submit" title="Tambah ke wishlist" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.95); border: none; display: flex; align-items: center; justify-content: center; font-size: 15px; color: #f43f5e; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">♡</button>
+              <button type="submit" title="Wishlist" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.95); border: none; display: flex; align-items: center; justify-content: center; font-size: 15px; color: <?= $inWishlist ? '#f43f5e' : '#a1a1aa' ?>; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"><?= $inWishlist ? '♥' : '♡' ?></button>
             </form>
           </div>
         <?php else: ?>
@@ -129,7 +130,7 @@ $bcColors = ['bc1','bc2','bc3','bc4','bc5','bc6'];
             <?= e($book['name']) ?>
             <form method="POST" action="index.php?action=toggle_wishlist" style="position: absolute; top: 12px; right: 12px; z-index: 10; margin: 0;" onclick="event.stopPropagation()">
               <input type="hidden" name="product_id" value="<?= $book['id'] ?>">
-              <button type="submit" title="Tambah ke wishlist" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.95); border: none; display: flex; align-items: center; justify-content: center; font-size: 15px; color: #f43f5e; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">♡</button>
+              <button type="submit" title="Wishlist" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.95); border: none; display: flex; align-items: center; justify-content: center; font-size: 15px; color: <?= $inWishlist ? '#f43f5e' : '#a1a1aa' ?>; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"><?= $inWishlist ? '♥' : '♡' ?></button>
             </form>
           </div>
         <?php endif; ?>
@@ -180,8 +181,9 @@ $bcColors = ['bc1','bc2','bc3','bc4','bc5','bc6'];
         <div class="price-actions">
           <button class="btn-primary" onclick="event.preventDefault(); addToCart(event, <?= $featured['id'] ?>, '<?= e(addslashes($featured['name'])) ?>')">🛒 Tambah ke Keranjang</button>
           <form method="POST" action="index.php?action=toggle_wishlist" style="display:inline;" onclick="event.stopPropagation()">
+            <?php $featWish = is_in_wishlist($GLOBALS['pdo'], $featured['id']); ?>
             <input type="hidden" name="product_id" value="<?= $featured['id'] ?>">
-            <button type="submit" class="btn-secondary">♡ Wishlist</button>
+            <button type="submit" class="btn-secondary" <?= $featWish ? 'style="color:var(--rose-deep); border-color:var(--rose-blush); background:var(--rose-blush);"' : '' ?>><?= $featWish ? '♥' : '♡' ?> Wishlist</button>
           </form>
         </div>
       </div>
@@ -189,34 +191,83 @@ $bcColors = ['bc1','bc2','bc3','bc4','bc5','bc6'];
     <?php endif; ?>
   </section>
 
-  <!-- SELLER CTA -->
-  <div class="seller-cta-section" id="section-cara-kerja" data-role="buyer">
-    <h2>Punya Buku untuk Dijual? ✍️</h2>
-    <p>Bergabunglah dengan <?= $heroStats['sellers'] ?>+ penjual aktif di RubbyBooks. Mudah, aman, dan komisi transparan.</p>
-    <div class="seller-steps">
-      <div class="seller-step">
-        <div class="step-icon">📝</div>
-        <div class="step-num">1</div>
-        <p>Daftar sebagai Penjual</p>
-      </div>
-      <div class="seller-step">
-        <div class="step-icon">📸</div>
-        <div class="step-num">2</div>
-        <p>Upload produk &amp; harga</p>
-      </div>
-      <div class="seller-step">
-        <div class="step-icon">📦</div>
-        <div class="step-num">3</div>
-        <p>Terima pesanan &amp; kirim</p>
-      </div>
-      <div class="seller-step">
-        <div class="step-icon">💸</div>
-        <div class="step-num">4</div>
-        <p>Terima pembayaran otomatis</p>
+  <!-- CARA KERJA & SELLER CTA -->
+  <section class="section hiw-section" id="section-cara-kerja">
+    
+    <!-- Bagian 1: Cara Kerja Pembeli -->
+    <div class="hiw-container">
+      <h2 class="hiw-title">Cara Kerja</h2>
+      <p class="hiw-subtitle">Nikmati kemudahan berbelanja buku favorit Anda hanya dalam tiga langkah mudah.</p>
+      
+      <div class="hiw-grid">
+        <!-- Step 1 -->
+        <div class="hiw-card">
+          <div class="hiw-icon">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <h3 class="hiw-card-title">Cari Buku Favorit</h3>
+          <p class="hiw-card-desc">Jelajahi ribuan koleksi buku dari berbagai genre yang sesuai dengan minat Anda.</p>
+        </div>
+        <!-- Step 2 -->
+        <div class="hiw-card">
+          <div class="hiw-icon">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </div>
+          <h3 class="hiw-card-title">Lakukan Pembayaran</h3>
+          <p class="hiw-card-desc">Proses transaksi aman dengan berbagai pilihan metode pembayaran yang praktis.</p>
+        </div>
+        <!-- Step 3 -->
+        <div class="hiw-card">
+          <div class="hiw-icon">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          </div>
+          <h3 class="hiw-card-title">Buku Sampai di Rumah</h3>
+          <p class="hiw-card-desc">Pengiriman cepat dan terlacak langsung ke alamat Anda dengan aman.</p>
+        </div>
       </div>
     </div>
-    <button class="btn-primary" onclick="openAuth()">🚀 Mulai Berjualan Gratis</button>
-  </div>
+
+    <!-- Divider -->
+    <div class="hiw-divider"></div>
+
+    <!-- Bagian 2: Mulai Berjualan (Penjual) -->
+    <div class="hiw-seller-container">
+      <h2 class="hiw-title-sm">Mulai Berjualan di Rubby Books</h2>
+      <p class="hiw-subtitle">Bergabunglah dengan ribuan penjual lainnya dan mulai kembangkan bisnis buku Anda bersama kami.</p>
+      
+      <div class="hiw-seller-grid">
+        <!-- Sell Step 1 -->
+        <div>
+          <div class="hiw-seller-step-title">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            Daftar Akun
+          </div>
+          <p class="hiw-seller-step-desc">Buat akun penjual Anda dalam hitungan menit.</p>
+        </div>
+        <!-- Sell Step 2 -->
+        <div>
+          <div class="hiw-seller-step-title">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="12" y2="12"/><line x1="15" y1="15" x2="12" y2="12"/></svg>
+            Upload Produk
+          </div>
+          <p class="hiw-seller-step-desc">Unggah katalog buku terbaik Anda dengan mudah.</p>
+        </div>
+        <!-- Sell Step 3 -->
+        <div>
+          <div class="hiw-seller-step-title">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Mulai Berjualan
+          </div>
+          <p class="hiw-seller-step-desc">Terima pesanan pertama Anda dan raih keuntungan.</p>
+        </div>
+      </div>
+
+      <button class="hiw-btn-seller" onclick="openAuth('seller')">
+        Daftar Jadi Penjual
+      </button>
+    </div>
+
+  </section>
 
   <!-- TESTIMONIALS -->
   <section class="section" id="section-testimoni">

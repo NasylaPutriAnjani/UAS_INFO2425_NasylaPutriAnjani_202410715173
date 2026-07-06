@@ -11,6 +11,7 @@ $starsHtml = function(float $n): string {
     return str_repeat('★', $n) . str_repeat('☆', 5 - $n);
 };
 $sellerInit = strtoupper(implode('', array_map(fn($w) => $w[0] ?? '', array_slice(explode(' ', $product['seller_name']), 0, 2))));
+$inWishlist = is_in_wishlist($GLOBALS['pdo'], (int)$product['id']);
 ?>
 <div id="page-product" class="page active">
   <div class="product-page-wrap">

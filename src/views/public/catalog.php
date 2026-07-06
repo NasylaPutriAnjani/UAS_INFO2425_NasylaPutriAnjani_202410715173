@@ -83,12 +83,13 @@ $totalItems = $f['totalItems'] ?? 0;
             $bcClass = 'bc' . (($book['id'] % 6) + 1);
           ?>
             <div class="book-card" onclick="window.location='index.php?page=product&id=<?= $book['id'] ?>'" style="cursor:pointer">
+              <?php $inWishlist = is_in_wishlist($GLOBALS['pdo'], $book['id']); ?>
               <?php if (!empty($book['image'])): ?>
                 <div class="book-cover-lg" style="background-image: url('<?= e(asset($book['image'])) ?>'); background-size: cover; background-position: center; font-size:0;">
                   <?php if ($isNew): ?><span class="badge badge-new">Baru</span><?php endif; ?>
                   <form method="POST" action="index.php?action=toggle_wishlist" style="position: absolute; top: 12px; right: 12px; z-index: 10; margin: 0;" onclick="event.stopPropagation()">
                     <input type="hidden" name="product_id" value="<?= $book['id'] ?>">
-                    <button type="submit" title="Tambah ke wishlist" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.95); border: none; display: flex; align-items: center; justify-content: center; font-size: 15px; color: #f43f5e; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">♡</button>
+                    <button type="submit" title="Wishlist" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.95); border: none; display: flex; align-items: center; justify-content: center; font-size: 15px; color: <?= $inWishlist ? '#f43f5e' : '#a1a1aa' ?>; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"><?= $inWishlist ? '♥' : '♡' ?></button>
                   </form>
                 </div>
               <?php else: ?>
@@ -99,7 +100,7 @@ $totalItems = $f['totalItems'] ?? 0;
                   <?= e($book['name']) ?>
                   <form method="POST" action="index.php?action=toggle_wishlist" style="position: absolute; top: 12px; right: 12px; z-index: 10; margin: 0;" onclick="event.stopPropagation()">
                     <input type="hidden" name="product_id" value="<?= $book['id'] ?>">
-                    <button type="submit" title="Tambah ke wishlist" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.95); border: none; display: flex; align-items: center; justify-content: center; font-size: 15px; color: #f43f5e; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">♡</button>
+                    <button type="submit" title="Wishlist" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.95); border: none; display: flex; align-items: center; justify-content: center; font-size: 15px; color: <?= $inWishlist ? '#f43f5e' : '#a1a1aa' ?>; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"><?= $inWishlist ? '♥' : '♡' ?></button>
                   </form>
                 </div>
               <?php endif; ?>

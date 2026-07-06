@@ -52,6 +52,7 @@ const ROLE_CONFIG = {
       { icon:'👥', label:'Manajemen User',  action:"_showPageDirect('admin_users');closeUserDropdown()" },
       { icon:'🏷️', label:'Kategori',        action:"_showPageDirect('admin_categories');closeUserDropdown()" },
       { divider: true },
+      { icon:'⚙️', label:'Pengaturan Akun', action:"_showPageDirect('account_settings');closeUserDropdown()" },
       { icon:'⚙️', label:'Pengaturan Sistem', action:"_showPageDirect('admin_settings');closeUserDropdown()" },
       { divider: true },
       { icon:'🚪', label:'Keluar',          action:'doLogout()', danger: true }
@@ -68,7 +69,7 @@ const PAGE_ACCESS = {
   guest:  ['home', 'catalog'],
   buyer:  ['home', 'catalog', 'checkout', 'tracking', 'buyer', 'buyer_account', 'buyer_wishlist', 'buyer_cart', 'buyer_orders', 'buyer_reviews', 'buyer_notifications', 'cart', 'account_settings'],
   seller: ['home', 'catalog', 'seller', 'seller_products', 'seller_orders', 'seller_reviews', 'seller_notifications', 'seller_report', 'account_settings'],
-  admin:  ['home', 'catalog', 'admin', 'admin_users', 'admin_categories', 'admin_notifications', 'account_settings', 'admin_settings']
+  admin:  ['home', 'catalog', 'admin', 'admin_users', 'admin_analytics', 'admin_categories', 'admin_notifications', 'account_settings', 'admin_settings']
 };
 
 
@@ -95,6 +96,7 @@ const PAGE_NAMES = {
   seller_report:        'Laporan Penjualan',
   admin:    'Panel Admin',
   admin_users:          'Manajemen User',
+  admin_analytics:      'Analitik Performa',
   admin_categories:     'Manajemen Kategori',
   admin_notifications:  'Notifikasi Admin',
   admin_settings:       'Pengaturan Sistem'

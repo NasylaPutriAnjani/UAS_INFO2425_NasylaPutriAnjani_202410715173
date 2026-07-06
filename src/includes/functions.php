@@ -11,6 +11,42 @@ function rupiah(int|float $value): string
     return 'Rp ' . number_format((float) $value, 0, ',', '.');
 }
 
+/**
+ * Fetch all system settings as a key-value array.
+ * Falls back to sensible defaults so the site always works.
+ */
+function get_system_settings(PDO $pdo): array
+{
+    static $cache = null;
+    if ($cache !== null) return $cache;
+
+    $defaults = [
+        'currency'            => 'IDR',
+        'timezone'            => 'Asia/Jakarta',
+        'min_order'           => '50000',
+        'ppn_rate'            => '11',
+        'ppn_included'        => '0',
+        'low_stock_alert'     => '1',
+        'low_stock_threshold' => '10',
+        'show_stock_display'  => '1',
+    ];
+
+    try {
+        $rows = $pdo->query('SELECT `key`, `value` FROM system_settings')->fetchAll(PDO::FETCH_KEY_PAIR);
+        $cache = array_merge($defaults, $rows);
+    } catch (Throwable) {
+        $cache = $defaults;
+    }
+
+    // Apply timezone globally — strip any parenthetical labels e.g. "(WIB)" stored by old data
+    $tz = preg_replace('/\s*\(.*\)\s*$/', '', $cache['timezone']);
+    if (@date_default_timezone_set($tz)) {
+        $cache['timezone'] = $tz; // normalise stored value
+    }
+
+    return $cache;
+}
+
 function asset(?string $path): string
 {
     if (empty($path)) return '';
@@ -214,4 +250,28 @@ function order_status_label(string $status): string
         'cancelled' => 'Dibatalkan',
         default => ucfirst($status),
     };
+}
+
+function get_user_wishlist_ids(PDO $pdo): array
+{
+    static $wishlistIds = null;
+    if ($wishlistIds !== null) {
+        return $wishlistIds;
+    }
+    
+    $user = current_user();
+    if (!$user || $user['role'] !== 'buyer') {
+        return $wishlistIds = [];
+    }
+    
+    $stmt = $pdo->prepare('SELECT product_id FROM wishlists WHERE buyer_id = ?');
+    $stmt->execute([$user['id']]);
+    $wishlistIds = $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+    return $wishlistIds;
+}
+
+function is_in_wishlist(PDO $pdo, int $productId): bool
+{
+    $ids = get_user_wishlist_ids($pdo);
+    return in_array($productId, $ids, false); // loose check since DB might return string
 }

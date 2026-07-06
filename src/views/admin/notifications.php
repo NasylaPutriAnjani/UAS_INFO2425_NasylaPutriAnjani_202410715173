@@ -17,7 +17,7 @@
           <button class="sidebar-item" onclick="showPage('admin')">
             <span class="si">📊</span> Dashboard
           </button>
-          <button class="sidebar-item" onclick="showToast('📈 Halaman Analitik')">
+          <button class="sidebar-item" onclick="showPage('admin_analytics')">
             <span class="si">📈</span> Analitik
           </button>
         </div>
@@ -40,6 +40,9 @@
           <div class="sidebar-group-label">Sistem</div>
           <button class="sidebar-item" onclick="showPage('account_settings')">
             <span class="si">⚙️</span> Pengaturan Akun
+          </button>
+          <button class="sidebar-item" onclick="showPage('admin_settings')">
+            <span class="si">🛠️</span> Pengaturan Sistem
           </button>
         </div>
       </nav>

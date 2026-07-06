@@ -17,7 +17,7 @@
           <button class="sidebar-item" onclick="showPage('admin')">
             <span class="si">📊</span> Dashboard
           </button>
-          <button class="sidebar-item" onclick="showToast('📈 Halaman Analitik')">
+          <button class="sidebar-item" onclick="showPage('admin_analytics')">
             <span class="si">📈</span> Analitik
           </button>
         </div>
@@ -41,6 +41,9 @@
           <button class="sidebar-item" onclick="showPage('account_settings')">
             <span class="si">⚙️</span> Pengaturan Akun
           </button>
+          <button class="sidebar-item" onclick="showPage('admin_settings')">
+            <span class="si">🛠️</span> Pengaturan Sistem
+          </button>
         </div>
       </nav>
 
@@ -62,7 +65,15 @@
             <p>Manajemen akun pembeli, penjual, dan verifikasi</p>
           </div>
         </div>
-        <div class="admin-topbar-right">
+        <div class="admin-topbar-right" style="display:flex; align-items:center; gap:16px;">
+          <form method="GET" action="index.php" style="display:flex; gap:8px;">
+            <input type="hidden" name="page" value="admin_users">
+            <input type="text" name="q" value="<?= e($q ?? '') ?>" placeholder="Cari nama/email..." style="padding:8px 12px; border:1px solid var(--border-soft); border-radius:6px; font-size:14px; width:250px;" required>
+            <button class="btn-primary" style="padding:8px 16px;">Cari</button>
+            <?php if (!empty($q)): ?>
+              <a href="index.php?page=admin_users" class="btn-secondary" style="padding:8px 12px; text-decoration:none;">Reset</a>
+            <?php endif; ?>
+          </form>
           <span style="font-size:12px;color:var(--ink-muted);">Total: <strong><?= count($users) ?> pengguna</strong></span>
         </div>
       </div>
@@ -111,6 +122,7 @@
                   };
                   $statusClass = match($userRow['status']) {
                     'active' => 'sp-active',
+                    'suspended' => 'sp-inactive',
                     'banned' => 'sp-inactive',
                     default  => 'sp-verify',
                   };
@@ -142,7 +154,7 @@
                         <form method="post" style="display:inline;" onsubmit="return confirm('Yakin menyetujui penghapusan akun ini?')">
                           <input type="hidden" name="action" value="approve_delete_user">
                           <input type="hidden" name="user_id" value="<?= $userRow['id'] ?>">
-                          <button class="admin-action-btn danger">Hapus Akun</button>
+                          <button class="admin-action-btn danger">Setuju Hapus</button>
                         </form>
                         <form method="post" style="display:inline;">
                           <input type="hidden" name="action" value="reject_delete_user">
@@ -158,15 +170,25 @@
                         </form>
                       <?php endif; ?>
                       <?php if ($userRow['role'] !== 'admin'): ?>
-                        <?php if ($userRow['status'] !== 'banned'): ?>
-                        <form method="post" style="display:inline;" onsubmit="return confirm('Ban user <?= e($userRow['name']) ?>?')">
-                          <input type="hidden" name="action" value="ban_user">
-                          <input type="hidden" name="user_id" value="<?= $userRow['id'] ?>">
-                          <button class="admin-action-btn danger">Ban</button>
-                        </form>
-                        <?php else: ?>
-                          <span style="font-size:12px;color:#9ca3af;">Dibanned</span>
+                        <?php if ($userRow['status'] === 'active'): ?>
+                          <form method="post" style="display:inline;" onsubmit="return confirm('Suspend user <?= e($userRow['name']) ?>?')">
+                            <input type="hidden" name="action" value="suspend_user">
+                            <input type="hidden" name="user_id" value="<?= $userRow['id'] ?>">
+                            <button class="admin-action-btn" style="background:#f59e0b;color:#fff;">Suspend</button>
+                          </form>
+                        <?php elseif (in_array($userRow['status'], ['suspended', 'banned'])): ?>
+                          <form method="post" style="display:inline;" onsubmit="return confirm('Aktifkan user <?= e($userRow['name']) ?>?')">
+                            <input type="hidden" name="action" value="activate_user">
+                            <input type="hidden" name="user_id" value="<?= $userRow['id'] ?>">
+                            <button class="admin-action-btn success">Aktifkan</button>
+                          </form>
                         <?php endif; ?>
+                        
+                        <form method="post" style="display:inline;" onsubmit="return confirm('Hapus permanen user <?= e($userRow['name']) ?>? (Aksi ini akan menghapus semua produk, ulasan, pesanan dll yang terkait)')">
+                          <input type="hidden" name="action" value="delete_user">
+                          <input type="hidden" name="user_id" value="<?= $userRow['id'] ?>">
+                          <button class="admin-action-btn danger">Delete</button>
+                        </form>
                       <?php endif; ?>
                     </div>
                   </td>

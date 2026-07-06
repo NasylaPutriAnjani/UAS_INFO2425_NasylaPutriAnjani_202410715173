@@ -9,13 +9,13 @@ Semua akun ini menggunakan password yang sama:
 
 | Role | Nama | Email | Deskripsi |
 | :--- | :--- | :--- | :--- |
-| **Admin** | Budi Admin | `budi.admin@gmail.com` | Memiliki akses penuh ke sistem (dashboard admin, kelola user, dll). |
+| **Admin** | Budi Admin | `budiadmin@gmail.com` | Memiliki akses penuh ke sistem (dashboard admin, kelola user, dll). |
 | **Penjual (Seller)** | Toko Buku Cahaya | `tokobukucahaya@gmail.com` | Bisa mengelola produk (4 buku default). |
-| **Penjual (Seller)** | Buku Keigo Official | `keigo.official@gmail.com` | Menjual buku-buku karya Keigo Higashino. |
+| **Penjual (Seller)** | Buku Keigo Official | `keigoofficial@gmail.com` | Menjual buku-buku karya Keigo Higashino. |
 | **Penjual (Seller)** | Literasi Jaya | `literasijaya@gmail.com` | Akun penjual tambahan. |
-| **Pembeli (Buyer)** | Putri Lestari | `putri.lestari@gmail.com` | Pembeli utama. |
-| **Pembeli (Buyer)** | Rina Amelia | `rina.amelia@gmail.com` | Pembeli tambahan. |
-| **Pembeli (Buyer)** | Dimas Prasetyo | `dimas.prasetyo@gmail.com` | Pembeli tambahan. |
+| **Pembeli (Buyer)** | Putri Lestari | `putrilestari@gmail.com` | Pembeli utama. |
+| **Pembeli (Buyer)** | Rina Amelia | `rinaamelia@gmail.com` | Pembeli tambahan. |
+| **Pembeli (Buyer)** | Dimas Prasetyo | `dimasprasetyo@gmail.com` | Pembeli tambahan. |
 
 ## 2. Skenario Pengujian Fungsional (Functional Testing)
 

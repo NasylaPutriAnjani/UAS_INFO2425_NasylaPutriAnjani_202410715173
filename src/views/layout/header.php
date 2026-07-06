@@ -164,6 +164,21 @@ $navGroup = match ($user['role'] ?? 'guest') {
   </div>
 
   <?php if ($flash = take_flash()): ?>
-    <div class="flash <?= e($flash['type']) ?>"><?= e($flash['message']) ?></div>
+    <?php
+      $msg = $flash['message'];
+      if (!preg_match('/^([\x{1F300}-\x{1FFFF}]|[\x{2600}-\x{27FF}]|✅|❌|⚠️)/u', $msg)) {
+          $icon = match($flash['type']) {
+              'error' => '❌ ',
+              'warning' => '⚠️ ',
+              default => '✅ '
+          };
+          $msg = $icon . $msg;
+      }
+    ?>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() { showToast(<?= json_encode($msg) ?>); }, 100);
+      });
+    </script>
   <?php endif; ?>
   <main class="rb-main">

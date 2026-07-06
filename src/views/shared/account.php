@@ -1,17 +1,13 @@
 <?php
-$user = $user ?? current_user();
-$role = $user['role'] ?? 'buyer';
+$user    = $user ?? current_user();
+$role    = $user['role'] ?? 'buyer';
 
-// Split name to first & last name
 $nameParts = explode(' ', trim($user['name'] ?? ''));
 $firstName = $nameParts[0] ?? '';
-$lastName = isset($nameParts[1]) ? implode(' ', array_slice($nameParts, 1)) : '';
+$lastName  = isset($nameParts[1]) ? implode(' ', array_slice($nameParts, 1)) : '';
 
-// Get initial for avatar placeholder
 $initials = strtoupper(substr($firstName, 0, 1) . substr($lastName, 0, 1));
-if (empty($initials)) {
-    $initials = 'U';
-}
+if (empty($initials)) $initials = 'U';
 
 $backPage = match($role) {
     'seller' => 'seller',
@@ -21,18 +17,15 @@ $backPage = match($role) {
 ?>
 <div id="page-account_settings" class="page active">
   <div class="dash-layout">
-    
-    <!-- SIDEBAR SELECTION BASED ON ROLE -->
+
+    <!-- ══════ SIDEBAR ══════ -->
     <?php if ($role === 'buyer'): ?>
-      <?php 
-      $buyerMenu = 'account_settings'; 
-      require __DIR__ . '/../buyer/partials/sidebar.php'; 
-      ?>
+      <?php $buyerMenu = 'account'; require __DIR__ . '/../buyer/partials/sidebar.php'; ?>
+
     <?php elseif ($role === 'seller'): ?>
       <?php
-      $currentSellerPage = 'account_settings';
-      $sellerIdForSidebar = $user['id'];
-      $activeProductsCount = (int)$GLOBALS['pdo']->query("SELECT COUNT(*) FROM products WHERE seller_id = $sellerIdForSidebar AND status = 'active'")->fetchColumn();
+        $sellerIdForSidebar  = $user['id'];
+        $activeProductsCount = (int)$GLOBALS['pdo']->query("SELECT COUNT(*) FROM products WHERE seller_id = $sellerIdForSidebar AND status = 'active'")->fetchColumn();
       ?>
       <aside class="dash-sidebar seller-sidebar">
         <div class="sidebar-store-profile">
@@ -45,42 +38,26 @@ $backPage = match($role) {
         <nav class="sidebar-nav">
           <div class="sidebar-group">
             <div class="sidebar-group-label">Menu Utama</div>
-            <button class="sidebar-item" onclick="showPage('seller')">
-              <span class="si">📊</span> Dashboard
-            </button>
-            <button class="sidebar-item" onclick="showPage('seller_products')">
-              <span class="si">📦</span> Produk Saya
-              <span class="sidebar-badge"><?= $activeProductsCount ?></span>
-            </button>
-            <button class="sidebar-item" onclick="showPage('seller_orders')">
-              <span class="si">🛒</span> Pesanan Masuk
-            </button>
-            <button class="sidebar-item" onclick="showPage('seller_reviews')">
-              <span class="si">💬</span> Ulasan & Rating
-            </button>
-            <button class="sidebar-item" onclick="showPage('seller_notifications')">
-              <span class="si">🔔</span> Notifikasi
-            </button>
+            <button class="sidebar-item" onclick="showPage('seller')"><span class="si">📊</span> Dashboard</button>
+            <button class="sidebar-item" onclick="showPage('seller_products')"><span class="si">📦</span> Produk Saya <span class="sidebar-badge"><?= $activeProductsCount ?></span></button>
+            <button class="sidebar-item" onclick="showPage('seller_orders')"><span class="si">🛒</span> Pesanan Masuk</button>
+            <button class="sidebar-item" onclick="showPage('seller_reviews')"><span class="si">💬</span> Ulasan &amp; Rating</button>
+            <button class="sidebar-item" onclick="showPage('seller_notifications')"><span class="si">🔔</span> Notifikasi</button>
           </div>
           <div class="sidebar-group">
             <div class="sidebar-group-label">Keuangan</div>
-            <button class="sidebar-item" onclick="showPage('seller_report')">
-              <span class="si">💰</span> Laporan Penjualan
-            </button>
+            <button class="sidebar-item" onclick="showPage('seller_report')"><span class="si">💰</span> Laporan Penjualan</button>
           </div>
           <div class="sidebar-group">
             <div class="sidebar-group-label">Pengaturan</div>
-            <button class="sidebar-item active" onclick="showPage('account_settings')">
-              <span class="si">⚙️</span> Pengaturan Akun
-            </button>
+            <button class="sidebar-item active"><span class="si">⚙️</span> Pengaturan Akun</button>
           </div>
         </nav>
         <div class="sidebar-footer">
-          <button class="sidebar-item" onclick="doLogout()" style="color:#dc2626;width:100%">
-            <span class="si">🚪</span> Keluar
-          </button>
+          <button class="sidebar-item" onclick="doLogout()" style="color:#dc2626;width:100%"><span class="si">🚪</span> Keluar</button>
         </div>
       </aside>
+
     <?php elseif ($role === 'admin'): ?>
       <aside class="dash-sidebar admin-sidebar">
         <div class="sidebar-store-profile">
@@ -93,75 +70,57 @@ $backPage = match($role) {
         <nav class="sidebar-nav" style="flex:1">
           <div class="sidebar-group">
             <div class="sidebar-group-label">Overview</div>
-            <button class="sidebar-item" onclick="showPage('admin')">
-              <span class="si">📊</span> Dashboard
-            </button>
-            <button class="sidebar-item" onclick="showToast('📈 Halaman Analitik')">
-              <span class="si">📈</span> Analitik
-            </button>
+            <button class="sidebar-item" onclick="showPage('admin')"><span class="si">📊</span> Dashboard</button>
+            <button class="sidebar-item" onclick="showToast('📈 Halaman Analitik')"><span class="si">📈</span> Analitik</button>
           </div>
           <div class="sidebar-group">
             <div class="sidebar-group-label">Manajemen</div>
-            <button class="sidebar-item" onclick="showPage('admin_users')">
-              <span class="si">👥</span> Kelola User
-            </button>
-            <button class="sidebar-item" onclick="showPage('admin_categories')">
-              <span class="si">🏷️</span> Kelola Kategori
-            </button>
-            <button class="sidebar-item" onclick="showToast('📚 Kelola Produk')">
-              <span class="si">📚</span> Kelola Produk
-            </button>
-            <button class="sidebar-item" onclick="showToast('🛒 Semua Pesanan')">
-              <span class="si">🛒</span> Semua Pesanan
-            </button>
+            <button class="sidebar-item" onclick="showPage('admin_users')"><span class="si">👥</span> Kelola User</button>
+            <button class="sidebar-item" onclick="showPage('admin_categories')"><span class="si">🏷️</span> Kelola Kategori</button>
+            <button class="sidebar-item" onclick="showToast('📚 Kelola Produk')"><span class="si">📚</span> Kelola Produk</button>
+            <button class="sidebar-item" onclick="showToast('🛒 Semua Pesanan')"><span class="si">🛒</span> Semua Pesanan</button>
           </div>
           <div class="sidebar-group">
             <div class="sidebar-group-label">Sistem</div>
-            <button class="sidebar-item active" onclick="showPage('account_settings')">
-              <span class="si">⚙️</span> Pengaturan Akun
-            </button>
+            <button class="sidebar-item active"><span class="si">⚙️</span> Pengaturan Akun</button>
+            <button class="sidebar-item" onclick="showPage('admin_settings')"><span class="si">🛠️</span> Pengaturan Sistem</button>
           </div>
         </nav>
         <div class="sidebar-footer">
-          <button class="sidebar-item" onclick="doLogout()" style="width:100%">
-            <span class="si">🚪</span> Keluar
-          </button>
+          <button class="sidebar-item" onclick="doLogout()" style="width:100%"><span class="si">🚪</span> Keluar</button>
         </div>
       </aside>
     <?php endif; ?>
 
-    <!-- MAIN CONTENT CONTAINER -->
+    <!-- ══════ MAIN CONTENT ══════ -->
     <div class="dash-content">
       <div class="profile-container">
-        
+
         <h1 class="profile-title">My Profile</h1>
 
-        <!-- NAVIGATION TABS -->
-        <div class="profile-tabs">
-          <button type="button" class="tab-btn active" onclick="switchTab(event, 'tab-basic-info')">Basic Info</button>
-          <button type="button" class="tab-btn" onclick="switchTab(event, 'tab-password-change')">Password Change</button>
-          <button type="button" class="tab-btn" onclick="switchTab(event, 'tab-delete-account')">Delete Account</button>
+        <!-- TAB NAVIGATION -->
+        <div class="profile-tabs" id="profile-tabs">
+          <button type="button" class="tab-btn active" onclick="switchTab(this,'tab-basic-info')">Basic Info</button>
+          <button type="button" class="tab-btn"        onclick="switchTab(this,'tab-password-change')">Password Change</button>
+          <button type="button" class="tab-btn"        onclick="switchTab(this,'tab-delete-account')">Delete Account</button>
         </div>
 
-        <form id="profileForm" class="profile-form" method="POST" action="index.php?action=update_account" enctype="multipart/form-data">
-          <input type="hidden" name="delete_avatar" id="delete-avatar-input" value="0">
-          
-          <!-- TAB 1: BASIC INFO -->
-          <div id="tab-basic-info" class="tab-pane active">
-            <!-- Profile Picture Section -->
-            <div class="avatar-section">
-              <div class="avatar-container">
-                <div id="avatar-placeholder" class="profile-avatar-placeholder">
-                  <?= e($initials) ?>
-                </div>
-              </div>
-              <div class="avatar-details">
-                <h3>Profile picture</h3>
-                <p>Foto profil default menggunakan inisial nama Anda.</p>
+        <!-- ══ TAB 1: BASIC INFO ══ -->
+        <div id="tab-basic-info" class="tab-pane active">
+          <form method="POST" action="index.php?action=update_account" enctype="multipart/form-data">
+            <input type="hidden" name="action_type" value="save">
+            <input type="hidden" name="delete_avatar" value="0">
+
+            <!-- Avatar row -->
+            <div class="acc-avatar-row">
+              <div class="acc-avatar-circle"><?= e($initials) ?></div>
+              <div>
+                <div style="font-weight:700;font-size:15px;color:var(--ink-dark);margin-bottom:4px;">Profile picture</div>
+                <div style="font-size:13px;color:var(--ink-muted);">Foto profil default menggunakan inisial nama Anda.</div>
               </div>
             </div>
 
-            <!-- Fields Grid -->
+            <!-- Fields -->
             <div class="fields-grid">
               <div class="form-field">
                 <label>First Name</label>
@@ -173,7 +132,7 @@ $backPage = match($role) {
               </div>
               <div class="form-field">
                 <label>Email Address</label>
-                <input type="email" value="<?= e($user['email']) ?>" placeholder="email@example.com" readonly class="readonly-field">
+                <input type="email" value="<?= e($user['email']) ?>" readonly class="readonly-field">
               </div>
               <div class="form-field">
                 <label>Phone</label>
@@ -184,258 +143,208 @@ $backPage = match($role) {
                 <input type="date" name="dob" value="<?= e($user['dob'] ?? '') ?>">
               </div>
               <div class="form-field">
-                <label>Alternate mobile details</label>
+                <label>Alternate Mobile</label>
                 <input type="text" name="alternate_phone" value="<?= e($user['alternate_phone'] ?? '') ?>" placeholder="Alternative number">
               </div>
             </div>
 
-            <div class="profile-actions" style="margin-top: 32px; border-top: 1px solid var(--border-soft); padding-top: 24px; display:flex; gap:12px;">
-              <button type="submit" name="action_type" value="save" class="btn-save-details" style="background: var(--rose-deep); color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:600; display:flex; align-items:center; gap:8px;">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 12 4 10"/></svg>
+            <div class="tab-footer">
+              <button type="submit" class="btn-primary-rose">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                 Save Details
               </button>
-              <button type="button" class="btn-cancel-details" onclick="window.location.href = 'index.php?page=<?= e($backPage) ?>'" style="background: #fff; border:1px solid var(--border); padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:600; color:var(--ink-mid);">
-                ✕ Cancel
-              </button>
+              <button type="button" class="btn-outline-gray" onclick="window.location.href='index.php?page=<?= e($backPage) ?>'">✕ Cancel</button>
             </div>
-          </div>
+          </form>
+        </div><!-- /tab-basic-info -->
 
-          <!-- TAB 2: PASSWORD CHANGE -->
-          <div id="tab-password-change" class="tab-pane">
-            <div class="fields-grid" style="grid-template-columns: 1fr; max-width: 600px;">
+        <!-- ══ TAB 2: PASSWORD CHANGE ══ -->
+        <div id="tab-password-change" class="tab-pane">
+          <form method="POST" action="index.php?action=update_account">
+            <input type="hidden" name="action_type" value="password_update">
+
+            <div class="fields-grid" style="grid-template-columns:1fr;max-width:520px;">
               <div class="form-field">
                 <label>Current Password</label>
                 <input type="password" name="password_current" placeholder="Masukkan password saat ini">
               </div>
               <div class="form-field">
                 <label>New Password</label>
-                <input type="password" name="password" id="new-password" placeholder="Masukkan password baru" onkeyup="checkPasswordStrength(this.value)">
-                <div class="pwd-strength" style="display:flex; align-items:center; gap:8px; margin-top:8px;">
-                  <div class="pwd-bars" style="display:flex; gap:4px; flex:1; max-width: 250px;">
-                    <div class="pwd-bar" id="pwd-bar-1" style="height:4px; background:var(--border); flex:1; border-radius:2px; transition:0.3s"></div>
-                    <div class="pwd-bar" id="pwd-bar-2" style="height:4px; background:var(--border); flex:1; border-radius:2px; transition:0.3s"></div>
-                    <div class="pwd-bar" id="pwd-bar-3" style="height:4px; background:var(--border); flex:1; border-radius:2px; transition:0.3s"></div>
-                    <div class="pwd-bar" id="pwd-bar-4" style="height:4px; background:var(--border); flex:1; border-radius:2px; transition:0.3s"></div>
+                <input type="password" name="password" id="new-password" placeholder="Masukkan password baru" oninput="checkPasswordStrength(this.value)">
+                <!-- strength bar -->
+                <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+                  <div style="display:flex;gap:4px;flex:1;max-width:220px;">
+                    <div id="pwd-bar-1" class="pwd-bar"></div>
+                    <div id="pwd-bar-2" class="pwd-bar"></div>
+                    <div id="pwd-bar-3" class="pwd-bar"></div>
+                    <div id="pwd-bar-4" class="pwd-bar"></div>
                   </div>
-                  <div class="pwd-label" style="font-size:12px; color:var(--ink-muted);">Kekuatan password: <span id="pwd-text">—</span></div>
+                  <span style="font-size:12px;color:var(--ink-muted);">Kekuatan: <span id="pwd-text">—</span></span>
                 </div>
               </div>
               <div class="form-field">
                 <label>Confirm New Password</label>
                 <input type="password" name="password_confirm" placeholder="Ulangi password baru">
-                <div class="pwd-rules" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:12px; font-size:13px; color:var(--ink-muted);">
-                  <div class="rule" id="rule-len">• Minimal 8 karakter</div>
-                  <div class="rule" id="rule-upper">• Mengandung huruf besar</div>
-                  <div class="rule" id="rule-num">• Mengandung angka</div>
-                  <div class="rule" id="rule-sym">• Mengandung simbol (!@#$%)</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;font-size:13px;">
+                  <div id="rule-len"   class="pwd-rule">• Minimal 8 karakter</div>
+                  <div id="rule-upper" class="pwd-rule">• Mengandung huruf besar</div>
+                  <div id="rule-num"   class="pwd-rule">• Mengandung angka</div>
+                  <div id="rule-sym"   class="pwd-rule">• Mengandung simbol (!@#$%)</div>
                 </div>
               </div>
             </div>
-            <div class="profile-actions" style="margin-top: 32px; border-top: 1px solid var(--border-soft); padding-top: 24px; display:flex; gap:12px;">
-              <button type="submit" name="action_type" value="save" class="btn-save-details" style="background: var(--rose-deep); color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:600; display:flex; align-items:center; gap:8px;">
-                ✓ Save Password
-              </button>
-              <button type="button" class="btn-cancel-details" onclick="window.location.href = 'index.php?page=<?= e($backPage) ?>'" style="background: #fff; border:1px solid var(--border); padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:600; color:var(--ink-mid);">
-                ✕ Cancel
-              </button>
-            </div>
-          </div>
 
-          <!-- TAB 3: DELETE ACCOUNT -->
-          <div id="tab-delete-account" class="tab-pane">
+            <div class="tab-footer">
+              <button type="submit" class="btn-primary-rose">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                Save Password
+              </button>
+              <button type="button" class="btn-outline-gray" onclick="window.location.href='index.php?page=<?= e($backPage) ?>'">✕ Cancel</button>
+            </div>
+          </form>
+        </div><!-- /tab-password-change -->
+
+        <!-- ══ TAB 3: DELETE ACCOUNT ══ -->
+        <div id="tab-delete-account" class="tab-pane">
+          <form method="POST" action="index.php?action=update_account">
             <?php if (($user['delete_requested'] ?? 0) == 1): ?>
-              <div class="danger-zone" style="background:#fffbeb; border:1px solid #d97706; border-radius:8px; padding:24px; margin-bottom:24px;">
-                <h3 style="color:#d97706; margin-top:0; font-size:16px; margin-bottom:16px;">⚠️ Permintaan Penghapusan Terkirim</h3>
-                <p style="color:#92400e; font-size:14px; margin:0; line-height:1.6;">Permintaan penghapusan akun Anda saat ini sedang menunggu persetujuan dan verifikasi dari Admin. Anda masih dapat membatalkan permintaan ini di bawah jika berubah pikiran.</p>
-                <button type="submit" name="action_type" value="cancel_delete_account" class="btn-danger-action" style="background:#d97706; color:#fff; padding:10px 20px; border:none; border-radius:6px; cursor:pointer; font-weight:600; margin-top:20px; display:flex; align-items:center; gap:8px;">
-                  🔄 Batalkan Permintaan Penghapusan Akun
+              <input type="hidden" name="action_type" value="cancel_delete_account">
+              <div class="warning-box" style="background:#fffbeb;border:1px solid #fbbf24;border-radius:10px;padding:24px;margin-bottom:24px;">
+                <h3 style="color:#d97706;margin:0 0 12px;font-size:16px;">⚠️ Permintaan Penghapusan Terkirim</h3>
+                <p style="color:#92400e;font-size:14px;margin:0;line-height:1.6;">Permintaan penghapusan akun Anda sedang menunggu verifikasi Admin. Anda masih dapat membatalkan permintaan ini.</p>
+              </div>
+              <div class="tab-footer">
+                <button type="submit" style="background:#d97706;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
+                  🔄 Batalkan Permintaan Penghapusan
                 </button>
               </div>
             <?php else: ?>
-              <div class="danger-zone" style="background: var(--rose-blush); border: 1px solid var(--rose-pale); border-radius: 8px; padding: 24px; margin-bottom: 24px;">
-                <h3 style="color: var(--rose-deep); margin-top:0; font-size: 16px; margin-bottom: 16px;">
-                  ⚠️ Tindakan ini tidak dapat dibatalkan
-                </h3>
-                <ul style="color: var(--rose-deep); margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6;">
+              <input type="hidden" name="action_type" value="request_delete_account">
+
+              <!-- Warning box -->
+              <div style="background:var(--rose-blush);border:1px solid var(--rose-pale);border-radius:10px;padding:24px;margin-bottom:28px;">
+                <h3 style="color:var(--rose-deep);margin:0 0 14px;font-size:15px;font-weight:700;">⚠️ Tindakan ini tidak dapat dibatalkan</h3>
+                <ul style="color:var(--rose-deep);margin:0;padding-left:20px;font-size:14px;line-height:1.8;">
                   <li>Semua data profil, riwayat transaksi, dan pesan Anda akan dihapus secara permanen.</li>
                   <li>Buku yang sedang Anda jual akan diturunkan dari katalog secara otomatis.</li>
                   <li>Saldo atau poin yang belum digunakan akan hangus dan tidak dapat dikembalikan.</li>
                   <li>Anda tidak dapat menggunakan email yang sama untuk mendaftar ulang selama 30 hari.</li>
                 </ul>
               </div>
-              
-              <div class="form-field" style="max-width: 600px; margin-bottom: 24px;">
-                <label style="font-weight:600; color:var(--ink); margin-bottom:4px; display:block;">Ketik "DELETE" untuk konfirmasi</label>
-                <p style="font-size: 13px; color: var(--ink-muted); margin-bottom: 12px; margin-top: 0;">Ini membantu memastikan Anda tidak menghapus akun secara tidak sengaja.</p>
-                <input type="text" name="delete_confirm_text" placeholder="DELETE" id="delete-confirm-input" onkeyup="checkDeleteStatus()" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:6px; font-size:14px; font-family:var(--font-body);">
+
+              <!-- Confirmation input -->
+              <div class="form-field" style="max-width:520px;margin-bottom:20px;">
+                <label style="font-weight:700;color:var(--ink-dark);">Ketik "DELETE" untuk konfirmasi</label>
+                <p style="font-size:13px;color:var(--ink-muted);margin:4px 0 10px;">Ini membantu memastikan Anda tidak menghapus akun secara tidak sengaja.</p>
+                <input type="text" name="delete_confirm_text" id="delete-confirm-input" placeholder="DELETE" oninput="checkDeleteStatus()">
               </div>
 
-              <div class="form-field" style="max-width: 600px; margin-bottom: 32px;">
-                <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; font-weight: 400; color: var(--ink-mid);">
-                  <input type="checkbox" id="delete-checkbox" onchange="checkDeleteStatus()" style="margin-top: 4px; width: 18px; height: 18px; accent-color: var(--rose-deep);">
-                  <span style="font-size:14px; line-height:1.5;">Saya memahami bahwa akun ini akan dihapus secara permanen dan tidak dapat dipulihkan kembali.</span>
+              <!-- Checkbox -->
+              <div style="max-width:520px;margin-bottom:28px;">
+                <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;font-size:14px;color:var(--ink-mid);line-height:1.5;">
+                  <input type="checkbox" id="delete-checkbox" onchange="checkDeleteStatus()" style="margin-top:3px;width:17px;height:17px;accent-color:var(--rose-deep);flex-shrink:0;">
+                  <span>Saya memahami bahwa akun ini akan dihapus secara permanen dan tidak dapat dipulihkan kembali.</span>
                 </label>
               </div>
 
-              <div class="profile-actions" style="border-top: 1px solid var(--border-soft); padding-top: 24px; display:flex; gap:12px;">
-                <button type="submit" name="action_type" value="request_delete_account" class="btn-danger-action" id="btn-delete-account" disabled style="background: var(--rose-light); color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:not-allowed; font-weight:600; display:flex; align-items:center; gap:8px;">
+              <div class="tab-footer">
+                <button type="submit" id="btn-delete-account" disabled
+                  style="background:var(--rose-pale);color:var(--rose-deep);border:none;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:700;cursor:not-allowed;display:flex;align-items:center;gap:8px;transition:0.2s;opacity:0.6;">
                   🗑️ Delete My Account
                 </button>
-                <button type="button" class="btn-cancel-details" onclick="window.location.href = 'index.php?page=<?= e($backPage) ?>'" style="background: #fff; border:1px solid var(--border); padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:600; color:var(--ink-mid);">
-                  ✕ Cancel
-                </button>
+                <button type="button" class="btn-outline-gray" onclick="window.location.href='index.php?page=<?= e($backPage) ?>'">✕ Cancel</button>
               </div>
             <?php endif; ?>
-          </div>
-        </form>
+          </form>
+        </div><!-- /tab-delete-account -->
 
-      </div>
-    </div>
+      </div><!-- /profile-container -->
+    </div><!-- /dash-content -->
 
   </div>
 </div>
 
 <style>
-/* --- Profile Page Styling --- */
+/* ═══ Profile container ═══ */
 .profile-container {
   background: #fff;
   border-radius: 16px;
-  padding: 32px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  max-width: 900px;
+  padding: 36px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  max-width: 860px;
   margin: 0 auto;
 }
 .profile-title {
-  font-family: var(--font-body);
   font-size: 26px;
   font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 24px;
+  color: var(--ink-dark);
+  margin: 0 0 24px;
 }
 
-/* Tabs */
+/* ═══ Tabs ═══ */
 .profile-tabs {
   display: flex;
-  gap: 24px;
-  border-bottom: 1px solid #e2e8f0;
+  gap: 0;
+  border-bottom: 2px solid var(--border-soft);
   margin-bottom: 32px;
-  padding-bottom: 2px;
 }
 .tab-btn {
   background: none;
   border: none;
-  padding: 10px 4px;
+  padding: 10px 20px;
   font-size: 14px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--ink-muted);
   cursor: pointer;
   position: relative;
   transition: color 0.2s;
+  white-space: nowrap;
 }
-.tab-btn:hover {
-  color: #0f172a;
-}
+.tab-btn:hover { color: var(--ink-dark); }
 .tab-btn.active {
-  color: #1d4ed8;
+  color: var(--rose-deep);
 }
 .tab-btn.active::after {
   content: '';
   position: absolute;
-  bottom: -3px;
-  left: 0;
-  right: 0;
+  bottom: -2px; left: 0; right: 0;
   height: 3px;
-  background: #1d4ed8;
-  border-radius: 2px;
+  background: var(--rose-deep);
+  border-radius: 2px 2px 0 0;
 }
 
-/* Panes */
-.tab-pane {
-  display: none;
-}
-.tab-pane.active {
-  display: block;
-}
+/* ═══ Tab panes ═══ */
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
 
-/* Avatar section */
-.avatar-section {
+/* ═══ Avatar row ═══ */
+.acc-avatar-row {
   display: flex;
   align-items: center;
-  gap: 24px;
-  margin-bottom: 32px;
+  gap: 20px;
+  margin-bottom: 28px;
+  padding: 16px;
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
 }
-.avatar-container {
-  width: 100px;
-  height: 100px;
+.acc-avatar-circle {
+  width: 72px; height: 72px;
   border-radius: 50%;
-  overflow: hidden;
-  background: #f1f5f9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #e2e8f0;
-}
-.profile-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.profile-avatar-placeholder {
-  font-size: 36px;
+  background: linear-gradient(135deg, var(--rose-deep), var(--rose-mid, #e85b7a));
+  color: #fff;
+  font-size: 26px;
   font-weight: 700;
-  color: #64748b;
-}
-.avatar-details h3 {
-  font-size: 15px;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 4px;
-}
-.avatar-details p {
-  font-size: 12px;
-  color: #94a3b8;
-  margin-bottom: 12px;
-}
-.avatar-actions {
-  display: flex;
-  gap: 10px;
-}
-.btn-upload, .btn-delete-photo {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: var(--font-body);
-  transition: all 0.2s;
-}
-.btn-upload {
-  background: #fff;
-  border: 1px solid #cbd5e1;
-  color: #475569;
-}
-.btn-upload:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
-}
-.btn-delete-photo {
-  background: #fff5f5;
-  border: 1px solid #fecaca;
-  color: #e11d48;
-}
-.btn-delete-photo:hover {
-  background: #ffe4e6;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
 }
 
-/* Fields Grid */
+/* ═══ Fields ═══ */
 .fields-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-  margin-bottom: 32px;
+  margin-bottom: 8px;
 }
 .form-field {
   display: flex;
@@ -445,179 +354,136 @@ $backPage = match($role) {
 .form-field label {
   font-size: 13px;
   font-weight: 600;
-  color: #334155;
+  color: var(--ink-dark);
 }
 .form-field input {
   padding: 11px 14px;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
   font-size: 14px;
   outline: none;
-  font-family: var(--font-body);
-  transition: all 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
   background: #fff;
+  font-family: var(--font-body);
 }
-.form-field input:focus:not(.readonly-field) {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+.form-field input:focus {
+  border-color: var(--rose-deep);
+  box-shadow: 0 0 0 3px rgba(var(--rose-rgb, 200,56,80), 0.12);
 }
 .form-field input.readonly-field {
-  background: #f8fafc;
-  color: #94a3b8;
+  background: var(--surface);
+  color: var(--ink-muted);
   cursor: not-allowed;
-  border-color: #e2e8f0;
+  border-color: var(--border-soft);
 }
 
-/* Danger Zone */
-.danger-zone {
-  border: 1px dashed #f87171;
-  background: #fff5f5;
-  border-radius: 12px;
-  padding: 24px;
+/* ═══ Password strength bar ═══ */
+.pwd-bar {
+  height: 4px;
+  flex: 1;
+  border-radius: 2px;
+  background: var(--border);
+  transition: background 0.3s;
 }
-.danger-zone h3 {
-  font-size: 16px;
-  font-weight: 700;
-  color: #b91c1c;
-  margin-bottom: 6px;
-}
-.danger-zone p {
-  font-size: 13px;
-  color: #7f1d1d;
-  margin-bottom: 16px;
-}
-.btn-danger-action {
-  background: #dc2626;
-  border: none;
-  color: #fff;
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 700;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.btn-danger-action:hover {
-  background: #b91c1c;
-}
+.pwd-rule { color: var(--ink-muted); }
 
-/* Footer buttons */
-.profile-actions {
+/* ═══ Action footer ═══ */
+.tab-footer {
   display: flex;
   gap: 12px;
-  border-top: 1px solid #e2e8f0;
+  margin-top: 32px;
   padding-top: 24px;
+  border-top: 1px solid var(--border-soft);
 }
-.btn-save-details {
+.btn-primary-rose {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: #1e3a8a; /* Premium dark navy */
+  gap: 7px;
+  background: var(--rose-deep);
   color: #fff;
   border: none;
-  font-family: var(--font-body);
-  font-size: 13px;
+  padding: 11px 24px;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 700;
-  padding: 12px 24px;
-  border-radius: 10px;
   cursor: pointer;
-  transition: background 0.2s;
+  font-family: var(--font-body);
+  transition: opacity 0.2s;
 }
-.btn-save-details:hover {
-  background: #172554;
-}
-.btn-cancel-details {
+.btn-primary-rose:hover { opacity: 0.87; }
+.btn-outline-gray {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   background: #fff;
-  border: 1px solid #cbd5e1;
-  color: #475569;
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 700;
-  padding: 12px 24px;
-  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  color: var(--ink-mid);
+  padding: 11px 22px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  font-family: var(--font-body);
   transition: background 0.2s;
 }
-.btn-cancel-details:hover {
-  background: #f8fafc;
-}
+.btn-outline-gray:hover { background: var(--surface); }
 
 @media (max-width: 640px) {
-  .fields-grid {
-    grid-template-columns: 1fr;
-  }
-  .avatar-section {
-    flex-direction: column;
-    text-align: center;
-  }
+  .fields-grid { grid-template-columns: 1fr; }
+  .acc-avatar-row { flex-direction: column; text-align: center; }
+  .profile-container { padding: 20px; }
 }
 </style>
 
 <script>
-function switchTab(e, tabId) {
-  e.preventDefault();
-  // Deactivate all tabs
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-  
-  // Activate selected tab & pane
-  e.currentTarget.classList.add('active');
-  document.getElementById(tabId).classList.add('active');
+/* ── Tab switching ── */
+function switchTab(btn, tabId) {
+  document.querySelectorAll('#profile-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  const pane = document.getElementById(tabId);
+  if (pane) pane.classList.add('active');
 }
 
+/* ── Password strength ── */
 function checkPasswordStrength(val) {
-  let strength = 0;
-  let text = '—';
-  let color = 'var(--border)';
-  
-  const hasLen = val.length >= 8;
+  const hasLen   = val.length >= 8;
   const hasUpper = /[A-Z]/.test(val);
-  const hasNum = /[0-9]/.test(val);
-  const hasSym = /[!@#$%^&*(),.?":{}|<>]/.test(val);
-  
-  if (hasLen) strength++;
-  if (hasUpper) strength++;
-  if (hasNum) strength++;
-  if (hasSym) strength++;
-  
-  document.getElementById('rule-len').style.color = hasLen ? 'var(--rose)' : 'var(--ink-muted)';
-  document.getElementById('rule-upper').style.color = hasUpper ? 'var(--rose)' : 'var(--ink-muted)';
-  document.getElementById('rule-num').style.color = hasNum ? 'var(--rose)' : 'var(--ink-muted)';
-  document.getElementById('rule-sym').style.color = hasSym ? 'var(--rose)' : 'var(--ink-muted)';
-  
-  if (strength === 0) { text = '—'; }
-  else if (strength === 1) { text = 'Lemah'; color = '#ef4444'; }
-  else if (strength === 2) { text = 'Sedang'; color = '#f59e0b'; }
-  else if (strength === 3) { text = 'Kuat'; color = '#10b981'; }
-  else if (strength === 4) { text = 'Sangat Kuat'; color = '#059669'; }
-  
-  document.getElementById('pwd-text').innerText = text;
-  document.getElementById('pwd-text').style.color = color;
-  
+  const hasNum   = /[0-9]/.test(val);
+  const hasSym   = /[!@#$%^&*(),.?":{}|<>]/.test(val);
+  let   strength = [hasLen, hasUpper, hasNum, hasSym].filter(Boolean).length;
+
+  const colors   = ['', '#ef4444', '#f59e0b', '#10b981', '#059669'];
+  const labels   = ['—', 'Lemah', 'Sedang', 'Kuat', 'Sangat Kuat'];
+  const color    = strength ? colors[strength] : 'var(--border)';
+
+  const ruleColor = (ok) => ok ? 'var(--rose-deep)' : 'var(--ink-muted)';
+  document.getElementById('rule-len').style.color   = ruleColor(hasLen);
+  document.getElementById('rule-upper').style.color = ruleColor(hasUpper);
+  document.getElementById('rule-num').style.color   = ruleColor(hasNum);
+  document.getElementById('rule-sym').style.color   = ruleColor(hasSym);
+
+  const txt = document.getElementById('pwd-text');
+  txt.textContent = labels[strength] || '—';
+  txt.style.color = color;
+
   for (let i = 1; i <= 4; i++) {
-    document.getElementById('pwd-bar-' + i).style.background = (i <= strength) ? color : 'var(--border)';
+    document.getElementById('pwd-bar-' + i).style.background = i <= strength ? color : 'var(--border)';
   }
 }
 
+/* ── Delete account gate ── */
 function checkDeleteStatus() {
-  const input = document.getElementById('delete-confirm-input').value;
-  const cb = document.getElementById('delete-checkbox').checked;
-  const btn = document.getElementById('btn-delete-account');
-  
-  if (input === 'DELETE' && cb) {
-    btn.disabled = false;
-    btn.style.opacity = '1';
-    btn.style.cursor = 'pointer';
-    btn.style.background = '#dc2626'; // pure red for final action
-  } else {
-    btn.disabled = true;
-    btn.style.opacity = '0.5';
-    btn.style.cursor = 'not-allowed';
-    btn.style.background = 'var(--rose-light)';
-  }
+  const input = document.getElementById('delete-confirm-input');
+  const cb    = document.getElementById('delete-checkbox');
+  const btn   = document.getElementById('btn-delete-account');
+  if (!btn) return;
+
+  const ok = input && input.value === 'DELETE' && cb && cb.checked;
+  btn.disabled      = !ok;
+  btn.style.opacity = ok ? '1' : '0.6';
+  btn.style.cursor  = ok ? 'pointer' : 'not-allowed';
+  btn.style.background   = ok ? 'var(--rose-deep)' : 'var(--rose-pale)';
+  btn.style.color        = ok ? '#fff' : 'var(--rose-deep)';
 }
 </script>

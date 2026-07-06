@@ -2,7 +2,7 @@ CREATE DATABASE IF NOT EXISTS rubbybooks CHARACTER SET utf8mb4 COLLATE utf8mb4_u
 USE rubbybooks;
 
 SET FOREIGN_KEY_CHECKS=0;
-DROP TABLE IF EXISTS system_logs, seller_verifications, notifications, reviews, payments, order_items, orders, carts, shipping_addresses, products, categories, users, wishlists;
+DROP TABLE IF EXISTS system_logs, seller_verifications, notifications, reviews, payments, order_items, orders, carts, shipping_addresses, products, categories, users, wishlists, system_settings;
 SET FOREIGN_KEY_CHECKS=1;
 
 CREATE TABLE users (
@@ -11,7 +11,7 @@ CREATE TABLE users (
   email VARCHAR(160) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
   role ENUM('buyer','seller','admin') NOT NULL DEFAULT 'buyer',
-  status ENUM('active','pending','banned') NOT NULL DEFAULT 'active',
+  status ENUM('active','pending','banned','suspended') NOT NULL DEFAULT 'active',
   avatar VARCHAR(255) NULL,
   phone VARCHAR(40) NULL,
   dob DATE NULL,
@@ -146,14 +146,29 @@ CREATE TABLE system_logs (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE system_settings (
+  `key` VARCHAR(80) NOT NULL PRIMARY KEY,
+  `value` TEXT NOT NULL
+);
+
+INSERT INTO system_settings (`key`, `value`) VALUES
+('currency', 'IDR'),
+('timezone', 'Asia/Jakarta'),
+('min_order', '50000'),
+('ppn_rate', '11'),
+('ppn_included', '0'),
+('low_stock_alert', '1'),
+('low_stock_threshold', '10'),
+('show_stock_display', '1');
+
 INSERT INTO users (name,email,password,role,status) VALUES
-('Budi Admin','budi.admin@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','admin','active'),
+('Budi Admin','budiadmin@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','admin','active'),
 ('Toko Buku Cahaya','tokobukucahaya@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','seller','active'),
-('Putri Lestari','putri.lestari@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','buyer','active'),
-('Buku Keigo Official','keigo.official@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','seller','active'),
+('Putri Lestari','putrilestari@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','buyer','active'),
+('Buku Keigo Official','keigoofficial@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','seller','active'),
 ('Literasi Jaya','literasijaya@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','seller','active'),
-('Rina Amelia','rina.amelia@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','buyer','active'),
-('Dimas Prasetyo','dimas.prasetyo@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','buyer','active');
+('Rina Amelia','rinaamelia@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','buyer','active'),
+('Dimas Prasetyo','dimasprasetyo@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','buyer','active');
 
 INSERT INTO seller_verifications (seller_id,status,approved_by,approved_at) VALUES 
 (2,'approved',1,NOW()),

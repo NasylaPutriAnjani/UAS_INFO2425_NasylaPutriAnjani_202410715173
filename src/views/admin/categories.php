@@ -17,7 +17,7 @@
           <button class="sidebar-item" onclick="showPage('admin')">
             <span class="si">📊</span> Dashboard
           </button>
-          <button class="sidebar-item" onclick="showToast('📈 Halaman Analitik')">
+          <button class="sidebar-item" onclick="showPage('admin_analytics')">
             <span class="si">📈</span> Analitik
           </button>
         </div>
@@ -41,6 +41,9 @@
           <button class="sidebar-item" onclick="showPage('account_settings')">
             <span class="si">⚙️</span> Pengaturan Akun
           </button>
+          <button class="sidebar-item" onclick="showPage('admin_settings')">
+            <span class="si">🛠️</span> Pengaturan Sistem
+          </button>
         </div>
       </nav>
 
@@ -62,7 +65,15 @@
             <p>Manajemen kategori buku untuk klasifikasi katalog</p>
           </div>
         </div>
-        <div class="admin-topbar-right">
+        <div class="admin-topbar-right" style="display:flex; align-items:center; gap:16px;">
+          <form method="GET" action="index.php" style="display:flex; gap:8px;">
+            <input type="hidden" name="page" value="admin_categories">
+            <input type="text" name="q" value="<?= e($q ?? '') ?>" placeholder="Cari kategori..." style="padding:8px 12px; border:1px solid var(--border-soft); border-radius:6px; font-size:14px; width:250px;" required>
+            <button class="btn-primary" style="padding:8px 16px;">Cari</button>
+            <?php if (!empty($q)): ?>
+              <a href="index.php?page=admin_categories" class="btn-secondary" style="padding:8px 12px; text-decoration:none;">Reset</a>
+            <?php endif; ?>
+          </form>
           <span style="font-size:12px;color:var(--ink-muted);">Total: <strong><?= count($categories) ?> kategori</strong></span>
         </div>
       </div>
@@ -103,6 +114,7 @@
                   <tr>
                     <th>Nama</th>
                     <th>Deskripsi</th>
+                    <th style="width:80px; text-align:center;">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -110,6 +122,13 @@
                     <tr>
                       <td style="font-weight:600; color:var(--accent);"><?= e($category['name']) ?></td>
                       <td style="color:var(--ink-muted);"><?= e($category['description']) ?></td>
+                      <td style="text-align:center;">
+                        <form method="post" style="display:inline;" onsubmit="return confirm('Hapus kategori <?= e($category['name']) ?>? (Pastikan tidak ada produk yang menggunakan kategori ini)')">
+                          <input type="hidden" name="action" value="delete_category">
+                          <input type="hidden" name="category_id" value="<?= $category['id'] ?>">
+                          <button class="admin-action-btn danger">Delete</button>
+                        </form>
+                      </td>
                     </tr>
                   <?php endforeach; ?>
                 </tbody>
