@@ -40,10 +40,7 @@
                         <?php if ($order['status'] === 'delivered'): ?>
                           <button type="button" class="btn-dash-primary" style="padding: 4px 12px; font-size: 12px;" onclick="openReviewModal(<?= htmlspecialchars(json_encode($order['items'])) ?>)">Beri Review</button>
                         <?php elseif ($order['status'] === 'shipped'): ?>
-                          <form method="POST" action="index.php?action=complete_order" style="display:inline;" onsubmit="return confirm('Apakah Anda yakin pesanan sudah diterima?');">
-                            <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                            <button type="submit" class="btn-dash-primary" style="padding: 4px 12px; font-size: 12px; background: #16a34a;">Pesanan Diterima</button>
-                          </form>
+                          <button type="button" class="btn-dash-primary" style="padding: 4px 12px; font-size: 12px; background: #16a34a;" onclick="openCompleteOrderModal(<?= $order['id'] ?>)">Pesanan Diterima</button>
                         <?php else: ?>
                           <span style="color:#999;font-size:13px">Menunggu Selesai</span>
                         <?php endif; ?>
@@ -91,3 +88,36 @@
     </form>
   </div>
 </div>
+
+<div class="overlay" id="completeOrderOverlay" onclick="closeCompleteOrderModal()"></div>
+<div class="cart-drawer" id="completeOrderModal" style="max-width: 400px; left: 50%; top: 50%; transform: translate(-50%, -50%); right: auto; bottom: auto; height: auto; border-radius: 12px; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 10000; position: fixed; background: #fff;">
+  <div class="cart-drawer-head" style="padding: 20px; border-bottom: 1px solid #eee;">
+    <h3 style="margin: 0;">✅ Konfirmasi Pesanan</h3>
+    <button class="close-btn" onclick="closeCompleteOrderModal()" style="background: none; border: none; font-size: 20px; cursor: pointer;">✕</button>
+  </div>
+  <div style="padding: 20px;">
+    <p style="margin-top: 0; margin-bottom: 20px; color: #4b5563; line-height: 1.5;">Apakah Anda yakin pesanan sudah diterima dengan baik? Mengonfirmasi pesanan berarti transaksi selesai.</p>
+    <form method="POST" action="index.php?action=complete_order" id="completeOrderForm">
+      <input type="hidden" name="order_id" id="completeOrderId" value="">
+      <div style="display: flex; gap: 10px;">
+        <button type="button" class="btn-dash-outline" style="flex: 1; justify-content: center;" onclick="closeCompleteOrderModal()">Batal</button>
+        <button type="submit" class="btn-primary" style="flex: 1; justify-content: center; background: #16a34a;">Ya, Diterima</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openCompleteOrderModal(orderId) {
+  document.getElementById('completeOrderId').value = orderId;
+  document.getElementById('completeOrderOverlay').classList.add('active');
+  document.getElementById('completeOrderModal').style.opacity = '1';
+  document.getElementById('completeOrderModal').style.pointerEvents = 'auto';
+}
+
+function closeCompleteOrderModal() {
+  document.getElementById('completeOrderOverlay').classList.remove('active');
+  document.getElementById('completeOrderModal').style.opacity = '0';
+  document.getElementById('completeOrderModal').style.pointerEvents = 'none';
+}
+</script>

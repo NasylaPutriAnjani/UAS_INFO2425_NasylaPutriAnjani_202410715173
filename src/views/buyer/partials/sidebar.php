@@ -34,6 +34,9 @@ $firstName = explode(' ', trim($user['name'] ?? 'Pembeli'))[0];
       
       <a href="index.php?page=buyer_orders" class="sidebar-item<?= $buyerMenu === 'orders' ? ' active' : '' ?>">
         <span class="si">📦</span> Pesanan Saya
+        <?php if ($sidebar['activeOrders'] > 0): ?>
+          <span class="sidebar-badge"><?= (int)$sidebar['activeOrders'] ?></span>
+        <?php endif; ?>
       </a>
       
       <a href="index.php?page=buyer_reviews" class="sidebar-item<?= $buyerMenu === 'reviews' ? ' active' : '' ?>">
