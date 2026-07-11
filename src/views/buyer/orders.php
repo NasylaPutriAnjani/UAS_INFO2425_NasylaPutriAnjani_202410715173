@@ -40,7 +40,7 @@
                         <?php if ($order['status'] === 'delivered'): ?>
                           <button type="button" class="btn-dash-primary" style="padding: 4px 12px; font-size: 12px;" onclick="openReviewModal(<?= htmlspecialchars(json_encode($order['items'])) ?>)">Beri Review</button>
                         <?php elseif ($order['status'] === 'shipped'): ?>
-                          <button type="button" class="btn-dash-primary" style="padding: 4px 12px; font-size: 12px; background: #16a34a;" onclick="openCompleteOrderModal(<?= $order['id'] ?>)">Pesanan Diterima</button>
+                          <button type="button" class="btn-dash-primary" style="padding: 4px 12px; font-size: 12px;" onclick="openCompleteOrderModal(<?= $order['id'] ?>)">Pesanan Diterima</button>
                         <?php else: ?>
                           <span style="color:#999;font-size:13px">Menunggu Selesai</span>
                         <?php endif; ?>
@@ -101,7 +101,7 @@
       <input type="hidden" name="order_id" id="completeOrderId" value="">
       <div style="display: flex; gap: 10px;">
         <button type="button" class="btn-dash-outline" style="flex: 1; justify-content: center;" onclick="closeCompleteOrderModal()">Batal</button>
-        <button type="submit" class="btn-primary" style="flex: 1; justify-content: center; background: #16a34a;">Ya, Diterima</button>
+        <button type="submit" class="btn-primary" style="flex: 1; justify-content: center;">Ya, Diterima</button>
       </div>
     </form>
   </div>
