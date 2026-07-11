@@ -276,14 +276,3 @@ $buildUrl = fn(array $params): string => 'index.php?' . http_build_query(array_m
     </div>
   </div>
 </div>
-
-<script>
-// Close period dropdown when clicking outside
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('[onclick*="nextElementSibling"]') && !e.target.closest('[onclick*="nextElementSibling"]')?.nextElementSibling) {
-    document.querySelectorAll('#page-admin_analytics div[style*="position:absolute"]').forEach(d => {
-      if (d.style.display === 'block') d.style.display = 'none';
-    });
-  }
-});
-</script>

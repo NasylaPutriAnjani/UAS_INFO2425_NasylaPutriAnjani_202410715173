@@ -9,6 +9,7 @@ $checkoutSubtotal = 0;
 foreach ($checkoutItems as $item) {
     $checkoutSubtotal += (int)$item['price'] * (int)$item['qty'];
 }
+$defaultShipping = shipping_cost('');
 ?>
 <div id="page-checkout" class="page active">
   <div class="checkout-page">
@@ -27,30 +28,25 @@ foreach ($checkoutItems as $item) {
             <div class="form-row">
               <div class="form-group">
                 <label>Nama Lengkap Penerima</label>
-                <input type="text" name="recipient_name" class="form-input" placeholder="Sari Rahayu" required>
+                <input type="text" name="recipient_name" class="form-input" placeholder="Nama Lengkap" required>
               </div>
               <div class="form-group">
                 <label>Nomor Telepon</label>
-                <input type="text" name="phone" class="form-input" placeholder="081234567890" required>
+                <input type="text" name="phone" class="form-input numeric-only" placeholder="Nomor Telepon" inputmode="numeric" pattern="[0-9]+" autocomplete="tel" required>
               </div>
             </div>
             <div class="form-group">
               <label>Alamat Lengkap</label>
-              <input type="text" name="address" class="form-input" placeholder="Jl. Sudirman No. 10, Kec. Setiabudi" required>
+              <input type="text" name="address" class="form-input" placeholder="Alamat Lengkap" required>
             </div>
             <div class="form-row">
               <div class="form-group">
                 <label>Kota</label>
-                <select name="city" id="checkoutCity" class="form-select form-input" required onchange="updateCheckoutTotal()">
-                  <option value="jakarta" data-cost="10000">Jakarta</option>
-                  <option value="surabaya" data-cost="20000">Surabaya</option>
-                  <option value="bandung" data-cost="15000">Bandung</option>
-                  <option value="lainnya" data-cost="25000">Kota Lainnya</option>
-                </select>
+                <input type="text" name="city" id="checkoutCity" class="form-input" placeholder="Masukkan kota" autocomplete="address-level2" required oninput="updateCheckoutTotal()">
               </div>
               <div class="form-group">
                 <label>Kode Pos</label>
-                <input type="text" name="postal_code" class="form-input" placeholder="12910" required>
+                <input type="text" name="postal_code" class="form-input numeric-only" placeholder="Kode Pos" inputmode="numeric" pattern="[0-9]+" autocomplete="postal-code" required>
               </div>
             </div>
             
@@ -85,9 +81,12 @@ foreach ($checkoutItems as $item) {
             <div style="max-height: 300px; overflow-y: auto; padding-right: 10px; margin-bottom: 20px;">
               <?php foreach ($checkoutItems as $item): 
                 $bcClass = 'bc' . (($item['id'] % 6) + 1);
+                $summaryCoverStyle = !empty($item['image'])
+                  ? "background-image:url('" . e(asset($item['image'])) . "');background-size:cover;background-position:center;font-size:0;"
+                  : '';
               ?>
                 <div class="sum-item">
-                  <div class="sum-cover <?= $bcClass ?>"><?= e($item['name']) ?></div>
+                  <div class="sum-cover <?= $bcClass ?>" style="<?= $summaryCoverStyle ?>"><?= empty($item['image']) ? e($item['name']) : '' ?></div>
                   <div class="ci-info">
                     <div class="sum-title"><?= e($item['name']) ?></div>
                     <div class="sum-qty">Qty: <?= (int)$item['qty'] ?></div>
@@ -98,8 +97,8 @@ foreach ($checkoutItems as $item) {
             </div>
             <div class="tot-rows">
               <div class="tot-row"><span>Subtotal (<?= count($checkoutItems) ?> item)</span><span id="coSubtotal" data-value="<?= $checkoutSubtotal ?>"><?= rupiah($checkoutSubtotal) ?></span></div>
-              <div class="tot-row"><span>Ongkos Kirim</span><span id="coShipping" data-value="10000">Rp 10.000</span></div>
-              <div class="tot-row grand"><span>Total</span><span id="coTotal"><?= rupiah($checkoutSubtotal + 10000) ?></span></div>
+              <div class="tot-row"><span>Ongkos Kirim</span><span id="coShipping" data-value="<?= $defaultShipping ?>"><?= rupiah($defaultShipping) ?></span></div>
+              <div class="tot-row grand"><span>Total</span><span id="coTotal"><?= rupiah($checkoutSubtotal + $defaultShipping) ?></span></div>
             </div>
             <button type="submit" class="btn-checkout">Buat Pesanan →</button>
             <p style="text-align:center;font-size:11.5px;color:var(--ink-muted);margin-top:14px;">🔒 Transaksi aman & terenkripsi · 100% terjamin</p>
@@ -109,18 +108,3 @@ foreach ($checkoutItems as $item) {
     </form>
   </div>
 </div>
-<script>
-function updateCheckoutTotal() {
-  const citySelect = document.getElementById('checkoutCity');
-  const option = citySelect.options[citySelect.selectedIndex];
-  const shippingCost = parseInt(option.getAttribute('data-cost'));
-  
-  const subtotal = parseInt(document.getElementById('coSubtotal').getAttribute('data-value'));
-  const total = subtotal + shippingCost;
-  
-  document.getElementById('coShipping').textContent = 'Rp ' + shippingCost.toLocaleString('id-ID');
-  document.getElementById('coTotal').textContent = 'Rp ' + total.toLocaleString('id-ID');
-}
-// Init
-updateCheckoutTotal();
-</script>

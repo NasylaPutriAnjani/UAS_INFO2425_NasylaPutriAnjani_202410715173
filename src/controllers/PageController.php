@@ -9,6 +9,7 @@ function route_config(string $page): array
         'product'          => ['view' => 'public/product.php'],
         'login'            => ['view' => 'public/home.php'],
         'register' => ['view' => 'public/home.php'],
+        'logout' => ['view' => 'public/home.php'],
         'account_settings' => ['view' => 'shared/account.php'],  // general – no role restriction
         'buyer' => ['view' => 'buyer/dashboard.php', 'role' => 'buyer'],
         'buyer_account' => ['view' => 'shared/account.php', 'role' => 'buyer'],
@@ -41,8 +42,8 @@ function route_config(string $page): array
 function page_data(PDO $pdo, string $page): array
 {
     if ($page === 'home') {
-        $products = $pdo->query('SELECT p.*, c.name category, COALESCE((SELECT AVG(rating) FROM reviews WHERE product_id=p.id), 0) as avg_rating FROM products p JOIN categories c ON c.id=p.category_id WHERE p.status="active" ORDER BY (SELECT SUM(qty) FROM order_items WHERE product_id=p.id) DESC, p.id DESC LIMIT 6')->fetchAll();
-        $featured = $pdo->query('SELECT p.*, c.name category, COALESCE((SELECT AVG(rating) FROM reviews WHERE product_id=p.id), 0) as avg_rating FROM products p JOIN categories c ON c.id=p.category_id WHERE p.status="active" ORDER BY RAND() LIMIT 1')->fetch();
+        $products = $pdo->query('SELECT p.*, c.name category, u.name seller_name, COALESCE((SELECT AVG(rating) FROM reviews WHERE product_id=p.id), 0) as avg_rating FROM products p JOIN categories c ON c.id=p.category_id JOIN users u ON u.id=p.seller_id WHERE p.status="active" ORDER BY (SELECT SUM(qty) FROM order_items WHERE product_id=p.id) DESC, p.id DESC LIMIT 6')->fetchAll();
+        $featured = $pdo->query('SELECT p.*, c.name category, u.name seller_name, COALESCE((SELECT AVG(rating) FROM reviews WHERE product_id=p.id), 0) as avg_rating FROM products p JOIN categories c ON c.id=p.category_id JOIN users u ON u.id=p.seller_id WHERE p.status="active" ORDER BY RAND() LIMIT 1')->fetch();
         
         // Hero visual: 4 books (different from bestsellers, for decoration)
         $heroProducts = $pdo->query('SELECT p.*, c.name category FROM products p JOIN categories c ON c.id=p.category_id WHERE p.status="active" ORDER BY RAND() LIMIT 4')->fetchAll();
@@ -82,7 +83,7 @@ function page_data(PDO $pdo, string $page): array
     if ($page === 'product') {
         $id = (int)($_GET['id'] ?? 0);
         $stmt = $pdo->prepare('
-            SELECT p.*, c.name category, u.name seller_name,
+            SELECT p.*, c.name category, u.name seller_name, u.avatar seller_avatar,
                    COALESCE((SELECT AVG(rating) FROM reviews WHERE product_id=p.id), 0) as avg_rating,
                    COALESCE((SELECT COUNT(*) FROM reviews WHERE product_id=p.id), 0) as review_count,
                    COALESCE((SELECT SUM(qty) FROM order_items WHERE product_id=p.id), 0) as sold_count
@@ -122,8 +123,9 @@ function page_data(PDO $pdo, string $page): array
 
         // Related products (same category)
         $relStmt = $pdo->prepare('
-            SELECT p.*, c.name category FROM products p
+            SELECT p.*, c.name category, u.name seller_name, u.avatar seller_avatar FROM products p
             JOIN categories c ON c.id = p.category_id
+            JOIN users u ON u.id = p.seller_id
             WHERE p.category_id = ? AND p.id != ? AND p.status = "active"
             ORDER BY RAND() LIMIT 4
         ');
@@ -150,11 +152,12 @@ function page_data(PDO $pdo, string $page): array
         $limit = 8;
         $offset = ($p - 1) * $limit;
 
-        $sql = 'SELECT p.*, c.name category, 
+        $sql = 'SELECT p.*, c.name category, u.name seller_name,
                        COALESCE((SELECT AVG(rating) FROM reviews WHERE product_id=p.id), 0) as avg_rating,
                        COALESCE((SELECT SUM(qty) FROM order_items WHERE product_id=p.id), 0) as sales_count
                 FROM products p 
                 JOIN categories c ON c.id=p.category_id 
+                JOIN users u ON u.id=p.seller_id
                 WHERE p.status="active" AND p.name LIKE ? AND p.price <= ?';
         
         $params = [$q, $priceMax];
@@ -197,10 +200,44 @@ function page_data(PDO $pdo, string $page): array
         $sql .= " ORDER BY $orderBy LIMIT $limit OFFSET $offset";
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
+        $ratingOptions = [
+            ['value' => '5.0', 'label' => '5.0', 'stars' => '★★★★★'],
+            ['value' => '4.0', 'label' => '4.0+', 'stars' => '★★★★☆'],
+            ['value' => '3.0', 'label' => '3.0+', 'stars' => '★★★☆☆'],
+        ];
+        foreach ($ratingOptions as &$ratingOption) {
+            $ratingCount = $pdo->prepare('
+                SELECT COUNT(*) FROM (
+                    SELECT p.id, COALESCE(AVG(r.rating), 0) AS avg_rating
+                    FROM products p
+                    LEFT JOIN reviews r ON r.product_id = p.id
+                    WHERE p.status = "active"
+                    GROUP BY p.id
+                    HAVING avg_rating >= ?
+                ) rated_products
+            ');
+            $ratingCount->execute([(float)$ratingOption['value']]);
+            $ratingOption['count'] = (int)$ratingCount->fetchColumn();
+        }
+        unset($ratingOption);
+
+        $conditionOptions = [
+            'new' => ['label' => 'Baru', 'count' => 0],
+            'used_good' => ['label' => 'Bekas - Baik', 'count' => 0],
+            'used_fair' => ['label' => 'Bekas - Cukup', 'count' => 0],
+        ];
+        $conditionRows = $pdo->query('SELECT book_condition, COUNT(*) total FROM products WHERE status = "active" GROUP BY book_condition')->fetchAll();
+        foreach ($conditionRows as $row) {
+            if (isset($conditionOptions[$row['book_condition']])) {
+                $conditionOptions[$row['book_condition']]['count'] = (int)$row['total'];
+            }
+        }
 
         return [
             'products' => $stmt->fetchAll(), 
             'categories' => $pdo->query('SELECT * FROM categories ORDER BY name')->fetchAll(),
+            'ratingOptions' => $ratingOptions,
+            'conditionOptions' => $conditionOptions,
             'filters' => [
                 'q' => $qStr,
                 'category' => $categoriesFilter,
@@ -234,11 +271,18 @@ function page_data(PDO $pdo, string $page): array
         $uid = current_user()['id'];
 
         if ($page === 'buyer') {
-            $stmt = $pdo->prepare('SELECT * FROM orders WHERE buyer_id=? ORDER BY id DESC LIMIT 5');
+            $stmt = $pdo->prepare('SELECT o.*, pay.id AS payment_id FROM orders o LEFT JOIN payments pay ON pay.order_id = o.id WHERE o.buyer_id=? ORDER BY o.id DESC LIMIT 5');
             $stmt->execute([$uid]);
+            $recentOrders = $stmt->fetchAll();
+            foreach ($recentOrders as &$order) {
+                if ($order['status'] === 'pending' && !empty($order['payment_id'])) {
+                    $order['status'] = 'paid';
+                }
+            }
+            unset($order);
             return array_merge($base, [
                 'stats' => buyer_stats($pdo),
-                'recentOrders' => $stmt->fetchAll(),
+                'recentOrders' => $recentOrders,
             ]);
         }
         if (in_array($page, ['buyer_cart', 'cart'], true)) {
@@ -247,23 +291,33 @@ function page_data(PDO $pdo, string $page): array
             return array_merge($base, ['items' => $stmt->fetchAll()]);
         }
         if ($page === 'buyer_orders') {
-            $stmt = $pdo->prepare('SELECT * FROM orders WHERE buyer_id=? ORDER BY id DESC');
+            $stmt = $pdo->prepare('SELECT o.*, pay.id AS payment_id FROM orders o LEFT JOIN payments pay ON pay.order_id = o.id WHERE o.buyer_id=? ORDER BY o.id DESC');
             $stmt->execute([$uid]);
             $orders = $stmt->fetchAll();
             $itemsStmt = $pdo->prepare('SELECT oi.*, p.name FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE oi.order_id = ?');
             foreach ($orders as &$o) {
+                if ($o['status'] === 'pending' && !empty($o['payment_id'])) {
+                    $o['status'] = 'paid';
+                }
                 $itemsStmt->execute([$o['id']]);
                 $o['items'] = $itemsStmt->fetchAll();
             }
             return array_merge($base, ['orders' => $orders]);
         }
         if ($page === 'tracking') {
-            $stmt = $pdo->prepare('SELECT * FROM orders WHERE buyer_id=? ORDER BY id DESC');
+            $stmt = $pdo->prepare('SELECT o.*, pay.id AS payment_id FROM orders o LEFT JOIN payments pay ON pay.order_id = o.id WHERE o.buyer_id=? ORDER BY o.id DESC');
             $stmt->execute([$uid]);
-            return array_merge($base, ['orders' => $stmt->fetchAll()]);
+            $orders = $stmt->fetchAll();
+            foreach ($orders as &$order) {
+                if ($order['status'] === 'pending' && !empty($order['payment_id'])) {
+                    $order['status'] = 'paid';
+                }
+            }
+            unset($order);
+            return array_merge($base, ['orders' => $orders]);
         }
         if ($page === 'buyer_wishlist') {
-            $stmt = $pdo->prepare('SELECT w.*, p.*, c.name category FROM wishlists w JOIN products p ON p.id = w.product_id JOIN categories c ON c.id = p.category_id WHERE w.buyer_id = ? ORDER BY w.id DESC');
+            $stmt = $pdo->prepare('SELECT w.*, p.*, c.name category, u.name seller_name FROM wishlists w JOIN products p ON p.id = w.product_id JOIN categories c ON c.id = p.category_id JOIN users u ON u.id = p.seller_id WHERE w.buyer_id = ? ORDER BY w.id DESC');
             $stmt->execute([$uid]);
             return array_merge($base, ['wishlistItems' => $stmt->fetchAll()]);
         }
@@ -472,7 +526,7 @@ function page_data(PDO $pdo, string $page): array
 
         // Always fetch ALL reviews first for stats calculation
         $stmtAll = $pdo->prepare(
-            'SELECT r.*, u.name buyer_name, p.name product_name
+            'SELECT r.*, u.name buyer_name, u.avatar buyer_avatar, p.name product_name
              FROM reviews r
              JOIN products p ON p.id = r.product_id
              JOIN users u ON u.id = r.buyer_id
@@ -540,18 +594,18 @@ function page_data(PDO $pdo, string $page): array
             $prevEndDate = date('Y-m-d 23:59:59', strtotime('-7 days'));
             $compareLabel = 'vs minggu lalu';
         } elseif ($period === 'month') {
-            // Last 30 days grouped in 5-day intervals or just daily
-            for ($i = 29; $i >= 0; $i--) {
-                $d = date('Y-m-d', strtotime("-$i days"));
-                // Format: Date number
-                $labels[$d] = date('j', strtotime("-$i days"));
+            // Current month, day by day up to today.
+            $daysInPeriod = (int)date('j');
+            for ($day = 1; $day <= $daysInPeriod; $day++) {
+                $d = date('Y-m-') . str_pad((string)$day, 2, '0', STR_PAD_LEFT);
+                $labels[$d] = (string)$day;
                 $dataPoints[$d] = ['label' => $labels[$d], 'revenue' => 0.0, 'orders' => 0];
             }
-            $startDate = date('Y-m-d 00:00:00', strtotime('-29 days'));
+            $startDate = date('Y-m-01 00:00:00');
             $endDate = date('Y-m-d 23:59:59');
 
-            $prevStartDate = date('Y-m-d 00:00:00', strtotime('-59 days'));
-            $prevEndDate = date('Y-m-d 23:59:59', strtotime('-30 days'));
+            $prevStartDate = date('Y-m-01 00:00:00', strtotime('first day of last month'));
+            $prevEndDate = date('Y-m-d 23:59:59', strtotime('last month +' . ($daysInPeriod - 1) . ' days'));
             $compareLabel = 'vs bulan lalu';
         } else { // 'year'
             // Last 12 months
@@ -732,6 +786,31 @@ function page_data(PDO $pdo, string $page): array
     }
     if ($page === 'seller_notifications') {
         $uid = current_user()['id'];
+        $missingStmt = $pdo->prepare('
+            SELECT DISTINCT o.id, o.invoice_number,
+                   GROUP_CONCAT(CONCAT(p.name, " x", oi.qty) SEPARATOR ", ") AS product_list
+            FROM orders o
+            JOIN order_items oi ON oi.order_id = o.id
+            JOIN products p ON p.id = oi.product_id
+            WHERE p.seller_id = ?
+              AND o.status IN ("pending","paid","processing","shipped")
+              AND NOT EXISTS (
+                SELECT 1 FROM notifications n
+                WHERE n.user_id = ?
+                  AND n.message LIKE CONCAT("%", o.invoice_number, "%")
+              )
+            GROUP BY o.id, o.invoice_number
+            ORDER BY o.created_at DESC
+            LIMIT 20
+        ');
+        $missingStmt->execute([$uid, $uid]);
+        foreach ($missingStmt->fetchAll() as $missing) {
+            notify_user(
+                $pdo,
+                $uid,
+                'Pesanan masuk ' . $missing['invoice_number'] . ': ' . $missing['product_list'] . '. Menunggu konfirmasi penjual.'
+            );
+        }
         $stmt = $pdo->prepare('SELECT * FROM notifications WHERE user_id = ? ORDER BY is_read ASC, created_at DESC');
         $stmt->execute([$uid]);
         $notifications = $stmt->fetchAll();

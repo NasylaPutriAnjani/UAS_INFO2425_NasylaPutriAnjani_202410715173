@@ -12,10 +12,13 @@ $stats = $stats ?? ['average' => 0.0, 'total' => 0, 'breakdown' => [5 => 0, 4 =>
     $currentSellerPage = $_GET['page'] ?? 'seller';
     $sellerIdForSidebar = current_user()['id'];
     $activeProductsCount = (int)$GLOBALS['pdo']->query("SELECT COUNT(*) FROM products WHERE seller_id = $sellerIdForSidebar AND status = 'active'")->fetchColumn();
+    $sellerNavCounts = user_nav_counts($GLOBALS['pdo']);
+    $sellerOrderBadgeCount = (int)($sellerNavCounts['orders'] ?? 0);
+    $sellerUnreadNotifCount = (int)($sellerNavCounts['notifications'] ?? 0);
     ?>
     <aside class="dash-sidebar seller-sidebar">
       <div class="sidebar-store-profile">
-        <div class="sidebar-store-avatar">🏪</div>
+        <?= user_avatar_html(current_user(), 'sidebar-store-avatar', 'S') ?>
         <div>
           <div class="sidebar-store-name"><?= e(current_user()['name'] ?? 'Penjual') ?></div>
           <div class="sidebar-store-status">Toko Aktif</div>
@@ -34,12 +37,16 @@ $stats = $stats ?? ['average' => 0.0, 'total' => 0, 'breakdown' => [5 => 0, 4 =>
           </button>
           <button class="sidebar-item<?= $currentSellerPage === 'seller_orders' ? ' active' : '' ?>" onclick="showPage('seller_orders')">
             <span class="si">🛒</span> Pesanan Masuk
+
+            <?php if ($sellerOrderBadgeCount > 0): ?><span class="sidebar-badge"><?= $sellerOrderBadgeCount ?></span><?php endif; ?>
           </button>
           <button class="sidebar-item<?= $currentSellerPage === 'seller_reviews' ? ' active' : '' ?>" onclick="showPage('seller_reviews')">
             <span class="si">💬</span> Ulasan & Rating
           </button>
           <button class="sidebar-item<?= $currentSellerPage === 'seller_notifications' ? ' active' : '' ?>" onclick="showPage('seller_notifications')">
             <span class="si">🔔</span> Notifikasi
+
+            <?php if ($sellerUnreadNotifCount > 0): ?><span class="sidebar-badge warn"><?= $sellerUnreadNotifCount ?></span><?php endif; ?>
           </button>
         </div>
         <div class="sidebar-group">
@@ -135,14 +142,15 @@ $stats = $stats ?? ['average' => 0.0, 'total' => 0, 'breakdown' => [5 => 0, 4 =>
             </div>
           <?php else: ?>
             <?php foreach ($reviews as $rev):
-              $buyerInitial = strtoupper(substr($rev['buyer_name'], 0, 2));
+              $buyerUser = ['name' => $rev['buyer_name'], 'avatar' => $rev['buyer_avatar'] ?? null];
+              $buyerInitial = user_initials($buyerUser);
               $revRating = (int)$rev['rating'];
             ?>
               <div class="review-item-card">
                 <!-- User Header -->
                 <div class="review-item-header">
                   <div class="buyer-avatar-info">
-                    <div class="buyer-letter-avatar"><?= $buyerInitial ?></div>
+                    <?= user_avatar_html($buyerUser, 'buyer-letter-avatar', $buyerInitial) ?>
                     <div class="buyer-meta-text">
                       <span class="buyer-name-bold"><?= e($rev['buyer_name']) ?></span>
                       <span class="review-date-text"><?= date('d F Y', strtotime($rev['created_at'])) ?></span>
@@ -195,333 +203,3 @@ $stats = $stats ?? ['average' => 0.0, 'total' => 0, 'breakdown' => [5 => 0, 4 =>
     </div>
   </div>
 </div>
-
-<style>
-  /* ── Filter Form ──────────────────── */
-  .review-filter-form {
-    display: flex;
-    align-items: center;
-  }
-
-  .filter-button-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background: #fff;
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    padding: 0 12px;
-    transition: all 0.2s;
-  }
-
-  .filter-button-wrapper:hover {
-    border-color: var(--accent-light);
-    background: var(--accent-blush);
-  }
-
-  .filter-btn-icon {
-    margin-right: 6px;
-    font-size: 14px;
-  }
-
-  .filter-select-input {
-    border: none;
-    background: transparent;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink-mid);
-    padding: 10px 20px 10px 0;
-    outline: none;
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-  }
-
-  .filter-button-wrapper::after {
-    content: '▼';
-    font-size: 8px;
-    color: #94a3b8;
-    position: absolute;
-    right: 10px;
-    pointer-events: none;
-  }
-
-  /* Stats Layout */
-  .stats-overview-grid {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-
-  .stat-rating-card {
-    background: #fff;
-    border: 1px solid var(--border-soft);
-    border-radius: 16px;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
-  }
-
-  .big-rating-val {
-    font-family: var(--font-serif);
-    font-size: 56px;
-    font-weight: 700;
-    color: var(--ink);
-    line-height: 1;
-  }
-
-  .rating-stars-row {
-    margin: 12px 0 8px;
-    display: flex;
-    gap: 2px;
-  }
-
-  .star-item {
-    font-size: 20px;
-    color: #e2e8f0;
-  }
-
-  .star-item.filled {
-    color: #fbbf24;
-  }
-
-  .total-reviews-label {
-    font-size: 13px;
-    color: #64748b;
-    font-weight: 600;
-  }
-
-  .stat-breakdown-card {
-    background: #fff;
-    border: 1px solid var(--border-soft);
-    border-radius: 16px;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 10px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
-  }
-
-  .breakdown-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .star-num {
-    font-size: 12.5px;
-    font-weight: 700;
-    color: var(--ink-mid);
-    width: 12px;
-    text-align: center;
-  }
-
-  .breakdown-bar {
-    flex: 1;
-    height: 8px;
-    background: #f1f5f9;
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .breakdown-bar-fill {
-    height: 100%;
-    background: #fbbf24;
-    border-radius: 4px;
-  }
-
-  .breakdown-count {
-    font-size: 12.5px;
-    color: #64748b;
-    font-weight: 600;
-    width: 24px;
-    text-align: right;
-  }
-
-  /* Reviews List Styling */
-  .reviews-list-container {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .no-reviews-placeholder {
-    background: #fff;
-    border: 1.5px dashed var(--border);
-    border-radius: 16px;
-    padding: 60px 20px;
-    text-align: center;
-    color: #64748b;
-  }
-
-  .no-reviews-placeholder span {
-    font-size: 44px;
-    display: block;
-    margin-bottom: 12px;
-  }
-
-  .review-item-card {
-    background: #fff;
-    border: 1px solid var(--border-soft);
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .review-item-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-
-  .buyer-avatar-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .buyer-letter-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #eff6ff;
-    color: #1d4ed8;
-    font-weight: 800;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .buyer-meta-text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .buyer-name-bold {
-    font-size: 13.5px;
-    font-weight: 700;
-    color: var(--ink);
-  }
-
-  .review-date-text {
-    font-size: 11px;
-    color: #94a3b8;
-  }
-
-  .review-stars-display {
-    display: flex;
-    gap: 2px;
-  }
-
-  .star-item-small {
-    font-size: 14px;
-    color: #e2e8f0;
-  }
-
-  .star-item-small.filled {
-    color: #fbbf24;
-  }
-
-  .review-product-tag-row {
-    display: flex;
-  }
-
-  .product-tag-chip {
-    background: #f8fafc;
-    border: 1px solid var(--border-soft);
-    border-radius: 8px;
-    padding: 4px 10px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #64748b;
-  }
-
-  .review-comment-content p {
-    font-size: 13.5px;
-    color: var(--ink-mid);
-    line-height: 1.6;
-  }
-
-  /* Store Reply Section */
-  .store-reply-display {
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 16px;
-    border-left: 4px solid var(--accent);
-  }
-
-  .reply-label-tag {
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    display: block;
-    margin-bottom: 6px;
-  }
-
-  .reply-text-content {
-    font-size: 13px;
-    color: var(--ink-mid);
-    line-height: 1.5;
-  }
-
-  /* Reply Input Form */
-  .store-reply-input-area {
-    margin-top: 4px;
-  }
-
-  .reply-post-form textarea {
-    width: 100%;
-    border: 1.5px solid var(--border);
-    border-radius: 12px;
-    padding: 12px 14px;
-    font-size: 13px;
-    color: var(--ink);
-    outline: none;
-    min-height: 80px;
-    resize: vertical;
-    background: #f8fafc;
-    font-family: var(--font-body);
-    transition: all 0.2s;
-  }
-
-  .reply-post-form textarea:focus {
-    border-color: var(--accent-light);
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.08);
-  }
-
-  .reply-form-footer {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 8px;
-  }
-
-  .btn-reply-submit {
-    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 16px;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-reply-submit:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.2);
-  }
-</style>

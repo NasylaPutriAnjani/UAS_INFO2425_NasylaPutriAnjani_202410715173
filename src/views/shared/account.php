@@ -26,10 +26,13 @@ $backPage = match($role) {
       <?php
         $sellerIdForSidebar  = $user['id'];
         $activeProductsCount = (int)$GLOBALS['pdo']->query("SELECT COUNT(*) FROM products WHERE seller_id = $sellerIdForSidebar AND status = 'active'")->fetchColumn();
+        $sellerNavCounts = user_nav_counts($GLOBALS['pdo']);
+        $sellerOrderBadgeCount = (int)($sellerNavCounts['orders'] ?? 0);
+        $sellerUnreadNotifCount = (int)($sellerNavCounts['notifications'] ?? 0);
       ?>
       <aside class="dash-sidebar seller-sidebar">
         <div class="sidebar-store-profile">
-          <div class="sidebar-store-avatar">🏪</div>
+          <?= user_avatar_html($user, 'sidebar-store-avatar', 'S') ?>
           <div>
             <div class="sidebar-store-name"><?= e($user['name']) ?></div>
             <div class="sidebar-store-status">Toko Aktif</div>
@@ -40,9 +43,9 @@ $backPage = match($role) {
             <div class="sidebar-group-label">Menu Utama</div>
             <button class="sidebar-item" onclick="showPage('seller')"><span class="si">📊</span> Dashboard</button>
             <button class="sidebar-item" onclick="showPage('seller_products')"><span class="si">📦</span> Produk Saya <span class="sidebar-badge"><?= $activeProductsCount ?></span></button>
-            <button class="sidebar-item" onclick="showPage('seller_orders')"><span class="si">🛒</span> Pesanan Masuk</button>
+            <button class="sidebar-item" onclick="showPage('seller_orders')"><span class="si">🛒</span> Pesanan Masuk<?php if ($sellerOrderBadgeCount > 0): ?><span class="sidebar-badge"><?= $sellerOrderBadgeCount ?></span><?php endif; ?></button>
             <button class="sidebar-item" onclick="showPage('seller_reviews')"><span class="si">💬</span> Ulasan &amp; Rating</button>
-            <button class="sidebar-item" onclick="showPage('seller_notifications')"><span class="si">🔔</span> Notifikasi</button>
+            <button class="sidebar-item" onclick="showPage('seller_notifications')"><span class="si">🔔</span> Notifikasi<?php if ($sellerUnreadNotifCount > 0): ?><span class="sidebar-badge warn"><?= $sellerUnreadNotifCount ?></span><?php endif; ?></button>
           </div>
           <div class="sidebar-group">
             <div class="sidebar-group-label">Keuangan</div>
@@ -70,9 +73,9 @@ $backPage = match($role) {
 
         <!-- TAB NAVIGATION -->
         <div class="profile-tabs" id="profile-tabs">
-          <button type="button" class="tab-btn active" onclick="switchTab(this,'tab-basic-info')">Basic Info</button>
-          <button type="button" class="tab-btn"        onclick="switchTab(this,'tab-password-change')">Password Change</button>
-          <button type="button" class="tab-btn"        onclick="switchTab(this,'tab-delete-account')">Delete Account</button>
+          <button type="button" class="tab-btn active" onclick="switchAccountTab(this,'tab-basic-info')">Basic Info</button>
+          <button type="button" class="tab-btn"        onclick="switchAccountTab(this,'tab-password-change')">Password Change</button>
+          <button type="button" class="tab-btn"        onclick="switchAccountTab(this,'tab-delete-account')">Delete Account</button>
         </div>
 
         <!-- ══ TAB 1: BASIC INFO ══ -->
@@ -83,10 +86,14 @@ $backPage = match($role) {
 
             <!-- Avatar row -->
             <div class="acc-avatar-row">
-              <div class="acc-avatar-circle"><?= e($initials) ?></div>
+              <?= user_avatar_html($user, 'acc-avatar-circle', $initials) ?>
               <div>
                 <div style="font-weight:700;font-size:15px;color:var(--ink-dark);margin-bottom:4px;">Profile picture</div>
-                <div style="font-size:13px;color:var(--ink-muted);">Foto profil default menggunakan inisial nama Anda.</div>
+                <div style="font-size:13px;color:var(--ink-muted);margin-bottom:10px;">Upload foto profil agar tampil di header, sidebar, dan profil publik sesuai role.</div>
+                <input type="file" name="avatar" accept="image/png,image/jpeg,image/jpg,image/webp" style="font-size:13px;">
+                <?php if (!empty($user['avatar'])): ?>
+                  <button type="button" class="btn-outline-gray" style="margin-left:8px;padding:8px 12px;" onclick="this.form.delete_avatar.value='1';this.form.submit();">Hapus Foto</button>
+                <?php endif; ?>
               </div>
             </div>
 
@@ -233,227 +240,3 @@ $backPage = match($role) {
 
   </div>
 </div>
-
-<style>
-/* ═══ Profile container ═══ */
-.profile-container {
-  background: #fff;
-  border-radius: 16px;
-  padding: 36px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-  max-width: 860px;
-  margin: 0 auto;
-}
-.profile-title {
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--ink-dark);
-  margin: 0 0 24px;
-}
-
-/* ═══ Tabs ═══ */
-.profile-tabs {
-  display: flex;
-  gap: 0;
-  border-bottom: 2px solid var(--border-soft);
-  margin-bottom: 32px;
-}
-.tab-btn {
-  background: none;
-  border: none;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink-muted);
-  cursor: pointer;
-  position: relative;
-  transition: color 0.2s;
-  white-space: nowrap;
-}
-.tab-btn:hover { color: var(--ink-dark); }
-.tab-btn.active {
-  color: var(--rose-deep);
-}
-.tab-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: -2px; left: 0; right: 0;
-  height: 3px;
-  background: var(--rose-deep);
-  border-radius: 2px 2px 0 0;
-}
-
-/* ═══ Tab panes ═══ */
-.tab-pane { display: none; }
-.tab-pane.active { display: block; }
-
-/* ═══ Avatar row ═══ */
-.acc-avatar-row {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 28px;
-  padding: 16px;
-  background: var(--surface);
-  border-radius: 12px;
-  border: 1px solid var(--border-soft);
-}
-.acc-avatar-circle {
-  width: 72px; height: 72px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--rose-deep), var(--rose-mid, #e85b7a));
-  color: #fff;
-  font-size: 26px;
-  font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-
-/* ═══ Fields ═══ */
-.fields-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-bottom: 8px;
-}
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.form-field label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-dark);
-}
-.form-field input {
-  padding: 11px 14px;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  background: #fff;
-  font-family: var(--font-body);
-}
-.form-field input:focus {
-  border-color: var(--rose-deep);
-  box-shadow: 0 0 0 3px rgba(var(--rose-rgb, 200,56,80), 0.12);
-}
-.form-field input.readonly-field {
-  background: var(--surface);
-  color: var(--ink-muted);
-  cursor: not-allowed;
-  border-color: var(--border-soft);
-}
-
-/* ═══ Password strength bar ═══ */
-.pwd-bar {
-  height: 4px;
-  flex: 1;
-  border-radius: 2px;
-  background: var(--border);
-  transition: background 0.3s;
-}
-.pwd-rule { color: var(--ink-muted); }
-
-/* ═══ Action footer ═══ */
-.tab-footer {
-  display: flex;
-  gap: 12px;
-  margin-top: 32px;
-  padding-top: 24px;
-  border-top: 1px solid var(--border-soft);
-}
-.btn-primary-rose {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: var(--rose-deep);
-  color: #fff;
-  border: none;
-  padding: 11px 24px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: var(--font-body);
-  transition: opacity 0.2s;
-}
-.btn-primary-rose:hover { opacity: 0.87; }
-.btn-outline-gray {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: #fff;
-  border: 1.5px solid var(--border);
-  color: var(--ink-mid);
-  padding: 11px 22px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: var(--font-body);
-  transition: background 0.2s;
-}
-.btn-outline-gray:hover { background: var(--surface); }
-
-@media (max-width: 640px) {
-  .fields-grid { grid-template-columns: 1fr; }
-  .acc-avatar-row { flex-direction: column; text-align: center; }
-  .profile-container { padding: 20px; }
-}
-</style>
-
-<script>
-/* ── Tab switching ── */
-function switchTab(btn, tabId) {
-  document.querySelectorAll('#profile-tabs .tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  const pane = document.getElementById(tabId);
-  if (pane) pane.classList.add('active');
-}
-
-/* ── Password strength ── */
-function checkPasswordStrength(val) {
-  const hasLen   = val.length >= 8;
-  const hasUpper = /[A-Z]/.test(val);
-  const hasNum   = /[0-9]/.test(val);
-  const hasSym   = /[!@#$%^&*(),.?":{}|<>]/.test(val);
-  let   strength = [hasLen, hasUpper, hasNum, hasSym].filter(Boolean).length;
-
-  const colors   = ['', '#ef4444', '#f59e0b', '#10b981', '#059669'];
-  const labels   = ['—', 'Lemah', 'Sedang', 'Kuat', 'Sangat Kuat'];
-  const color    = strength ? colors[strength] : 'var(--border)';
-
-  const ruleColor = (ok) => ok ? 'var(--rose-deep)' : 'var(--ink-muted)';
-  document.getElementById('rule-len').style.color   = ruleColor(hasLen);
-  document.getElementById('rule-upper').style.color = ruleColor(hasUpper);
-  document.getElementById('rule-num').style.color   = ruleColor(hasNum);
-  document.getElementById('rule-sym').style.color   = ruleColor(hasSym);
-
-  const txt = document.getElementById('pwd-text');
-  txt.textContent = labels[strength] || '—';
-  txt.style.color = color;
-
-  for (let i = 1; i <= 4; i++) {
-    document.getElementById('pwd-bar-' + i).style.background = i <= strength ? color : 'var(--border)';
-  }
-}
-
-/* ── Delete account gate ── */
-function checkDeleteStatus() {
-  const input = document.getElementById('delete-confirm-input');
-  const cb    = document.getElementById('delete-checkbox');
-  const btn   = document.getElementById('btn-delete-account');
-  if (!btn) return;
-
-  const ok = input && input.value === 'DELETE' && cb && cb.checked;
-  btn.disabled      = !ok;
-  btn.style.opacity = ok ? '1' : '0.6';
-  btn.style.cursor  = ok ? 'pointer' : 'not-allowed';
-  btn.style.background   = ok ? 'var(--rose-deep)' : 'var(--rose-pale)';
-  btn.style.color        = ok ? '#fff' : 'var(--rose-deep)';
-}
-</script>

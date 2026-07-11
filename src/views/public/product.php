@@ -10,7 +10,8 @@ $starsHtml = function(float $n): string {
     $n = round($n);
     return str_repeat('★', $n) . str_repeat('☆', 5 - $n);
 };
-$sellerInit = strtoupper(implode('', array_map(fn($w) => $w[0] ?? '', array_slice(explode(' ', $product['seller_name']), 0, 2))));
+$sellerUser = ['name' => $product['seller_name'], 'avatar' => $product['seller_avatar'] ?? null];
+$sellerInit = user_initials($sellerUser);
 $inWishlist = is_in_wishlist($GLOBALS['pdo'], (int)$product['id']);
 ?>
 <div id="page-product" class="page active">
@@ -49,7 +50,7 @@ $inWishlist = is_in_wishlist($GLOBALS['pdo'], (int)$product['id']);
 
         <!-- Seller card -->
         <div class="prod-seller-card">
-          <div class="prod-seller-av"><?= $sellerInit ?></div>
+          <?= user_avatar_html($sellerUser, 'prod-seller-av', $sellerInit) ?>
           <div>
             <div class="prod-seller-name">🏪 <?= e($product['seller_name']) ?></div>
             <div class="prod-seller-sub">Penjual Terverifikasi ✓</div>
@@ -220,8 +221,11 @@ $inWishlist = is_in_wishlist($GLOBALS['pdo'], (int)$product['id']);
           <div class="book-body">
             <div class="book-genre"><?= e($rb['category']) ?></div>
             <div class="book-title"><?= e($rb['name']) ?></div>
+            <div class="book-seller">Penjual: <?= e($rb['seller_name'] ?? 'RubbyBooks') ?></div>
+            <div class="book-author">Stok: <?= (int)$rb['stock'] ?></div>
             <div class="book-footer">
               <div class="book-price"><?= rupiah($rb['price']) ?></div>
+              <button type="button" class="btn-add" onclick="event.stopPropagation(); event.preventDefault(); addToCart(event, <?= $rb['id'] ?>, '<?= e(addslashes($rb['name'])) ?>')">+</button>
             </div>
           </div>
         </div>
@@ -232,30 +236,3 @@ $inWishlist = is_in_wishlist($GLOBALS['pdo'], (int)$product['id']);
 
   </div><!-- /product-page-wrap -->
 </div>
-
-<script>
-function prodTab(pane, btn) {
-  document.querySelectorAll('.prod-tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.prod-tab-pane').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('prod-pane-' + pane)?.classList.add('active');
-}
-function prodQty(delta) {
-  const inp = document.getElementById('prod-qty');
-  const max = parseInt(inp.max) || 99;
-  inp.value = Math.max(1, Math.min(max, parseInt(inp.value) + delta));
-}
-function prodAddCart(id, name) {
-  const user = window.__RB_USER__;
-  if (!user || user.role !== 'buyer') { openAuth(); return; }
-  const qty = parseInt(document.getElementById('prod-qty').value) || 1;
-  addToCart(null, id, name, qty);
-}
-function prodBuyNow(id, name) {
-  const user = window.__RB_USER__;
-  if (!user || user.role !== 'buyer') { openAuth(); return; }
-  const qty = parseInt(document.getElementById('prod-qty').value) || 1;
-  addToCart(null, id, name, qty);
-  setTimeout(() => _showPageDirect('checkout'), 400);
-}
-</script>

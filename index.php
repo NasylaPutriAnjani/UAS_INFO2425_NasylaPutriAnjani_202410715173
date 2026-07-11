@@ -8,7 +8,31 @@ require __DIR__ . '/src/includes/functions.php';
 require __DIR__ . '/src/controllers/actions.php';
 require __DIR__ . '/src/controllers/PageController.php';
 
-$page = $_GET['page'] ?? 'home';
+$page = trim((string) ($_GET['page'] ?? 'home'));
+$page = trim($page, "/ \t\n\r\0\x0B");
+if ($page === '') {
+    $page = 'home';
+}
+$page = str_replace(['/', '-'], '_', $page);
+
+$role = current_user()['role'] ?? 'guest';
+$pageAliases = [
+    'dashboard'     => $role === 'admin' ? 'admin' : ($role === 'seller' ? 'seller' : 'buyer'),
+    'account'       => 'account_settings',
+    'settings'      => $role === 'admin' ? 'admin_settings' : 'account_settings',
+    'orders'        => $role === 'seller' ? 'seller_orders' : ($role === 'admin' ? 'admin_orders' : 'buyer_orders'),
+    'reviews'       => $role === 'seller' ? 'seller_reviews' : 'buyer_reviews',
+    'notifications' => $role === 'seller' ? 'seller_notifications' : ($role === 'admin' ? 'admin_notifications' : 'buyer_notifications'),
+    'wishlist'      => 'buyer_wishlist',
+    'cart_page'     => 'buyer_cart',
+    'products'      => $role === 'admin' ? 'admin_products' : 'seller_products',
+    'categories'    => 'admin_categories',
+    'users'         => 'admin_users',
+    'analytics'     => 'admin_analytics',
+    'report'        => 'seller_report',
+    'reports'       => 'seller_report',
+];
+$page = $pageAliases[$page] ?? $page;
 $action = $_POST['action'] ?? $_GET['action'] ?? null;
 
 handle_action($pdo, $action, $page);

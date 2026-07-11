@@ -78,12 +78,14 @@
                   };
                   $avatarColors = ['#be185d','#7c3aed','#0369a1','#047857','#b45309','#9f1239'];
                   $avatarColor = $avatarColors[$userRow['id'] % count($avatarColors)];
-                  $initials = strtoupper(substr($userRow['name'], 0, 2));
+                  $initials = user_initials($userRow);
                 ?>
                 <tr>
                   <td>
                     <div class="td-user">
-                      <div class="td-user-avatar" style="background:<?= $avatarColor ?>"><?= $initials ?></div>
+                      <?= !empty($userRow['avatar'])
+                        ? user_avatar_html($userRow, 'td-user-avatar')
+                        : '<div class="td-user-avatar" style="background:' . e($avatarColor) . '">' . e($initials) . '</div>' ?>
                       <div>
                         <div class="td-user-name">
                           <?= e($userRow['name']) ?>

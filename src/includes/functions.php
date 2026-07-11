@@ -112,11 +112,30 @@ function role_icon(string $role): string
 
 function role_chip_label(array $user): string
 {
-    return match ($user['role']) {
-        'seller' => 'Seller Dashboard',
-        'admin' => 'Admin Panel',
-        default => explode(' ', trim($user['name']))[0] ?: 'Akun Saya',
-    };
+    return explode(' ', trim($user['name'] ?? ''))[0] ?: 'Akun Saya';
+}
+
+function user_initials(array $user): string
+{
+    $name = trim((string)($user['name'] ?? ''));
+    $parts = preg_split('/\s+/', $name, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+    $first = strtoupper(substr($parts[0] ?? 'U', 0, 1));
+    $last = strtoupper(substr($parts[1] ?? '', 0, 1));
+    return $first . ($last ?: '');
+}
+
+function user_avatar_html(?array $user, string $class = 'avatar', ?string $fallback = null): string
+{
+    $user = $user ?? [];
+    $avatar = trim((string)($user['avatar'] ?? ''));
+    $label = e($fallback ?: user_initials($user));
+    $classAttr = e($class);
+
+    if ($avatar !== '') {
+        return '<div class="' . $classAttr . ' user-photo-avatar"><img src="' . e(asset($avatar)) . '" alt="Foto profil"></div>';
+    }
+
+    return '<div class="' . $classAttr . '">' . $label . '</div>';
 }
 
 function role_chip_sublabel(string $role): string
@@ -173,17 +192,6 @@ function log_activity(PDO $pdo, string $activity): void
     $stmt->execute([$activity]);
 }
 
-function cart_count(PDO $pdo): int
-{
-    $user = current_user();
-    if (!$user) {
-        return 0;
-    }
-    $stmt = $pdo->prepare('SELECT COALESCE(SUM(qty),0) FROM carts WHERE buyer_id = ?');
-    $stmt->execute([$user['id']]);
-    return (int) $stmt->fetchColumn();
-}
-
 function cart_items(PDO $pdo): array
 {
     $user = current_user();
@@ -195,34 +203,68 @@ function cart_items(PDO $pdo): array
     return $stmt->fetchAll();
 }
 
-function buyer_menu_items(): array
-{
-    return [
-        'buyer' => ['label' => 'Beranda', 'icon' => '🏠', 'page' => 'buyer'],
-        'account' => ['label' => 'Akun', 'icon' => '👤', 'page' => 'buyer_account'],
-        'wishlist' => ['label' => 'Wishlist', 'icon' => '❤️', 'page' => 'buyer_wishlist'],
-        'cart' => ['label' => 'Keranjang', 'icon' => '🛒', 'page' => 'buyer_cart'],
-        'orders' => ['label' => 'Pesanan Saya', 'icon' => '📦', 'page' => 'buyer_orders'],
-        'reviews' => ['label' => 'Review Saya', 'icon' => '⭐', 'page' => 'buyer_reviews'],
-        'notifications' => ['label' => 'Notifikasi', 'icon' => '🔔', 'page' => 'buyer_notifications'],
-    ];
-}
-
 function buyer_sidebar_data(PDO $pdo): array
 {
     $user = current_user();
     if (!$user || $user['role'] !== 'buyer') {
-        return ['cartCount' => 0, 'unreadNotifications' => 0];
+        return ['cartCount' => 0, 'unreadNotifications' => 0, 'activeOrders' => 0];
     }
     $id = (int) $user['id'];
     $cartStmt = $pdo->prepare('SELECT COALESCE(SUM(qty),0) FROM carts WHERE buyer_id = ?');
     $cartStmt->execute([$id]);
     $notifStmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
     $notifStmt->execute([$id]);
+    $activeOrderStmt = $pdo->prepare('SELECT COUNT(*) FROM orders WHERE buyer_id = ? AND status IN ("pending","paid","processing","shipped")');
+    $activeOrderStmt->execute([$id]);
     return [
         'cartCount' => (int) $cartStmt->fetchColumn(),
         'unreadNotifications' => (int) $notifStmt->fetchColumn(),
+        'activeOrders' => (int) $activeOrderStmt->fetchColumn(),
     ];
+}
+
+function user_nav_counts(PDO $pdo): array
+{
+    $user = current_user();
+    if (!$user) {
+        return ['cart' => 0, 'notifications' => 0, 'orders' => 0];
+    }
+
+    $id = (int) $user['id'];
+    $notifStmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
+    $notifStmt->execute([$id]);
+    $notifications = (int) $notifStmt->fetchColumn();
+
+    if ($user['role'] === 'buyer') {
+        $cartStmt = $pdo->prepare('SELECT COALESCE(SUM(qty),0) FROM carts WHERE buyer_id = ?');
+        $cartStmt->execute([$id]);
+        $orderStmt = $pdo->prepare('SELECT COUNT(*) FROM orders WHERE buyer_id = ? AND status IN ("pending","paid","processing","shipped")');
+        $orderStmt->execute([$id]);
+        return [
+            'cart' => (int) $cartStmt->fetchColumn(),
+            'notifications' => $notifications,
+            'orders' => (int) $orderStmt->fetchColumn(),
+        ];
+    }
+
+    if ($user['role'] === 'seller') {
+        $orderStmt = $pdo->prepare('
+            SELECT COUNT(DISTINCT o.id)
+            FROM orders o
+            JOIN order_items oi ON oi.order_id = o.id
+            JOIN products p ON p.id = oi.product_id
+            WHERE p.seller_id = ? AND o.status IN ("pending","paid","processing","shipped")
+        ');
+        $orderStmt->execute([$id]);
+        return ['cart' => 0, 'notifications' => $notifications, 'orders' => (int) $orderStmt->fetchColumn()];
+    }
+
+    if ($user['role'] === 'admin') {
+        $orders = (int) $pdo->query('SELECT COUNT(*) FROM orders WHERE status IN ("pending","paid","processing","shipped")')->fetchColumn();
+        return ['cart' => 0, 'notifications' => $notifications, 'orders' => $orders];
+    }
+
+    return ['cart' => 0, 'notifications' => $notifications, 'orders' => 0];
 }
 
 function buyer_stats(PDO $pdo): array
@@ -243,7 +285,7 @@ function order_status_label(string $status): string
 {
     return match ($status) {
         'pending' => 'Menunggu Pembayaran',
-        'paid' => 'Dibayar',
+        'paid' => 'Menunggu Konfirmasi Penjual',
         'processing' => 'Diproses',
         'shipped' => 'Dikirim',
         'delivered' => 'Selesai',

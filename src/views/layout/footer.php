@@ -49,20 +49,12 @@
     window.__RB_USER__ = <?= json_encode([
         'name' => $user['name'],
         'role' => $user['role'],
+        'avatar' => $user['avatar'] ?? null,
+        'counts' => user_nav_counts($pdo),
     ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
   </script>
   <?php endif; ?>
   <script src="src/assets/js/main.js?v=<?= time() ?>"></script>
-  <?php
-  $roleScriptMap = [
-    'admin'  => 'src/assets/js/admin/admin.js',
-    'buyer'  => 'src/assets/js/buyer/buyer.js',
-    'seller' => 'src/assets/js/seller/seller.js',
-  ];
-  $roleScript = $roleScriptMap[$user['role'] ?? ''] ?? null;
-  if ($roleScript): ?>
-  <script src="<?= $roleScript ?>?v=<?= time() ?>"></script>
-  <?php endif; ?>
 </main>
 
 </body>

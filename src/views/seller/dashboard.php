@@ -6,10 +6,13 @@
     $currentSellerPage = $_GET['page'] ?? 'seller';
     $sellerIdForSidebar = current_user()['id'];
     $activeProductsCount = (int)$GLOBALS['pdo']->query("SELECT COUNT(*) FROM products WHERE seller_id = $sellerIdForSidebar AND status = 'active'")->fetchColumn();
+    $sellerNavCounts = user_nav_counts($GLOBALS['pdo']);
+    $sellerOrderBadgeCount = (int)($sellerNavCounts['orders'] ?? 0);
+    $sellerUnreadNotifCount = (int)($sellerNavCounts['notifications'] ?? 0);
     ?>
     <aside class="dash-sidebar seller-sidebar">
       <div class="sidebar-store-profile">
-        <div class="sidebar-store-avatar">🏪</div>
+        <?= user_avatar_html(current_user(), 'sidebar-store-avatar', 'S') ?>
         <div>
           <div class="sidebar-store-name"><?= e(current_user()['name'] ?? 'Penjual') ?></div>
           <div class="sidebar-store-status">Toko Aktif</div>
@@ -28,12 +31,16 @@
           </button>
           <button class="sidebar-item<?= $currentSellerPage === 'seller_orders' ? ' active' : '' ?>" onclick="showPage('seller_orders')">
             <span class="si">🛒</span> Pesanan Masuk
+
+            <?php if ($sellerOrderBadgeCount > 0): ?><span class="sidebar-badge"><?= $sellerOrderBadgeCount ?></span><?php endif; ?>
           </button>
           <button class="sidebar-item<?= $currentSellerPage === 'seller_reviews' ? ' active' : '' ?>" onclick="showPage('seller_reviews')">
             <span class="si">💬</span> Ulasan & Rating
           </button>
           <button class="sidebar-item<?= $currentSellerPage === 'seller_notifications' ? ' active' : '' ?>" onclick="showPage('seller_notifications')">
             <span class="si">🔔</span> Notifikasi
+
+            <?php if ($sellerUnreadNotifCount > 0): ?><span class="sidebar-badge warn"><?= $sellerUnreadNotifCount ?></span><?php endif; ?>
           </button>
         </div>
         <div class="sidebar-group">
@@ -163,7 +170,7 @@
                 <div class="bar-grid-line"><span class="bar-grid-label">0</span></div>
               </div>
               <div class="bar-chart-bars">
-                <?php foreach ($monthlySales as $idx => $m): 
+                <?php foreach ($monthlySales as $idx => $m):
                   $pct = $gridMax > 0 ? ($m['val'] / $gridMax) * 100 : 0;
                   $pct = max(2, min(100, $pct));
                   $isCurrent = ($idx === count($monthlySales) - 1);
@@ -218,7 +225,7 @@
                     $totalProducts = array_sum(array_column($categoryDistribution, 'product_count'));
                     $circumference = 2 * M_PI * 50; // ~314.159
                     $currentOffset = 0;
-                    
+
                     foreach ($categoryDistribution as $index => $cat):
                         if ($totalProducts == 0) break;
                         $percentage = $cat['product_count'] / $totalProducts;
@@ -237,7 +244,7 @@
                 </svg>
               </div>
               <div class="donut-legend-grid">
-                <?php foreach ($categoryDistribution as $index => $cat): 
+                <?php foreach ($categoryDistribution as $index => $cat):
                   $percentage = $totalProducts > 0 ? round(($cat['product_count'] / $totalProducts) * 100) : 0;
                 ?>
                 <div class="donut-legend-item">

@@ -173,39 +173,3 @@ $s = $sysSettings ?? [];
     </div>
   </div>
 </div>
-
-<style>
-/* Toggle switch */
-.sys-toggle {
-  position: relative;
-  display: inline-block;
-  width: 44px;
-  height: 24px;
-  flex-shrink: 0;
-}
-.sys-toggle input { opacity: 0; width: 0; height: 0; }
-.sys-toggle-track {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: var(--border);
-  border-radius: 24px;
-  transition: 0.3s;
-}
-.sys-toggle input:checked + .sys-toggle-track {
-  background: var(--rose-deep);
-}
-.sys-toggle-track::before {
-  content: '';
-  position: absolute;
-  height: 18px; width: 18px;
-  left: 3px; bottom: 3px;
-  background: #fff;
-  border-radius: 50%;
-  transition: 0.3s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-}
-.sys-toggle input:checked + .sys-toggle-track::before {
-  transform: translateX(20px);
-}
-</style>

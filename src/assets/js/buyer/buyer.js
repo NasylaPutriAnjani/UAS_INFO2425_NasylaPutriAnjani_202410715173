@@ -1,1 +1,0 @@
-// Buyer (Pembeli) specific JavaScript

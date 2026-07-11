@@ -2,5 +2,12 @@ uploads/payments/*
 !uploads/payments/.gitkeep
 uploads/products/*
 !uploads/products/.gitkeep
+src/uploads/avatars/*
+!src/uploads/avatars/.gitkeep
+src/uploads/payments/*
+!src/uploads/payments/.gitkeep
+src/uploads/products/*
+!src/uploads/products/.gitkeep
+src/uploads/debug.txt
 .DS_Store
 Thumbs.db

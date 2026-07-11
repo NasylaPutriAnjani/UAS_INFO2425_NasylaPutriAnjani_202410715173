@@ -21,10 +21,13 @@ $bestSellers = $bestSellers ?? [];
     $currentSellerPage = $_GET['page'] ?? 'seller';
     $sellerIdForSidebar = current_user()['id'];
     $activeProductsCount = (int)$GLOBALS['pdo']->query("SELECT COUNT(*) FROM products WHERE seller_id = $sellerIdForSidebar AND status = 'active'")->fetchColumn();
+    $sellerNavCounts = user_nav_counts($GLOBALS['pdo']);
+    $sellerOrderBadgeCount = (int)($sellerNavCounts['orders'] ?? 0);
+    $sellerUnreadNotifCount = (int)($sellerNavCounts['notifications'] ?? 0);
     ?>
     <aside class="dash-sidebar seller-sidebar">
       <div class="sidebar-store-profile">
-        <div class="sidebar-store-avatar">🏪</div>
+        <?= user_avatar_html(current_user(), 'sidebar-store-avatar', 'S') ?>
         <div>
           <div class="sidebar-store-name"><?= e(current_user()['name'] ?? 'Penjual') ?></div>
           <div class="sidebar-store-status">Toko Aktif</div>
@@ -43,12 +46,16 @@ $bestSellers = $bestSellers ?? [];
           </button>
           <button class="sidebar-item<?= $currentSellerPage === 'seller_orders' ? ' active' : '' ?>" onclick="showPage('seller_orders')">
             <span class="si">🛒</span> Pesanan Masuk
+
+            <?php if ($sellerOrderBadgeCount > 0): ?><span class="sidebar-badge"><?= $sellerOrderBadgeCount ?></span><?php endif; ?>
           </button>
           <button class="sidebar-item<?= $currentSellerPage === 'seller_reviews' ? ' active' : '' ?>" onclick="showPage('seller_reviews')">
             <span class="si">💬</span> Ulasan & Rating
           </button>
           <button class="sidebar-item<?= $currentSellerPage === 'seller_notifications' ? ' active' : '' ?>" onclick="showPage('seller_notifications')">
             <span class="si">🔔</span> Notifikasi
+
+            <?php if ($sellerUnreadNotifCount > 0): ?><span class="sidebar-badge warn"><?= $sellerUnreadNotifCount ?></span><?php endif; ?>
           </button>
         </div>
         <div class="sidebar-group">
@@ -89,7 +96,7 @@ $bestSellers = $bestSellers ?? [];
 
       <!-- Body -->
       <div class="dash-body">
-        
+
         <!-- Period Switcher -->
         <div class="period-switcher-row">
           <a href="index.php?page=seller_report&period=week" class="period-tab <?= $period === 'week' ? 'active' : '' ?>">Minggu Ini</a>
@@ -103,7 +110,7 @@ $bestSellers = $bestSellers ?? [];
           <div class="metric-card">
             <div class="metric-card-top">
               <div class="metric-icon-wrap" style="background:#fdf2f8; color:#db2777;">$</div>
-              <?php 
+              <?php
               $revTrend = $kpi['revenue_trend'];
               $revClass = $revTrend >= 0 ? 'trend-up' : 'trend-down';
               $revArrow = $revTrend >= 0 ? '▲' : '▼';
@@ -121,7 +128,7 @@ $bestSellers = $bestSellers ?? [];
           <div class="metric-card">
             <div class="metric-card-top">
               <div class="metric-icon-wrap" style="background:#eff6ff; color:#2563eb;">🛍️</div>
-              <?php 
+              <?php
               $ordTrend = $kpi['orders_trend'];
               $ordClass = $ordTrend >= 0 ? 'trend-up' : 'trend-down';
               $ordArrow = $ordTrend >= 0 ? '▲' : '▼';
@@ -139,7 +146,7 @@ $bestSellers = $bestSellers ?? [];
           <div class="metric-card">
             <div class="metric-card-top">
               <div class="metric-icon-wrap" style="background:#f5f3ff; color:#7c3aed;">📚</div>
-              <?php 
+              <?php
               $bookTrend = $kpi['books_trend'];
               $bookClass = $bookTrend >= 0 ? 'trend-up' : 'trend-down';
               $bookArrow = $bookTrend >= 0 ? '▲' : '▼';
@@ -173,12 +180,12 @@ $bestSellers = $bestSellers ?? [];
           $countPoints = count($chartData);
           $maxRev = 10000; // base minimum
           $maxOrd = 5;     // base minimum
-          
+
           foreach ($chartData as $dp) {
               if ($dp['revenue'] > $maxRev) $maxRev = $dp['revenue'];
               if ($dp['orders'] > $maxOrd) $maxOrd = $dp['orders'];
           }
-          
+
           // Y-axis steps
           $yRevMax = ceil($maxRev / 100000) * 100000;
           $yOrdMax = ceil($maxOrd / 5) * 5;
@@ -206,7 +213,7 @@ $bestSellers = $bestSellers ?? [];
               } else {
                   $x = $paddingLeft + ($chartW / 2);
               }
-              
+
               // Y coord for Revenue (left axis)
               $yRev = $paddingTop + $chartH - (($dp['revenue'] / $yRevMax) * $chartH);
               // Y coord for Orders (right axis)
@@ -227,15 +234,18 @@ $bestSellers = $bestSellers ?? [];
 
           // Build SVG Line Path & Area Path for Revenue
           $linePath = '';
+          $orderLinePath = '';
           $areaPath = '';
           if ($countPoints > 0) {
               $linePath = "M " . $points[0]['x'] . " " . $points[0]['yRev'];
+              $orderLinePath = "M " . $points[0]['x'] . " " . $points[0]['yOrd'];
               $areaPath = "M " . $points[0]['x'] . " " . $points[0]['yBase'] . " L " . $points[0]['x'] . " " . $points[0]['yRev'];
-              
+
               // Curve drawing (Bezier approximation or straight lines)
               // For straight line aesthetic matching original dashboard:
               for ($i = 1; $i < $countPoints; $i++) {
                   $linePath .= " L " . $points[$i]['x'] . " " . $points[$i]['yRev'];
+                  $orderLinePath .= " L " . $points[$i]['x'] . " " . $points[$i]['yOrd'];
                   $areaPath .= " L " . $points[$i]['x'] . " " . $points[$i]['yRev'];
               }
               $areaPath .= " L " . $points[$countPoints - 1]['x'] . " " . $points[$countPoints - 1]['yBase'] . " Z";
@@ -250,23 +260,17 @@ $bestSellers = $bestSellers ?? [];
                   <stop offset="0%" stop-color="#db2777" stop-opacity="0.18" />
                   <stop offset="100%" stop-color="#db2777" stop-opacity="0.00" />
                 </linearGradient>
-                
-                <!-- Bar Gradient -->
-                <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#93c5fd" stop-opacity="0.8" />
-                  <stop offset="100%" stop-color="#eff6ff" stop-opacity="0.3" />
-                </linearGradient>
               </defs>
 
               <!-- Grid Lines -->
-              <?php for ($grid = 0; $grid <= 4; $grid++): 
+              <?php for ($grid = 0; $grid <= 4; $grid++):
                   $yGrid = $paddingTop + ($chartH * ($grid / 4));
                   $valRev = $yRevMax * (1 - ($grid / 4));
                   $valOrd = $yOrdMax * (1 - ($grid / 4));
               ?>
                 <!-- Horizontal grid line -->
                 <line x1="<?= $paddingLeft ?>" y1="<?= $yGrid ?>" x2="<?= $w - $paddingRight ?>" y2="<?= $yGrid ?>" stroke="#f1f5f9" stroke-width="1.5" />
-                
+
                 <!-- Left Y Axis Labels (Revenue in Thousands/Millions) -->
                 <text x="<?= $paddingLeft - 12 ?>" y="<?= $yGrid + 4 ?>" font-size="10.5" fill="#94a3b8" text-anchor="end" font-weight="600">
                   <?= $valRev >= 1000000 ? 'Rp ' . ($valRev / 1000000) . 'M' : ($valRev >= 1000 ? 'Rp ' . ($valRev / 1000) . 'K' : 'Rp ' . $valRev) ?>
@@ -281,20 +285,14 @@ $bestSellers = $bestSellers ?? [];
               <!-- X Axis Line -->
               <line x1="<?= $paddingLeft ?>" y1="<?= $paddingTop + $chartH ?>" x2="<?= $w - $paddingRight ?>" y2="<?= $paddingTop + $chartH ?>" stroke="#e2e8f0" stroke-width="1.5" />
 
-              <!-- Draw Bars for Orders -->
-              <?php 
-              $barW = min(36, $chartW / ($countPoints * 1.8)); // adaptive width
-              foreach ($points as $pt): 
-                  $barH = $pt['yBase'] - $pt['yOrd'];
-                  $bx = $pt['x'] - ($barW / 2);
-                  $by = $pt['yOrd'];
-              ?>
-                <rect x="<?= $bx ?>" y="<?= $by ?>" width="<?= $barW ?>" height="<?= max(2, $barH) ?>" rx="4" fill="url(#barGrad)" stroke="#3b82f6" stroke-width="1.5" style="transition: all 0.3s;" />
-              <?php endforeach; ?>
-
               <!-- Draw Revenue Area Fill -->
               <?php if (!empty($areaPath)): ?>
                 <path d="<?= $areaPath ?>" fill="url(#areaGrad)" />
+              <?php endif; ?>
+
+              <!-- Draw Orders Line Chart -->
+              <?php if (!empty($orderLinePath)): ?>
+                <path d="<?= $orderLinePath ?>" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
               <?php endif; ?>
 
               <!-- Draw Revenue Line Chart -->
@@ -312,7 +310,7 @@ $bestSellers = $bestSellers ?? [];
 
                 <!-- Hover trigger area -->
                 <rect x="<?= $pt['x'] - 16 ?>" y="<?= $paddingTop ?>" width="32" height="<?= $chartH ?>" fill="transparent" style="cursor: pointer;" class="graph-trigger" data-label="<?= e($pt['label']) ?>" data-rev="Rp <?= number_format($pt['revenue'], 0, ',', '.') ?>" data-ord="<?= $pt['orders'] ?> pesanan" />
-                
+
                 <!-- X Axis Labels -->
                 <text x="<?= $pt['x'] ?>" y="<?= $paddingTop + $chartH + 20 ?>" font-size="11" fill="#64748b" text-anchor="middle" font-weight="600"><?= e($pt['label']) ?></text>
               <?php endforeach; ?>
@@ -357,9 +355,9 @@ $bestSellers = $bestSellers ?? [];
                 <td colspan="5" class="text-center" style="padding: 40px 20px; color: #94a3b8;">Belum ada penjualan produk dalam periode ini.</td>
               </tr>
               <?php else: ?>
-              <?php 
+              <?php
               $rank = 1;
-              foreach ($bestSellers as $b): 
+              foreach ($bestSellers as $b):
                   $bcClass = 'bc' . (($b['id'] % 6) + 1);
               ?>
               <tr>
@@ -394,196 +392,3 @@ $bestSellers = $bestSellers ?? [];
     </div>
   </div>
 </div>
-
-<style>
-/* ── Period Switcher ── */
-.period-switcher-row {
-  display: inline-flex;
-  background: #f1f5f9;
-  border-radius: 12px;
-  padding: 4px;
-  margin-bottom: 24px;
-  border: 1px solid var(--border-soft);
-}
-.period-tab {
-  padding: 8px 16px;
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #64748b;
-  text-decoration: none;
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-.period-tab:hover {
-  color: var(--ink);
-}
-.period-tab.active {
-  background: #fff;
-  color: var(--ink);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-}
-
-/* ── KPI trend colors override ── */
-.metric-trend.trend-up {
-  background: #ecfdf5;
-  color: #059669;
-}
-.metric-trend.trend-down {
-  background: #fef2f2;
-  color: #dc2626;
-}
-
-/* ── Big Chart Card ── */
-.chart-big-card {
-  background: #fff;
-  border: 1px solid var(--border-soft);
-  border-radius: 18px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.04);
-}
-.chart-big-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-  gap: 14px;
-}
-.chart-big-head h3 {
-  font-family: var(--font-serif);
-  font-size: 18px;
-  color: var(--ink);
-}
-.chart-big-head p {
-  font-size: 12px;
-  color: #94a3b8;
-  margin-top: 2px;
-}
-.chart-legend-row {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--ink-mid);
-}
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.legend-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-}
-.legend-dot.income { background: #db2777; }
-.legend-dot.orders { background: #3b82f6; }
-.btn-csv-export {
-  background: #f8fafc;
-  border: 1px solid var(--border);
-  padding: 6px 12px;
-  border-radius: 8px;
-  color: var(--ink-mid);
-  text-decoration: none;
-  font-weight: 700;
-  font-size: 11.5px;
-  transition: all 0.2s;
-}
-.btn-csv-export:hover {
-  border-color: var(--accent-light);
-  background: var(--accent-blush);
-  color: var(--accent);
-}
-
-/* ── SVG Graph ── */
-.svg-container {
-  position: relative;
-  width: 100%;
-}
-.chart-rev-dot {
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-.chart-rev-dot:hover {
-  transform: scale(1.4);
-}
-.graph-trigger:hover ~ .chart-rev-dot {
-  transform: scale(1.3);
-}
-
-/* ── Tooltip Box ── */
-.chart-tooltip-box {
-  position: absolute;
-  background: rgba(15, 23, 42, 0.95);
-  border-radius: 10px;
-  padding: 10px 14px;
-  color: #fff;
-  font-size: 11.5px;
-  pointer-events: none;
-  z-index: 50;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-  min-width: 150px;
-  transform: translate(-50%, -110%);
-  transition: opacity 0.15s, left 0.1s, top 0.1s;
-}
-.tooltip-label {
-  font-weight: 800;
-  border-bottom: 1px solid rgba(255,255,255,0.15);
-  padding-bottom: 6px;
-  margin-bottom: 6px;
-  font-size: 11px;
-  color: #94a3b8;
-  text-transform: uppercase;
-}
-.tooltip-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-}
-.tt-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-.tt-dot.income { background: #db2777; }
-.tt-dot.orders { background: #3b82f6; }
-</style>
-
-<script>
-// Graph Interactive Tooltip Handler
-document.addEventListener('DOMContentLoaded', () => {
-  const triggers = document.querySelectorAll('.graph-trigger');
-  const tooltip = document.getElementById('chart-tooltip');
-  const ttLabel = document.getElementById('tt-label');
-  const ttRev = document.getElementById('tt-rev');
-  const ttOrd = document.getElementById('tt-ord');
-  const svgContainer = document.querySelector('.svg-container');
-
-  if (triggers.length > 0 && tooltip && svgContainer) {
-    triggers.forEach(trigger => {
-      trigger.addEventListener('mousemove', (e) => {
-        const rect = svgContainer.getBoundingClientRect();
-        // Calculate relative coordinate inside container
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        // Populate details
-        ttLabel.textContent = trigger.getAttribute('data-label');
-        ttRev.textContent = trigger.getAttribute('data-rev');
-        ttOrd.textContent = trigger.getAttribute('data-ord');
-
-        // Position tooltip
-        tooltip.style.left = x + 'px';
-        tooltip.style.top = y + 'px';
-        tooltip.style.display = 'block';
-      });
-
-      trigger.addEventListener('mouseleave', () => {
-        tooltip.style.display = 'none';
-      });
-    });
-  }
-});
-</script>

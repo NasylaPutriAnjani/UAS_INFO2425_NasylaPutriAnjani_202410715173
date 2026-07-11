@@ -5,6 +5,7 @@
  * e.g.  $adminActivePage = 'admin_users';
  */
 $adminActivePage = $adminActivePage ?? $_GET['page'] ?? 'admin';
+$adminUser = current_user();
 $adminMenuGroups = [
   'Overview' => [
     ['page' => 'admin', 'icon' => '📊', 'label' => 'Dashboard'],
@@ -24,7 +25,7 @@ $adminMenuGroups = [
 ?>
 <aside class="dash-sidebar admin-sidebar">
   <div class="sidebar-store-profile">
-    <div class="sidebar-store-avatar" style="background:linear-gradient(135deg,var(--accent),var(--accent-deep));font-size:18px">🖥️</div>
+    <?= user_avatar_html($adminUser, 'sidebar-store-avatar', 'A') ?>
     <div>
       <div class="sidebar-store-name">Control Center</div>
       <div class="sidebar-store-status">Super Admin · v2.0</div>

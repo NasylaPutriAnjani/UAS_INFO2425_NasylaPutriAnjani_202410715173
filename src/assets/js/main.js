@@ -1,7 +1,6 @@
 // ══════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════
-let cartCount = 3;
 let currentUser = null;   // { name, role: 'buyer'|'seller'|'admin' }
 
 // Role display config
@@ -13,7 +12,7 @@ const ROLE_CONFIG = {
     showCart:     true,
     showSearch:   true,
     dropdown: [
-      { icon:'🏠', label:'Dashboard Pembeli', action:"_showPageDirect('buyer');closeUserDropdown()" },
+      { icon:'🏠', label:'Beranda', action:"_showPageDirect('buyer');closeUserDropdown()" },
       { icon:'📖', label:'Katalog Buku',    action:"_showPageDirect('catalog');closeUserDropdown()" },
       { icon:'📦', label:'Pesanan Saya',    action:"_showPageDirect('buyer_orders');closeUserDropdown()" },
       { icon:'❤️', label:'Wishlist',        action:"_showPageDirect('buyer_wishlist');closeUserDropdown()" },
@@ -28,7 +27,7 @@ const ROLE_CONFIG = {
     chipLabel:    'Seller Dashboard',
     chipSublabel: 'Penjual · RubbyBooks',
     showCart:     false,
-    showSearch:   false,
+    showSearch:   true,
     dropdown: [
       { icon:'📊', label:'Dashboard Penjual', action:"_showPageDirect('seller');closeUserDropdown()" },
       { icon:'📦', label:'Kelola Produk',    action:"_showPageDirect('seller_products');closeUserDropdown()" },
@@ -46,7 +45,7 @@ const ROLE_CONFIG = {
     chipLabel:    'Admin Panel',
     chipSublabel: 'Administrator · RubbyBooks',
     showCart:     false,
-    showSearch:   false,
+    showSearch:   true,
     dropdown: [
       { icon:'🖥️', label:'Panel Admin',     action:"_showPageDirect('admin');closeUserDropdown()" },
       { icon:'👥', label:'Manajemen User',  action:"_showPageDirect('admin_users');closeUserDropdown()" },
@@ -63,6 +62,42 @@ const ROLE_CONFIG = {
 };
 
 // ══════════════════════════════════════════
+function attachDropdownBadgeKeys() {
+  const apply = (role, label, badgeKey, warn = false) => {
+    const item = ROLE_CONFIG[role]?.dropdown.find(entry => entry.label === label);
+    if (!item) return;
+    item.badgeKey = badgeKey;
+    item.warn = warn;
+  };
+  apply('buyer', 'Pesanan Saya', 'orders');
+  apply('buyer', 'Keranjang', 'cart');
+  apply('seller', 'Pesanan Masuk', 'orders');
+  apply('admin', 'Pesanan', 'orders');
+}
+
+function ensureDropdownCountItems() {
+  const buyerItems = ROLE_CONFIG.buyer?.dropdown || [];
+  if (!buyerItems.some(item => item.label === 'Keranjang')) {
+    const wishlistIndex = buyerItems.findIndex(item => item.label === 'Wishlist');
+    buyerItems.splice(wishlistIndex + 1, 0, {
+      icon: 'Cart',
+      label: 'Keranjang',
+      action: "_showPageDirect('buyer_cart');closeUserDropdown()",
+      badgeKey: 'cart'
+    });
+  }
+}
+
+function removeNotificationDropdownItems() {
+  Object.values(ROLE_CONFIG).forEach(config => {
+    config.dropdown = config.dropdown.filter(item => item.divider || item.label !== 'Notifikasi');
+  });
+}
+
+attachDropdownBadgeKeys();
+ensureDropdownCountItems();
+removeNotificationDropdownItems();
+
 //  ROLE-BASED ACCESS CONTROL (RBAC)
 // ══════════════════════════════════════════
 
@@ -82,7 +117,7 @@ const PAGE_NAMES = {
   checkout: 'Checkout',
   tracking: 'Lacak Pesanan',
   account_settings: 'Pengaturan Akun',
-  buyer:    'Dashboard Pembeli',
+  buyer:    'Beranda',
   buyer_account: 'Akun Saya',
   buyer_wishlist: 'Wishlist',
   buyer_cart: 'Keranjang',
@@ -111,12 +146,49 @@ function canAccess(pageName) {
   return (PAGE_ACCESS[role] || []).includes(pageName);
 }
 
+function goHome() {
+  window.location.href = 'index.php?page=home';
+}
+
+function toggleMobileMenu() {
+  const panel = document.getElementById('mobileNavPanel');
+  const overlay = document.getElementById('mobileMenuOverlay');
+  if (!panel || !overlay) return;
+  const willOpen = !panel.classList.contains('open');
+  panel.classList.toggle('open', willOpen);
+  overlay.classList.toggle('open', willOpen);
+  document.body.style.overflow = willOpen ? 'hidden' : '';
+}
+
+function closeMobileMenu() {
+  const panel = document.getElementById('mobileNavPanel');
+  const overlay = document.getElementById('mobileMenuOverlay');
+  if (panel) panel.classList.remove('open');
+  if (overlay) overlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeMobileMenu();
+});
+
 // ══════════════════════════════════════════
 //  PAGE NAVIGATION  (with RBAC guard)
 // ══════════════════════════════════════════
 function showPage(name) {
   if (!canAccess(name)) {
     handleAccessDenied(name);
+    return;
+  }
+  const serverPages = [
+    'home',
+    'buyer', 'buyer_account', 'buyer_wishlist', 'buyer_cart', 'buyer_orders', 'buyer_reviews', 'buyer_notifications',
+    'seller', 'seller_products', 'seller_orders', 'seller_reviews', 'seller_notifications', 'seller_report',
+    'admin', 'admin_users', 'admin_analytics', 'admin_categories', 'admin_products', 'admin_orders', 'admin_notifications', 'admin_settings',
+    'account_settings', 'checkout', 'tracking'
+  ];
+  if (serverPages.includes(name)) {
+    _showPageDirect(name);
     return;
   }
   const page = document.getElementById('page-' + name);
@@ -291,8 +363,7 @@ function validateRegister(e) {
 }
 
 function chipLabelFor(user, cfg) {
-  if (user.role === 'buyer') return user.name.split(' ')[0] || cfg.chipLabel;
-  return cfg.chipLabel;
+  return (user.name || '').trim().split(/\s+/)[0] || cfg.chipLabel;
 }
 
 function applyNavUser(user) {
@@ -304,8 +375,13 @@ function applyNavUser(user) {
   document.getElementById('nav-loggedin').style.display = 'block';
 
   const avatar = document.getElementById('nav-avatar-icon');
-  avatar.textContent = cfg.roleIcon;
-  avatar.className = 'nav-user-avatar nav-user-avatar--role';
+  if (user.avatar) {
+    avatar.innerHTML = `<img src="src/${String(user.avatar).replace(/^\/+/, '')}" alt="Foto profil">`;
+    avatar.className = 'nav-user-avatar nav-user-avatar--role user-photo-avatar';
+  } else {
+    avatar.textContent = cfg.roleIcon;
+    avatar.className = 'nav-user-avatar nav-user-avatar--role';
+  }
   avatar.dataset.role = user.role;
 
   const chip = document.getElementById('nav-user-chip');
@@ -331,8 +407,8 @@ function renderNavLinks(role) {
   const navCenter = document.getElementById('nav-center');
   if (!navCenter) return;
 
-  // Always show nav-center; hide all groups first
-  navCenter.style.display = 'flex';
+  // Let CSS decide desktop/mobile visibility.
+  navCenter.style.display = '';
   ['buyer', 'seller', 'admin'].forEach(r => {
     const el = document.getElementById('nav-links-' + r);
     if (el) el.style.display = 'none';
@@ -365,7 +441,9 @@ function buildDropdown(items) {
   const el = document.getElementById('userDropdown');
   el.innerHTML = items.map(item => {
     if (item.divider) return '<div class="dropdown-divider"></div>';
-    return `<button class="dropdown-item${item.danger ? ' danger' : ''}" onclick="${item.action}"><span>${item.icon}</span> ${item.label}</button>`;
+    const count = item.badgeKey ? Number(window.__RB_USER__?.counts?.[item.badgeKey] || 0) : 0;
+    const badge = count > 0 ? `<span class="dropdown-badge${item.warn ? ' warn' : ''}">${count}</span>` : '';
+    return `<button class="dropdown-item${item.danger ? ' danger' : ''}" onclick="${item.action}"><span>${item.icon}</span><span class="dropdown-label">${item.label}</span>${badge}</button>`;
   }).join('');
 }
 
@@ -387,7 +465,7 @@ document.addEventListener('click', e => {
 // ══════════════════════════════════════════
 function doLogout() {
   closeUserDropdown();
-  window.location.href = 'index.php?page=logout';
+  window.location.href = 'index.php?action=logout';
 }
 
 // ══════════════════════════════════════════
@@ -408,18 +486,32 @@ function closeCart() {
   document.body.style.overflow = '';
 }
 
+function requireBuyerAction(featureName) {
+  const user = window.__RB_USER__ || currentUser;
+  if (user && user.role !== 'buyer') {
+    showToast('⛔ ' + featureName + ' hanya tersedia untuk Pembeli');
+    return false;
+  }
+  if (!user) {
+    openAuth();
+    return false;
+  }
+  return true;
+}
+
 // ══════════════════════════════════════════
 //  ADD TO CART
 // ══════════════════════════════════════════
-function addToCart(e, productId, name) {
-  e.stopPropagation();
+function addToCart(e, productId, name, qty = 1, redirectPage = '') {
+  if (e) e.stopPropagation();
+  const user = window.__RB_USER__ || currentUser;
   // Only buyers (and guests who will be prompted to login) can add to cart
-  if (currentUser && currentUser.role !== 'buyer') {
+  if (user && user.role !== 'buyer') {
     showToast('⛔ Fitur keranjang hanya tersedia untuk Pembeli');
     return;
   }
-  if (!currentUser) {
-    showToast('🔐 Masuk sebagai Pembeli untuk menambahkan ke keranjang');
+  if (!user) {
+    showToast('🔐 Masuk dahulu untuk menambahkan ke keranjang');
     setTimeout(openAuth, 400);
     return;
   }
@@ -433,8 +525,22 @@ function addToCart(e, productId, name) {
   input.type = 'hidden';
   input.name = 'product_id';
   input.value = productId;
-  
   form.appendChild(input);
+
+  const qtyInput = document.createElement('input');
+  qtyInput.type = 'hidden';
+  qtyInput.name = 'qty';
+  qtyInput.value = Math.max(1, parseInt(qty) || 1);
+  form.appendChild(qtyInput);
+
+  if (redirectPage) {
+    const redirectInput = document.createElement('input');
+    redirectInput.type = 'hidden';
+    redirectInput.name = 'redirect';
+    redirectInput.value = redirectPage;
+    form.appendChild(redirectInput);
+  }
+
   document.body.appendChild(form);
   form.submit();
 }
@@ -474,6 +580,22 @@ function updatePrice(input) {
   if (el) el.textContent = 'Rp ' + parseInt(input.value).toLocaleString('id-ID');
 }
 
+function submitCatalogFilters() {
+  const form = document.getElementById('catalog-form');
+  if (!form) return;
+  const pageInput = document.getElementById('page-input');
+  if (pageInput) pageInput.value = '1';
+  form.submit();
+}
+
+function changePage(page) {
+  const form = document.getElementById('catalog-form');
+  const pageInput = document.getElementById('page-input');
+  if (!form || !pageInput) return;
+  pageInput.value = page;
+  form.submit();
+}
+
 // ══════════════════════════════════════════
 //  TOAST
 // ══════════════════════════════════════════
@@ -497,11 +619,53 @@ document.addEventListener('keydown', e => {
 
 // Setup on page load
 document.addEventListener('DOMContentLoaded', () => {
+  const catalogForm = document.getElementById('catalog-form');
+  if (catalogForm) {
+    const catAll = document.getElementById('cat-all');
+    const catChecks = Array.from(catalogForm.querySelectorAll('.cat-checkbox'));
+    const rangeInput = catalogForm.querySelector('.range-input');
+    const sortSelect = document.querySelector('.sort-select[form="catalog-form"]') || catalogForm.querySelector('.sort-select');
+
+    catalogForm.addEventListener('change', e => {
+      const target = e.target;
+      if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
+
+      if (target === catAll) {
+        catChecks.forEach(cb => { cb.checked = false; });
+        submitCatalogFilters();
+        return;
+      }
+
+      if (catChecks.includes(target)) {
+        if (catAll) catAll.checked = false;
+        submitCatalogFilters();
+        return;
+      }
+
+      if (target === rangeInput || target === sortSelect) {
+        submitCatalogFilters();
+      }
+    });
+
+    if (rangeInput) {
+      rangeInput.addEventListener('input', () => updatePrice(rangeInput));
+      updatePrice(rangeInput);
+    }
+
+    if (sortSelect && !catalogForm.contains(sortSelect)) {
+      sortSelect.addEventListener('change', submitCatalogFilters);
+    }
+  }
+
   // Global search
   const searchInput = document.querySelector('#nav-search input');
   if (searchInput) {
+    const currentParams = new URLSearchParams(window.location.search);
+    searchInput.value = currentParams.get('q') || '';
+
     searchInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
+        e.preventDefault();
         const val = searchInput.value.trim();
         if (val) {
           window.location.href = 'index.php?page=catalog&q=' + encodeURIComponent(val);
@@ -554,6 +718,11 @@ function _avatarGrad(name) {
 }
 function _initials(name) {
   return name.split(' ').slice(0,2).map(w => w[0]||'').join('').toUpperCase();
+}
+function _avatarUrl(path) {
+  if (!path) return '';
+  const clean = String(path).replace(/^\/+/, '');
+  return clean.startsWith('http') ? clean : `src/${clean}`;
 }
 function _stars(n) {
   n = Math.round(n);
@@ -610,6 +779,9 @@ function _buildPD(data) {
   const stockLabel = p.stock <= 0 ? 'Stok habis' : `Stok tersedia — ${p.stock} buku`;
   const sellerInit = _initials(p.seller_name);
   const sellerGrad = _avatarGrad(p.seller_name);
+  const sellerAvatar = p.seller_avatar
+    ? `<div class="pd-seller-avatar user-photo-avatar"><img src="${_avatarUrl(p.seller_avatar)}" alt="Foto profil"></div>`
+    : `<div class="pd-seller-avatar" style="background:linear-gradient(135deg,${sellerGrad})">${sellerInit}</div>`;
 
   // Review breakdown
   const total = parseInt(p.review_count) || 0;
@@ -654,7 +826,7 @@ function _buildPD(data) {
         <button class="pd-wish-btn ${wishActive}" onclick="pdToggleWish(${p.id},this)" title="Wishlist">${wishIcon}</button>
       </div>
       <div class="pd-seller-box">
-        <div class="pd-seller-avatar" style="background:linear-gradient(135deg,${sellerGrad})">${sellerInit}</div>
+        ${sellerAvatar}
         <div>
           <div class="pd-seller-name">🏪 ${p.seller_name}</div>
           <div class="pd-seller-sub">Penjual Terverifikasi ✓</div>
@@ -749,19 +921,15 @@ function pdQty(delta) {
 
 function pdAddCart() {
   if (!_pdProduct) return;
-  const user = window.__RB_USER__;
-  if (!user || user.role !== 'buyer') { openAuth(); return; }
+  if (!requireBuyerAction('Fitur keranjang')) return;
   addToCart(null, _pdProduct.id, _pdProduct.name);
   closePDBtn();
 }
 
 function pdBuyNow() {
   if (!_pdProduct) return;
-  const user = window.__RB_USER__;
-  if (!user || user.role !== 'buyer') { openAuth(); return; }
-  addToCart(null, _pdProduct.id, _pdProduct.name);
-  closePDBtn();
-  setTimeout(() => _showPageDirect('checkout'), 300);
+  if (!requireBuyerAction('Fitur beli sekarang')) return;
+  addToCart(null, _pdProduct.id, _pdProduct.name, _pdQty, 'checkout');
 }
 
 function pdToggleWish(productId, btn) {
@@ -799,3 +967,369 @@ document.addEventListener('click', function(e) {
   const pid = card.dataset.productId;
   if (pid) openPD(pid);
 });
+
+// Shared account page
+/* ── Tab switching ── */
+function switchAccountTab(btn, tabId) {
+  document.querySelectorAll('#profile-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  const pane = document.getElementById(tabId);
+  if (pane) pane.classList.add('active');
+}
+
+/* ── Password strength ── */
+function checkPasswordStrength(val) {
+  const hasLen   = val.length >= 8;
+  const hasUpper = /[A-Z]/.test(val);
+  const hasNum   = /[0-9]/.test(val);
+  const hasSym   = /[!@#$%^&*(),.?":{}|<>]/.test(val);
+  let   strength = [hasLen, hasUpper, hasNum, hasSym].filter(Boolean).length;
+
+  const colors   = ['', '#ef4444', '#f59e0b', '#10b981', '#059669'];
+  const labels   = ['—', 'Lemah', 'Sedang', 'Kuat', 'Sangat Kuat'];
+  const color    = strength ? colors[strength] : 'var(--border)';
+
+  const ruleColor = (ok) => ok ? 'var(--rose-deep)' : 'var(--ink-muted)';
+  document.getElementById('rule-len').style.color   = ruleColor(hasLen);
+  document.getElementById('rule-upper').style.color = ruleColor(hasUpper);
+  document.getElementById('rule-num').style.color   = ruleColor(hasNum);
+  document.getElementById('rule-sym').style.color   = ruleColor(hasSym);
+
+  const txt = document.getElementById('pwd-text');
+  txt.textContent = labels[strength] || '—';
+  txt.style.color = color;
+
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById('pwd-bar-' + i).style.background = i <= strength ? color : 'var(--border)';
+  }
+}
+
+/* ── Delete account gate ── */
+function checkDeleteStatus() {
+  const input = document.getElementById('delete-confirm-input');
+  const cb    = document.getElementById('delete-checkbox');
+  const btn   = document.getElementById('btn-delete-account');
+  if (!btn) return;
+
+  const ok = input && input.value === 'DELETE' && cb && cb.checked;
+  btn.disabled      = !ok;
+  btn.style.opacity = ok ? '1' : '0.6';
+  btn.style.cursor  = ok ? 'pointer' : 'not-allowed';
+  btn.style.background   = ok ? 'var(--rose-deep)' : 'var(--rose-pale)';
+  btn.style.color        = ok ? '#fff' : 'var(--rose-deep)';
+}
+
+// Buyer checkout page
+function updateCheckoutTotal() {
+  const checkoutPage = document.getElementById('page-checkout');
+  const cityInput = document.getElementById('checkoutCity');
+  const subtotalEl = document.getElementById('coSubtotal');
+  const shippingEl = document.getElementById('coShipping');
+  const totalEl = document.getElementById('coTotal');
+  if (!checkoutPage || !cityInput || !subtotalEl || !shippingEl || !totalEl) return;
+
+  const city = (cityInput.value || '').trim().toLowerCase();
+  const costMap = { jakarta: 10000, bandung: 15000, surabaya: 20000 };
+  const shippingCost = costMap[city] || 25000;
+  const subtotal = parseInt(subtotalEl.getAttribute('data-value') || '0', 10);
+  const total = subtotal + shippingCost;
+
+  shippingEl.textContent = 'Rp ' + shippingCost.toLocaleString('id-ID');
+  totalEl.textContent = 'Rp ' + total.toLocaleString('id-ID');
+}
+
+function initCheckoutPage() {
+  if (!document.getElementById('page-checkout')) return;
+
+  document.querySelectorAll('.numeric-only').forEach(input => {
+    input.addEventListener('input', () => {
+      input.value = input.value.replace(/\D/g, '');
+    });
+  });
+
+  const cityInput = document.getElementById('checkoutCity');
+  if (cityInput) {
+    cityInput.addEventListener('input', updateCheckoutTotal);
+    cityInput.addEventListener('change', updateCheckoutTotal);
+  }
+
+  updateCheckoutTotal();
+}
+
+// Public product page
+function prodTab(pane, btn) {
+  document.querySelectorAll('.prod-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.prod-tab-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('prod-pane-' + pane)?.classList.add('active');
+}
+
+function prodQty(delta) {
+  const inp = document.getElementById('prod-qty');
+  if (!inp) return;
+  const max = parseInt(inp.max || '99', 10);
+  inp.value = Math.max(1, Math.min(max, parseInt(inp.value || '1', 10) + delta));
+}
+
+function prodAddCart(id, name) {
+  if (!requireBuyerAction('Fitur keranjang')) return;
+  const qty = parseInt(document.getElementById('prod-qty')?.value || '1', 10) || 1;
+  addToCart(null, id, name, qty);
+}
+
+function prodBuyNow(id, name) {
+  if (!requireBuyerAction('Fitur beli sekarang')) return;
+  const qty = parseInt(document.getElementById('prod-qty')?.value || '1', 10) || 1;
+  addToCart(null, id, name, qty, 'checkout');
+}
+
+// Seller products page
+function openProductModal() {
+  const modal = document.getElementById('productModal');
+  if (!modal) return;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeProductModal() {
+  const modal = document.getElementById('productModal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function openAddModal() {
+  const categorySelect = document.getElementById('formProductCategory');
+  document.getElementById('modalTitle').textContent = 'Tambah Produk';
+  document.getElementById('formProductId').value = '';
+  document.getElementById('productForm').action = 'index.php?page=seller_products';
+  document.getElementById('formProductName').value = '';
+  document.getElementById('formProductCategory').value = categorySelect?.options[0]?.value || '';
+  document.getElementById('formProductStatus').value = 'active';
+  document.getElementById('formProductPrice').value = '';
+  document.getElementById('formProductStock').value = '';
+  document.getElementById('formProductImage').value = '';
+  document.getElementById('formProductDescription').value = '';
+  document.getElementById('formProductImageHelp').textContent = 'Akan menggunakan cover default jika dikosongkan.';
+  document.getElementById('submitBtn').textContent = 'Tambah Buku';
+  openProductModal();
+}
+
+function openEditModal(product) {
+  document.getElementById('modalTitle').textContent = 'Edit Produk';
+  document.getElementById('formProductId').value = product.id;
+  document.getElementById('productForm').action = 'index.php?page=seller_products';
+  document.getElementById('formProductName').value = product.name;
+  document.getElementById('formProductCategory').value = product.category_id;
+  document.getElementById('formProductStatus').value = product.status;
+  document.getElementById('formProductPrice').value = product.price;
+  document.getElementById('formProductStock').value = product.stock;
+  document.getElementById('formProductImage').value = '';
+  document.getElementById('formProductDescription').value = product.description || '';
+  document.getElementById('formProductImageHelp').textContent = 'Kosongkan jika tidak ingin mengubah cover.';
+  document.getElementById('submitBtn').textContent = 'Simpan Perubahan';
+  openProductModal();
+}
+
+// Seller orders page
+function openShippingModal(orderId, invoice) {
+  const orderInput = document.getElementById('shippingOrderId');
+  const invoiceLabel = document.getElementById('modalInvoice');
+  const modal = document.getElementById('shippingModal');
+  if (!orderInput || !invoiceLabel || !modal) return;
+  orderInput.value = orderId;
+  invoiceLabel.textContent = invoice;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeShippingModal() {
+  const modal = document.getElementById('shippingModal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function openDetailModal(order) {
+  const statusEl = document.getElementById('detailStatus');
+  const itemsEl = document.getElementById('detailItems');
+  const modal = document.getElementById('orderDetailModal');
+  if (!statusEl || !itemsEl || !modal) return;
+
+  document.getElementById('detailInvoice').textContent = '#' + order.invoice;
+  document.getElementById('detailBuyer').textContent = order.buyer;
+  document.getElementById('detailDate').textContent = order.date;
+  document.getElementById('detailReceipt').textContent = order.receipt || '-';
+  document.getElementById('detailTotal').textContent = 'Rp ' + order.total;
+
+  statusEl.textContent = order.status;
+  statusEl.className = 'order-status-badge ' + order.statusClass;
+
+  itemsEl.innerHTML = order.items.map(item => `
+    <div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border-radius:10px;padding:10px 14px;">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--ink);">📚 ${item.name}</div>
+        <div style="font-size:11.5px;color:#94a3b8;margin-top:2px;">Qty: ${item.qty}</div>
+      </div>
+      <div style="font-family:var(--font-serif);font-size:14px;font-weight:700;color:var(--ink);">Rp ${item.subtotal}</div>
+    </div>
+  `).join('');
+
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDetailModal() {
+  const modal = document.getElementById('orderDetailModal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Buyer orders page
+function openReviewModal(items) {
+  const select = document.getElementById('reviewProductId');
+  const overlay = document.getElementById('reviewOverlay');
+  const modal = document.getElementById('reviewModal');
+  if (!select || !overlay || !modal) return;
+
+  select.innerHTML = '';
+  items.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.product_id;
+    opt.textContent = item.name;
+    select.appendChild(opt);
+  });
+
+  overlay.classList.add('open');
+  modal.style.opacity = '1';
+  modal.style.pointerEvents = 'auto';
+}
+
+function closeReviewModal() {
+  const overlay = document.getElementById('reviewOverlay');
+  const modal = document.getElementById('reviewModal');
+  if (!overlay || !modal) return;
+  overlay.classList.remove('open');
+  modal.style.opacity = '0';
+  modal.style.pointerEvents = 'none';
+}
+
+function initSellerProductsPage() {
+  const productModal = document.getElementById('productModal');
+  if (!productModal) return;
+  productModal.addEventListener('click', function(e) {
+    if (e.target === this) closeProductModal();
+  });
+}
+
+function initSellerOrdersPage() {
+  const shippingModal = document.getElementById('shippingModal');
+  if (shippingModal) {
+    shippingModal.addEventListener('click', function(e) {
+      if (e.target === this) closeShippingModal();
+    });
+  }
+
+  const detailModal = document.getElementById('orderDetailModal');
+  if (detailModal) {
+    detailModal.addEventListener('click', function(e) {
+      if (e.target === this) closeDetailModal();
+    });
+  }
+}
+
+function initSellerReportsPage() {
+  if (!document.getElementById('page-seller-report')) return;
+  const triggers = document.querySelectorAll('.graph-trigger');
+  const tooltip = document.getElementById('chart-tooltip');
+  const ttLabel = document.getElementById('tt-label');
+  const ttRev = document.getElementById('tt-rev');
+  const ttOrd = document.getElementById('tt-ord');
+  const svgContainer = document.querySelector('.svg-container');
+
+  if (!triggers.length || !tooltip || !svgContainer || !ttLabel || !ttRev || !ttOrd) return;
+
+  triggers.forEach(trigger => {
+    trigger.addEventListener('mousemove', e => {
+      const rect = svgContainer.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      ttLabel.textContent = trigger.getAttribute('data-label') || '';
+      ttRev.textContent = trigger.getAttribute('data-rev') || '';
+      ttOrd.textContent = trigger.getAttribute('data-ord') || '';
+
+      tooltip.style.left = x + 'px';
+      tooltip.style.top = y + 'px';
+      tooltip.style.display = 'block';
+    });
+
+    trigger.addEventListener('mouseleave', () => {
+      tooltip.style.display = 'none';
+    });
+  });
+}
+
+function initBuyerCartPage() {
+  if (!document.getElementById('page-buyer_cart')) return;
+  const selectAll = document.getElementById('cart-select-all');
+  const itemChecks = Array.from(document.querySelectorAll('.cart-item-select'));
+  const totalEl = document.getElementById('cart-selected-total');
+  const checkoutBtn = document.getElementById('cart-checkout-btn');
+  if (!itemChecks.length) return;
+
+  function rupiah(value) {
+    return 'Rp ' + Number(value || 0).toLocaleString('id-ID');
+  }
+
+  function syncCartSummary() {
+    let total = 0;
+    let selected = 0;
+
+    itemChecks.forEach(check => {
+      const item = check.closest('.cart-shop-item');
+      if (!item || !check.checked) return;
+      total += Number(item.dataset.price || 0) * Number(item.dataset.qty || 0);
+      selected++;
+    });
+
+    if (totalEl) totalEl.textContent = selected ? rupiah(total) : '-';
+    if (checkoutBtn) checkoutBtn.classList.toggle('disabled', selected === 0);
+    if (selectAll) selectAll.checked = selected === itemChecks.length;
+  }
+
+  if (selectAll) {
+    selectAll.addEventListener('change', () => {
+      itemChecks.forEach(check => {
+        check.checked = selectAll.checked;
+      });
+      syncCartSummary();
+    });
+  }
+
+  itemChecks.forEach(check => check.addEventListener('change', syncCartSummary));
+  syncCartSummary();
+}
+
+function initAdminAnalyticsPage() {
+  if (!document.getElementById('page-admin_analytics')) return;
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('[onclick*="nextElementSibling"]')) return;
+    document.querySelectorAll('#page-admin_analytics div[style*="position:absolute"]').forEach(dropdown => {
+      if (dropdown.style.display === 'block') dropdown.style.display = 'none';
+    });
+  });
+}
+
+function initMigratedPageScripts() {
+  initCheckoutPage();
+  initSellerProductsPage();
+  initSellerOrdersPage();
+  initSellerReportsPage();
+  initBuyerCartPage();
+  initAdminAnalyticsPage();
+}
+
+document.addEventListener('DOMContentLoaded', initMigratedPageScripts);

@@ -6,7 +6,7 @@ $firstName = explode(' ', trim($user['name'] ?? 'Pembeli'))[0];
 ?>
 <aside class="dash-sidebar buyer-sidebar">
   <div class="sidebar-store-profile">
-    <div class="sidebar-store-avatar">🛒</div>
+    <?= user_avatar_html($user, 'sidebar-store-avatar', 'B') ?>
     <div>
       <div class="sidebar-store-name"><?= e($firstName) ?></div>
       <div class="sidebar-store-status">Pembeli Aktif</div>

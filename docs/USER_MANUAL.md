@@ -7,6 +7,14 @@
 3.  Untuk Pembeli, biarkan tab role pada **Pembeli**. Untuk mendaftar sebagai toko buku, pilih tab **Penjual**.
 4.  *(Khusus Penjual)* Akun yang baru saja didaftarkan sebagai penjual akan berada pada status *Pending*, dan menunggu konfirmasi dari Admin sebelum bisa berjualan.
 
+## Akun Demo Presentasi
+
+Gunakan akun berikut untuk demo dan presentasi:
+
+*   **Admin:** `admindemo@rubbybooks.com` / `password`
+*   **Seller:** `sellerdemo@rubbybooks.com` / `password`
+*   **Buyer:** `buyerdemo@rubbybooks.com` / `password`
+
 ## Panduan untuk Pembeli (Buyer)
 
 *   **Pencarian Buku:** Gunakan kolom pencarian di bagian navigasi atas, atau klik tombol "Katalog" untuk melihat daftar buku berdasarkan kategori, harga, maupun rating ulasan.

@@ -8,7 +8,7 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
     if ($action === 'get_product') {
         $id = (int)($_GET['id'] ?? 0);
         $stmt = $pdo->prepare('
-            SELECT p.*, c.name category, u.name seller_name,
+            SELECT p.*, c.name category, u.name seller_name, u.avatar seller_avatar,
                    COALESCE((SELECT AVG(rating) FROM reviews WHERE product_id=p.id), 0) as avg_rating,
                    COALESCE((SELECT COUNT(*) FROM reviews WHERE product_id=p.id), 0) as review_count,
                    COALESCE((SELECT SUM(qty) FROM order_items WHERE product_id=p.id), 0) as sold_count
@@ -67,15 +67,15 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         $stmt->execute([$_POST['email']]);
         $user = $stmt->fetch();
         if ($user && password_verify($_POST['password'], $user['password']) && $user['status'] === 'active') {
-            $_SESSION['user'] = ['id' => (int) $user['id'], 'name' => $user['name'], 'email' => $user['email'], 'role' => $user['role']];
+            $_SESSION['user'] = ['id' => (int) $user['id'], 'name' => $user['name'], 'email' => $user['email'], 'role' => $user['role'], 'avatar' => $user['avatar'] ?? null];
             log_activity($pdo, "Login {$user['role']}: {$user['email']}");
-            redirect($user['role'] === 'admin' ? 'admin' : ($user['role'] === 'seller' ? 'seller' : 'buyer'));
+            redirect('home');
         }
-        flash('Login gagal. Cek email/password atau status akun.', 'error');
+        flash('Login gagal. Cek email/password akun.', 'error');
         redirect('home', ['auth' => 'masuk']);
     }
 
-    if ($page === 'logout') {
+    if ($action === 'logout' || $page === 'logout') {
         session_destroy();
         session_start();
         redirect('home');
@@ -83,26 +83,35 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
 
     if ($action === 'add_cart') {
         require_role('buyer');
-        $stmt = $pdo->prepare('INSERT INTO carts (buyer_id,product_id,qty) VALUES (?,?,1) ON DUPLICATE KEY UPDATE qty = qty + 1');
-        $stmt->execute([current_user()['id'], $_POST['product_id']]);
+        $qty = max(1, (int)($_POST['qty'] ?? 1));
+        $stmt = $pdo->prepare('INSERT INTO carts (buyer_id,product_id,qty) VALUES (?,?,?) ON DUPLICATE KEY UPDATE qty = qty + VALUES(qty)');
+        $stmt->execute([current_user()['id'], $_POST['product_id'], $qty]);
         flash('Buku ditambahkan ke keranjang.');
-        redirect('catalog');
+        $redirectPage = $_POST['redirect'] ?? 'catalog';
+        redirect($redirectPage === 'checkout' ? 'checkout' : 'catalog');
     }
 
     if ($action === 'update_cart') {
         require_role('buyer');
-        foreach ($_POST['qty'] ?? [] as $cartId => $qty) {
-            $pdo->prepare('UPDATE carts SET qty=? WHERE id=? AND buyer_id=?')->execute([max(1, (int) $qty), $cartId, current_user()['id']]);
+        $qtyPayload = $_POST['qty'] ?? [];
+        if (!is_array($qtyPayload) && isset($_POST['cart_id'])) {
+            $qtyPayload = [$_POST['cart_id'] => $qtyPayload];
+        }
+        foreach ($qtyPayload as $cartId => $qty) {
+            $qty = max(1, (int)$qty);
+            $pdo->prepare('UPDATE carts SET qty=? WHERE id=? AND buyer_id=?')->execute([$qty, (int)$cartId, current_user()['id']]);
         }
         flash('Keranjang diperbarui.');
-        redirect('cart');
+        $redirectPage = $_POST['redirect'] ?? 'cart';
+        redirect($redirectPage === 'buyer_cart' ? 'buyer_cart' : 'cart');
     }
 
     if ($action === 'remove_cart') {
         require_role('buyer');
         $pdo->prepare('DELETE FROM carts WHERE id=? AND buyer_id=?')->execute([$_POST['cart_id'], current_user()['id']]);
         flash('Item dihapus.');
-        redirect('cart');
+        $redirectPage = $_POST['redirect'] ?? 'cart';
+        redirect($redirectPage === 'buyer_cart' ? 'buyer_cart' : 'cart');
     }
 
     if ($action === 'toggle_wishlist') {
@@ -257,10 +266,10 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         }
 
         // Update basic info in DB
-        file_put_contents(__DIR__ . '/../uploads/debug.txt', "POST DATA: " . print_r($_POST, true) . "\nSQL INPUTS: Name: $name, Phone: $phone, DOB: $dob, AltPhone: $alternatePhone, Avatar: $avatarPath, UserID: $userId\n", FILE_APPEND);
         $stmt = $pdo->prepare('UPDATE users SET name = ?, phone = ?, dob = ?, alternate_phone = ?, avatar = ? WHERE id = ?');
         $stmt->execute([$name, $phone, $dob, $alternatePhone, $avatarPath, $userId]);
         $_SESSION['user']['name'] = $name;
+        $_SESSION['user']['avatar'] = $avatarPath;
 
         // 3. Password Update (if entered)
         $password = trim($_POST['password'] ?? '');
@@ -315,8 +324,14 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
 
     if ($action === 'checkout') {
         require_role('buyer');
+        $phone = trim((string)($_POST['phone'] ?? ''));
+        $postalCode = trim((string)($_POST['postal_code'] ?? ''));
+        if ($phone === '' || !ctype_digit($phone) || $postalCode === '' || !ctype_digit($postalCode)) {
+            flash('Nomor telepon dan kode pos hanya boleh berisi angka.', 'error');
+            redirect('checkout');
+        }
         $pdo->beginTransaction();
-        $stmt = $pdo->prepare('SELECT c.*, p.name, p.price, p.stock FROM carts c JOIN products p ON p.id=c.product_id WHERE c.buyer_id=? FOR UPDATE');
+        $stmt = $pdo->prepare('SELECT c.*, p.name, p.price, p.stock, p.seller_id FROM carts c JOIN products p ON p.id=c.product_id WHERE c.buyer_id=? FOR UPDATE');
         $stmt->execute([current_user()['id']]);
         $items = $stmt->fetchAll();
         if (!$items) {
@@ -334,11 +349,11 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         $shipping = shipping_cost($_POST['city']);
         $subtotal = array_sum(array_map(fn($item) => (int) $item['price'] * (int) $item['qty'], $items));
         $pdo->prepare('INSERT INTO shipping_addresses (buyer_id,recipient_name,phone,address,city,postal_code) VALUES (?,?,?,?,?,?)')
-            ->execute([current_user()['id'], $_POST['recipient_name'], $_POST['phone'], $_POST['address'], $_POST['city'], $_POST['postal_code']]);
+            ->execute([current_user()['id'], $_POST['recipient_name'], $phone, $_POST['address'], $_POST['city'], $postalCode]);
         $shippingAddressId = (int) $pdo->lastInsertId();
         $invoice = next_invoice($pdo);
-        $pdo->prepare('INSERT INTO orders (buyer_id,shipping_address_id,invoice_number,total,shipping_cost) VALUES (?,?,?,?,?)')
-            ->execute([current_user()['id'], $shippingAddressId, $invoice, $subtotal + $shipping, $shipping]);
+        $pdo->prepare('INSERT INTO orders (buyer_id,shipping_address_id,invoice_number,total,shipping_cost,status) VALUES (?,?,?,?,?,?)')
+            ->execute([current_user()['id'], $shippingAddressId, $invoice, $subtotal + $shipping, $shipping, 'paid']);
         $orderId = (int) $pdo->lastInsertId();
         foreach ($items as $item) {
             $line = (int) $item['price'] * (int) $item['qty'];
@@ -348,10 +363,25 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         }
         $pdo->prepare('INSERT INTO payments (order_id,method,proof) VALUES (?,?,?)')->execute([$orderId, $_POST['method'], upload_file('proof', 'payments')]);
         $pdo->prepare('DELETE FROM carts WHERE buyer_id=?')->execute([current_user()['id']]);
-        notify_user($pdo, current_user()['id'], "Pesanan {$invoice} dibuat. Status pending.");
+        notify_user($pdo, current_user()['id'], "Pesanan {$invoice} dibuat dan bukti pembayaran terkirim. Menunggu konfirmasi penjual.");
+        $sellerItems = [];
+        foreach ($items as $item) {
+            $sellerId = (int)($item['seller_id'] ?? 0);
+            if ($sellerId <= 0) {
+                continue;
+            }
+            $sellerItems[$sellerId][] = $item['name'] . ' x' . (int)$item['qty'];
+        }
+        foreach ($sellerItems as $sellerId => $names) {
+            notify_user(
+                $pdo,
+                $sellerId,
+                "Pesanan masuk {$invoice}: " . implode(', ', $names) . ". Bukti pembayaran sudah dikirim, menunggu konfirmasi."
+            );
+        }
         log_activity($pdo, "Checkout invoice {$invoice}");
         $pdo->commit();
-        flash("Checkout berhasil. Invoice {$invoice} dibuat otomatis.");
+        flash("Checkout berhasil. Invoice {$invoice}.");
         redirect('tracking');
     }
 

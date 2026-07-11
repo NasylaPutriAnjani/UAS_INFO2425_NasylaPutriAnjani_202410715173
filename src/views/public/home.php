@@ -115,13 +115,13 @@ $bcColors = ['bc1','bc2','bc3','bc4','bc5','bc6'];
       ?>
       <div class="book-card" onclick="window.location='index.php?page=product&id=<?= $book['id'] ?>'" style="cursor:pointer">
         <?php $inWishlist = is_in_wishlist($GLOBALS['pdo'], $book['id']); ?>
+              <form method="POST" action="index.php?action=toggle_wishlist" class="wish-form card-wish-form" onclick="event.stopPropagation()">
+                <input type="hidden" name="product_id" value="<?= $book['id'] ?>">
+                <button type="submit" title="Wishlist" class="wish-btn <?= $inWishlist ? 'active' : '' ?>"><?= $inWishlist ? '&hearts;' : '&#9825;' ?></button>
+              </form>
         <?php if (!empty($book['image'])): ?>
           <div class="book-cover-lg" style="background-image: url('<?= e(asset($book['image'])) ?>'); background-size: cover; background-position: center; font-size:0;">
             <?php if ($book['book_condition'] === 'new'): ?><span class="badge badge-new">Baru</span><?php endif; ?>
-            <form method="POST" action="index.php?action=toggle_wishlist" style="position: absolute; top: 12px; right: 12px; z-index: 10; margin: 0;" onclick="event.stopPropagation()">
-              <input type="hidden" name="product_id" value="<?= $book['id'] ?>">
-              <button type="submit" title="Wishlist" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.95); border: none; display: flex; align-items: center; justify-content: center; font-size: 15px; color: <?= $inWishlist ? '#f43f5e' : '#a1a1aa' ?>; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"><?= $inWishlist ? '♥' : '♡' ?></button>
-            </form>
           </div>
         <?php else: ?>
           <div class="book-cover-lg <?= $bcClass ?>">
@@ -129,15 +129,12 @@ $bcColors = ['bc1','bc2','bc3','bc4','bc5','bc6'];
               <span class="badge badge-new">Baru</span>
             <?php endif; ?>
             <?= e($book['name']) ?>
-            <form method="POST" action="index.php?action=toggle_wishlist" style="position: absolute; top: 12px; right: 12px; z-index: 10; margin: 0;" onclick="event.stopPropagation()">
-              <input type="hidden" name="product_id" value="<?= $book['id'] ?>">
-              <button type="submit" title="Wishlist" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.95); border: none; display: flex; align-items: center; justify-content: center; font-size: 15px; color: <?= $inWishlist ? '#f43f5e' : '#a1a1aa' ?>; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"><?= $inWishlist ? '♥' : '♡' ?></button>
-            </form>
           </div>
         <?php endif; ?>
         <div class="book-body">
           <div class="book-genre"><?= e($book['category']) ?></div>
           <div class="book-title"><?= e($book['name']) ?></div>
+          <div class="book-seller">Penjual: <?= e($book['seller_name'] ?? 'RubbyBooks') ?></div>
           <div class="book-author">Stok: <?= (int)$book['stock'] ?></div>
           <div class="book-rating"><span class="stars"><?= $stars ?></span><span class="rating-count"><?= number_format($rating, 1) ?></span></div>
           <div class="book-footer">
@@ -170,6 +167,7 @@ $bcColors = ['bc1','bc2','bc3','bc4','bc5','bc6'];
           <span class="tag-chip">⭐ Pilihan Editor</span>
         </div>
         <div class="featured-title"><?= e($featured['name']) ?></div>
+        <div class="featured-author">Penjual: <b><?= e($featured['seller_name'] ?? 'RubbyBooks') ?></b></div>
         <div class="featured-author">Stok tersedia: <b><?= (int)$featured['stock'] ?></b></div>
         <p class="featured-desc"><?= e($featured['description'] ?? 'Sebuah karya luar biasa yang wajib Anda baca.') ?></p>
         <?php
@@ -188,7 +186,7 @@ $bcColors = ['bc1','bc2','bc3','bc4','bc5','bc6'];
           <form method="POST" action="index.php?action=toggle_wishlist" style="display:inline;" onclick="event.stopPropagation()">
             <?php $featWish = is_in_wishlist($GLOBALS['pdo'], $featured['id']); ?>
             <input type="hidden" name="product_id" value="<?= $featured['id'] ?>">
-            <button type="submit" class="btn-secondary" <?= $featWish ? 'style="color:var(--rose-deep); border-color:var(--rose-blush); background:var(--rose-blush);"' : '' ?>><?= $featWish ? '♥' : '♡' ?> Wishlist</button>
+            <button type="submit" class="btn-secondary" <?= $featWish ? 'style="color:var(--rose-deep); border-color:var(--rose-blush); background:var(--rose-blush);"' : '' ?>><?= $featWish ? '&hearts;' : '&#9825;' ?> Wishlist</button>
           </form>
         </div>
       </div>

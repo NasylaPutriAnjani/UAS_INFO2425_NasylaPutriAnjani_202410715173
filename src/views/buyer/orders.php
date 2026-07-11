@@ -86,27 +86,3 @@
     </form>
   </div>
 </div>
-
-<script>
-function openReviewModal(items) {
-  const select = document.getElementById('reviewProductId');
-  select.innerHTML = '';
-  items.forEach(item => {
-    const opt = document.createElement('option');
-    opt.value = item.product_id;
-    opt.textContent = item.name;
-    select.appendChild(opt);
-  });
-  document.getElementById('reviewOverlay').classList.add('open');
-  const modal = document.getElementById('reviewModal');
-  modal.style.opacity = '1';
-  modal.style.pointerEvents = 'auto';
-}
-
-function closeReviewModal() {
-  document.getElementById('reviewOverlay').classList.remove('open');
-  const modal = document.getElementById('reviewModal');
-  modal.style.opacity = '0';
-  modal.style.pointerEvents = 'none';
-}
-</script>

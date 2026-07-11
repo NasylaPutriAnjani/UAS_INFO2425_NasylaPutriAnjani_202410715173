@@ -162,9 +162,9 @@ INSERT INTO system_settings (`key`, `value`) VALUES
 ('show_stock_display', '1');
 
 INSERT INTO users (name,email,password,role,status) VALUES
-('Budi Admin','budiadmin@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','admin','active'),
-('Toko Buku Cahaya','tokobukucahaya@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','seller','active'),
-('Putri Lestari','putrilestari@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','buyer','active'),
+('Admin Demo','admindemo@rubbybooks.com','$2y$12$xHqU3v/45UMrZHQBKyjBt.qjGyGfTzAnX9FwxxgBA.L1LcRlcdXCG','admin','active'),
+('Seller Demo','sellerdemo@rubbybooks.com','$2y$12$xHqU3v/45UMrZHQBKyjBt.qjGyGfTzAnX9FwxxgBA.L1LcRlcdXCG','seller','active'),
+('Buyer Demo','buyerdemo@rubbybooks.com','$2y$12$xHqU3v/45UMrZHQBKyjBt.qjGyGfTzAnX9FwxxgBA.L1LcRlcdXCG','buyer','active'),
 ('Buku Keigo Official','keigoofficial@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','seller','active'),
 ('Literasi Jaya','literasijaya@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','seller','active'),
 ('Rina Amelia','rinaamelia@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','buyer','active'),
@@ -180,9 +180,28 @@ INSERT INTO categories (name,description) VALUES
 ('Bisnis','Bisnis, karier, dan finansial'),('Agama','Kajian dan spiritualitas'),('Sejarah','Sejarah Indonesia dan dunia');
 
 INSERT INTO products (seller_id,category_id,name,description,price,stock,status) VALUES
-(2,3,'Atomic Habits','Panduan membangun kebiasaan kecil yang berdampak besar.',89000,20,'active'),
-(2,1,'Laskar Pelangi','Novel inspiratif karya Andrea Hirata.',65000,15,'active'),
-(2,4,'Rich Dad Poor Dad','Buku finansial personal populer.',75000,12,'active'),
-(2,1,'The Midnight Library','Novel tentang kesempatan kedua dan pilihan hidup.',95000,9,'active'),
-(4,1,'Keajaiban Toko Kelontong Namiya','Novel best-seller karya Keigo Higashino yang penuh dengan misteri dan pesan moral yang menyentuh.',85000,10,'active'),
-(4,1,'Kesetiaan Mr. X (The Devotion of Suspect X)','Kisah investigasi pembunuhan yang penuh teka-teki dan intrik psikologis yang brilian oleh Keigo Higashino.',78000,5,'active');
+(2,1,'Laskar Pelangi','Novel inspiratif karya Andrea Hirata tentang mimpi, pendidikan, dan persahabatan.',65000,18,'active'),
+(2,2,'Naruto, Vol. 1: Uzumaki Naruto','Manga pembuka kisah Naruto karya Masashi Kishimoto.',55000,25,'active'),
+(2,3,'Clean Code: A Handbook of Agile Software Craftsmanship','Panduan klasik untuk menulis kode yang bersih, mudah dibaca, dan terawat.',125000,14,'active'),
+(2,4,'Rich Dad Poor Dad','Buku finansial populer tentang pola pikir dan literasi keuangan.',75000,20,'active'),
+(2,5,'The Purpose Driven Life','Buku rohani populer tentang tujuan hidup dan refleksi spiritual.',99000,12,'active'),
+(2,6,'Sapiens: A Brief History of Humankind','Buku sejarah populer yang merangkum perjalanan peradaban manusia.',115000,10,'active');
+
+INSERT INTO shipping_addresses (buyer_id, recipient_name, phone, address, city, postal_code) VALUES
+(3,'Buyer Demo RubbyBooks','081234567890','Jl. Merdeka No. 10, Bandung','Bandung','40111');
+
+INSERT INTO orders (buyer_id, shipping_address_id, invoice_number, total, shipping_cost, receipt_number, status) VALUES
+(3,1,'INV-20260711-001',80000,15000,'REG-DEMO-20260711','delivered');
+
+INSERT INTO order_items (order_id, product_id, qty, price, subtotal) VALUES
+(1,1,1,65000,65000);
+
+INSERT INTO payments (order_id, method, proof, status, paid_at) VALUES
+(1,'Transfer Bank BCA','uploads/payments/demo-payment.jpg','accepted',NOW());
+
+INSERT INTO reviews (product_id, buyer_id, rating, comment, seller_reply) VALUES
+(1,3,5,'Cerita yang hangat, inspiratif, dan sangat cocok untuk presentasi demo aplikasi.','Terima kasih atas ulasannya!');
+
+INSERT INTO notifications (user_id, message, is_read) VALUES
+(3,'Pesanan demo Anda telah selesai dan dapat ditampilkan di presentasi.',0),
+(2,'Anda menerima review demo dari Buyer Demo pada produk Laskar Pelangi.',0);

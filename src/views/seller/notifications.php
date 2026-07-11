@@ -6,11 +6,14 @@
     $currentSellerPage = $_GET['page'] ?? 'seller';
     $sellerIdForSidebar = current_user()['id'];
     $activeProductsCount = (int)$GLOBALS['pdo']->query("SELECT COUNT(*) FROM products WHERE seller_id = $sellerIdForSidebar AND status = 'active'")->fetchColumn();
+    $sellerNavCounts = user_nav_counts($GLOBALS['pdo']);
+    $sellerOrderBadgeCount = (int)($sellerNavCounts['orders'] ?? 0);
+    $sellerUnreadNotifCount = (int)($sellerNavCounts['notifications'] ?? 0);
     $unreadNotifCount = (int)$GLOBALS['pdo']->query("SELECT COUNT(*) FROM notifications WHERE user_id = $sellerIdForSidebar AND is_read = 0")->fetchColumn();
     ?>
     <aside class="dash-sidebar seller-sidebar">
       <div class="sidebar-store-profile">
-        <div class="sidebar-store-avatar">🏪</div>
+        <?= user_avatar_html(current_user(), 'sidebar-store-avatar', 'S') ?>
         <div>
           <div class="sidebar-store-name"><?= e(current_user()['name'] ?? 'Penjual') ?></div>
           <div class="sidebar-store-status">Toko Aktif</div>
@@ -29,6 +32,8 @@
           </button>
           <button class="sidebar-item<?= $currentSellerPage === 'seller_orders' ? ' active' : '' ?>" onclick="showPage('seller_orders')">
             <span class="si">🛒</span> Pesanan Masuk
+
+            <?php if ($sellerOrderBadgeCount > 0): ?><span class="sidebar-badge"><?= $sellerOrderBadgeCount ?></span><?php endif; ?>
           </button>
           <button class="sidebar-item<?= $currentSellerPage === 'seller_reviews' ? ' active' : '' ?>" onclick="showPage('seller_reviews')">
             <span class="si">💬</span> Ulasan & Rating
@@ -149,154 +154,3 @@
     </div>
   </div>
 </div>
-
-<style>
-/* Empty State */
-.notif-empty-state {
-  background: #fff;
-  border: 1.5px dashed var(--border);
-  border-radius: 20px;
-  padding: 60px 32px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-.notif-empty-icon {
-  font-size: 52px;
-  line-height: 1;
-  margin-bottom: 4px;
-}
-.notif-empty-title {
-  font-family: var(--font-serif);
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--ink);
-}
-.notif-empty-desc {
-  font-size: 14px;
-  color: #64748b;
-  max-width: 360px;
-  line-height: 1.6;
-}
-
-/* Summary Bar */
-.notif-summary-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 12px;
-  padding: 12px 18px;
-  margin-bottom: 16px;
-  font-size: 13.5px;
-  color: #1e40af;
-}
-.notif-summary-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #3b82f6;
-  flex-shrink: 0;
-  animation: pulse-dot 1.5s infinite;
-}
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.3); }
-}
-
-/* Notification List */
-.notif-list-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.notif-item {
-  background: #fff;
-  border: 1px solid var(--border-soft);
-  border-radius: 14px;
-  padding: 18px 20px;
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  transition: all 0.2s;
-  box-shadow: 0 1px 3px rgba(0,0,0,.03);
-}
-.notif-item:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,.06);
-  transform: translateY(-1px);
-}
-.notif-item.notif-unread {
-  border-left: 4px solid var(--accent);
-  background: #fdf4ff;
-}
-.notif-item.notif-read {
-  opacity: 0.75;
-}
-
-.notif-icon-wrap {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: #f1f5f9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  flex-shrink: 0;
-}
-.notif-unread .notif-icon-wrap {
-  background: #fae8ff;
-}
-
-.notif-content {
-  flex: 1;
-  min-width: 0;
-}
-.notif-msg {
-  font-size: 13.5px;
-  color: var(--ink);
-  font-weight: 500;
-  line-height: 1.5;
-}
-.notif-time {
-  font-size: 11.5px;
-  color: #94a3b8;
-  margin-top: 4px;
-}
-
-.notif-actions {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-}
-.notif-read-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: #f0fdf4;
-  border: 1.5px solid #bbf7d0;
-  color: #16a34a;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-.notif-read-btn:hover {
-  background: #16a34a;
-  color: #fff;
-  border-color: #16a34a;
-  transform: scale(1.1);
-}
-.notif-read-label {
-  font-size: 11px;
-  color: #94a3b8;
-  font-weight: 600;
-}
-</style>
