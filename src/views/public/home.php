@@ -108,8 +108,9 @@ $bcColors = ['bc1','bc2','bc3','bc4','bc5','bc6'];
     </div>
     <div class="book-grid">
       <?php foreach ($products as $book): 
-        $rating = 5.0;
-        $stars = '★★★★★';
+        $rating = round((float)($book['avg_rating'] ?? 0), 1);
+        $stars = $rating >= 4.5 ? '★★★★★' : ($rating >= 3.5 ? '★★★★☆' : ($rating >= 2.5 ? '★★★☆☆' : ($rating >= 1.5 ? '★★☆☆☆' : '★☆☆☆☆')));
+        if ($rating == 0) { $stars = '☆☆☆☆☆'; }
         $bcClass = 'bc' . (($book['id'] % 6) + 1);
       ?>
       <div class="book-card" onclick="window.location='index.php?page=product&id=<?= $book['id'] ?>'" style="cursor:pointer">
@@ -171,9 +172,13 @@ $bcColors = ['bc1','bc2','bc3','bc4','bc5','bc6'];
         <div class="featured-title"><?= e($featured['name']) ?></div>
         <div class="featured-author">Stok tersedia: <b><?= (int)$featured['stock'] ?></b></div>
         <p class="featured-desc"><?= e($featured['description'] ?? 'Sebuah karya luar biasa yang wajib Anda baca.') ?></p>
+        <?php
+          $featAvg = round((float)($featured['avg_rating'] ?? 0), 1);
+          $featStars = $featAvg >= 4.5 ? '★★★★★' : ($featAvg >= 3.5 ? '★★★★☆' : ($featAvg >= 2.5 ? '★★★☆☆' : ($featAvg >= 1.5 ? '★★☆☆☆' : '☆☆☆☆☆')));
+        ?>
         <div class="featured-rating">
-          <span class="stars">★★★★★</span>
-          <span>5.0</span>
+          <span class="stars"><?= $featStars ?></span>
+          <span><?= $featAvg > 0 ? number_format($featAvg, 1) : 'Belum ada rating' ?></span>
           <span>·</span>
           <span>🛒 Terlaris</span>
         </div>

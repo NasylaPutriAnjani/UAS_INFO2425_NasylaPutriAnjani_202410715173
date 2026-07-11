@@ -2,7 +2,7 @@
   $isDashboardPage = in_array($activePage, [
       'buyer', 'buyer_account', 'buyer_wishlist', 'buyer_cart', 'buyer_orders', 'buyer_reviews', 'buyer_notifications',
       'seller', 'seller_products', 'seller_orders', 'seller_reviews', 'seller_notifications', 'seller_report',
-      'admin', 'admin_users', 'admin_categories', 'admin_notifications', 'admin_settings',
+      'admin', 'admin_users', 'admin_analytics', 'admin_categories', 'admin_products', 'admin_orders', 'admin_notifications', 'admin_settings',
       'account_settings'
   ], true);
   if (!$isDashboardPage): ?>

@@ -15,8 +15,8 @@ $backPage = match($role) {
     default  => 'buyer',
 };
 ?>
-<div id="page-account_settings" class="page active">
-  <div class="dash-layout">
+<div id="page-account_settings" class="page active<?= $role === 'admin' ? ' admin-page' : '' ?>">
+  <div class="dash-layout<?= $role === 'admin' ? ' admin-layout' : '' ?>">
 
     <!-- ══════ SIDEBAR ══════ -->
     <?php if ($role === 'buyer'): ?>
@@ -59,37 +59,7 @@ $backPage = match($role) {
       </aside>
 
     <?php elseif ($role === 'admin'): ?>
-      <aside class="dash-sidebar admin-sidebar">
-        <div class="sidebar-store-profile">
-          <div class="sidebar-store-avatar" style="background:linear-gradient(135deg,var(--accent),var(--accent-deep));font-size:18px">🖥️</div>
-          <div>
-            <div class="sidebar-store-name">Control Center</div>
-            <div class="sidebar-store-status">Super Admin · v2.0</div>
-          </div>
-        </div>
-        <nav class="sidebar-nav" style="flex:1">
-          <div class="sidebar-group">
-            <div class="sidebar-group-label">Overview</div>
-            <button class="sidebar-item" onclick="showPage('admin')"><span class="si">📊</span> Dashboard</button>
-            <button class="sidebar-item" onclick="showToast('📈 Halaman Analitik')"><span class="si">📈</span> Analitik</button>
-          </div>
-          <div class="sidebar-group">
-            <div class="sidebar-group-label">Manajemen</div>
-            <button class="sidebar-item" onclick="showPage('admin_users')"><span class="si">👥</span> Kelola User</button>
-            <button class="sidebar-item" onclick="showPage('admin_categories')"><span class="si">🏷️</span> Kelola Kategori</button>
-            <button class="sidebar-item" onclick="showToast('📚 Kelola Produk')"><span class="si">📚</span> Kelola Produk</button>
-            <button class="sidebar-item" onclick="showToast('🛒 Semua Pesanan')"><span class="si">🛒</span> Semua Pesanan</button>
-          </div>
-          <div class="sidebar-group">
-            <div class="sidebar-group-label">Sistem</div>
-            <button class="sidebar-item active"><span class="si">⚙️</span> Pengaturan Akun</button>
-            <button class="sidebar-item" onclick="showPage('admin_settings')"><span class="si">🛠️</span> Pengaturan Sistem</button>
-          </div>
-        </nav>
-        <div class="sidebar-footer">
-          <button class="sidebar-item" onclick="doLogout()" style="width:100%"><span class="si">🚪</span> Keluar</button>
-        </div>
-      </aside>
+      <?php $adminActivePage = 'account_settings'; require __DIR__ . '/../admin/partials/sidebar.php'; ?>
     <?php endif; ?>
 
     <!-- ══════ MAIN CONTENT ══════ -->
@@ -107,7 +77,7 @@ $backPage = match($role) {
 
         <!-- ══ TAB 1: BASIC INFO ══ -->
         <div id="tab-basic-info" class="tab-pane active">
-          <form method="POST" action="index.php?action=update_account" enctype="multipart/form-data">
+          <form method="POST" action="index.php?action=update_account&page=<?= e($page ?? 'account_settings') ?>" enctype="multipart/form-data">
             <input type="hidden" name="action_type" value="save">
             <input type="hidden" name="delete_avatar" value="0">
 
@@ -160,7 +130,7 @@ $backPage = match($role) {
 
         <!-- ══ TAB 2: PASSWORD CHANGE ══ -->
         <div id="tab-password-change" class="tab-pane">
-          <form method="POST" action="index.php?action=update_account">
+          <form method="POST" action="index.php?action=update_account&page=<?= e($page ?? 'account_settings') ?>">
             <input type="hidden" name="action_type" value="password_update">
 
             <div class="fields-grid" style="grid-template-columns:1fr;max-width:520px;">
@@ -206,7 +176,7 @@ $backPage = match($role) {
 
         <!-- ══ TAB 3: DELETE ACCOUNT ══ -->
         <div id="tab-delete-account" class="tab-pane">
-          <form method="POST" action="index.php?action=update_account">
+          <form method="POST" action="index.php?action=update_account&page=<?= e($page ?? 'account_settings') ?>">
             <?php if (($user['delete_requested'] ?? 0) == 1): ?>
               <input type="hidden" name="action_type" value="cancel_delete_account">
               <div class="warning-box" style="background:#fffbeb;border:1px solid #fbbf24;border-radius:10px;padding:24px;margin-bottom:24px;">

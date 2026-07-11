@@ -1,0 +1,120 @@
+POST DATA: Array
+(
+    [action_type] => save
+    [delete_avatar] => 0
+    [first_name] => jannie
+    [last_name] => ade
+    [phone] => 082110207177
+    [dob] => 
+    [alternate_phone] => 
+)
+
+SQL INPUTS: Name: jannie ade, Phone: 082110207177, DOB: , AltPhone: , Avatar: , UserID: 8
+POST DATA: Array
+(
+    [action_type] => save
+    [delete_avatar] => 0
+    [first_name] => Putri
+    [last_name] => Lestari
+    [phone] => +628123456789
+    [dob] => 2001-07-26
+    [alternate_phone] => 
+)
+
+SQL INPUTS: Name: Putri Lestari, Phone: +628123456789, DOB: 2001-07-26, AltPhone: , Avatar: , UserID: 3
+POST DATA: Array
+(
+    [action_type] => save
+    [delete_avatar] => 0
+    [first_name] => Putri
+    [last_name] => Lestari
+    [phone] => +628123456789
+    [dob] => 2000-01-01
+    [alternate_phone] => 08987654321
+)
+
+SQL INPUTS: Name: Putri Lestari, Phone: +628123456789, DOB: 2000-01-01, AltPhone: 08987654321, Avatar: , UserID: 3
+POST DATA: Array
+(
+    [action_type] => save
+    [delete_avatar] => 0
+    [first_name] => PutriTest
+    [last_name] => LestariTest
+    [phone] => +628123456789
+    [dob] => 
+    [alternate_phone] => 
+)
+
+SQL INPUTS: Name: PutriTest LestariTest, Phone: +628123456789, DOB: , AltPhone: , Avatar: , UserID: 3
+POST DATA: Array
+(
+    [action_type] => save
+    [delete_avatar] => 0
+    [first_name] => PutriTest
+    [last_name] => LestariTest
+    [phone] => +628123456789
+    [dob] => 
+    [alternate_phone] => 
+)
+
+SQL INPUTS: Name: PutriTest LestariTest, Phone: +628123456789, DOB: , AltPhone: , Avatar: , UserID: 3
+POST DATA: Array
+(
+    [action_type] => save
+    [delete_avatar] => 0
+    [first_name] => PutriTest
+    [last_name] => LestariTest
+    [phone] => +628123456789
+    [dob] => 
+    [alternate_phone] => 
+)
+
+SQL INPUTS: Name: PutriTest LestariTest, Phone: +628123456789, DOB: , AltPhone: , Avatar: , UserID: 3
+POST DATA: Array
+(
+    [action_type] => save
+    [delete_avatar] => 0
+    [first_name] => PutriTest
+    [last_name] => LestariTest
+    [phone] => +628123456789
+    [dob] => 2004-02-09
+    [alternate_phone] => 
+)
+
+SQL INPUTS: Name: PutriTest LestariTest, Phone: +628123456789, DOB: 2004-02-09, AltPhone: , Avatar: , UserID: 3
+POST DATA: Array
+(
+    [action_type] => save
+    [delete_avatar] => 0
+    [first_name] => jannie
+    [last_name] => ade
+    [phone] => +628123456888
+    [dob] => 2004-03-09
+    [alternate_phone] => 
+)
+
+SQL INPUTS: Name: jannie ade, Phone: +628123456888, DOB: 2004-03-09, AltPhone: , Avatar: , UserID: 8
+POST DATA: Array
+(
+    [action_type] => save
+    [delete_avatar] => 0
+    [first_name] => Budi
+    [last_name] => Admin
+    [phone] => +628123456789
+    [dob] => 2026-07-06
+    [alternate_phone] => 
+)
+
+SQL INPUTS: Name: Budi Admin, Phone: +628123456789, DOB: 2026-07-06, AltPhone: , Avatar: , UserID: 1
+POST DATA: Array
+(
+    [action_type] => save
+    [delete_avatar] => 0
+    [first_name] => Budi
+    [last_name] => Admin
+    [phone] => +628123456888
+    [dob] => 2026-07-06
+    [alternate_phone] => 
+)
+
+SQL INPUTS: Name: Budi Admin, Phone: +628123456888, DOB: 2026-07-06, AltPhone: , Avatar: , UserID: 1

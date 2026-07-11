@@ -30,6 +30,8 @@ function route_config(string $page): array
         'admin_users' => ['view' => 'admin/users.php', 'role' => 'admin'],
         'admin_analytics' => ['view' => 'admin/analytics.php', 'role' => 'admin'],
         'admin_categories' => ['view' => 'admin/categories.php', 'role' => 'admin'],
+        'admin_products' => ['view' => 'admin/products.php', 'role' => 'admin'],
+        'admin_orders' => ['view' => 'admin/orders.php', 'role' => 'admin'],
         'admin_notifications' => ['view' => 'admin/notifications.php', 'role' => 'admin'],
         'admin_settings' => ['view' => 'admin/settings.php', 'role' => 'admin'],
 
@@ -39,8 +41,8 @@ function route_config(string $page): array
 function page_data(PDO $pdo, string $page): array
 {
     if ($page === 'home') {
-        $products = $pdo->query('SELECT p.*, c.name category FROM products p JOIN categories c ON c.id=p.category_id WHERE p.status="active" ORDER BY (SELECT SUM(qty) FROM order_items WHERE product_id=p.id) DESC, p.id DESC LIMIT 6')->fetchAll();
-        $featured = $pdo->query('SELECT p.*, c.name category FROM products p JOIN categories c ON c.id=p.category_id WHERE p.status="active" ORDER BY RAND() LIMIT 1')->fetch();
+        $products = $pdo->query('SELECT p.*, c.name category, COALESCE((SELECT AVG(rating) FROM reviews WHERE product_id=p.id), 0) as avg_rating FROM products p JOIN categories c ON c.id=p.category_id WHERE p.status="active" ORDER BY (SELECT SUM(qty) FROM order_items WHERE product_id=p.id) DESC, p.id DESC LIMIT 6')->fetchAll();
+        $featured = $pdo->query('SELECT p.*, c.name category, COALESCE((SELECT AVG(rating) FROM reviews WHERE product_id=p.id), 0) as avg_rating FROM products p JOIN categories c ON c.id=p.category_id WHERE p.status="active" ORDER BY RAND() LIMIT 1')->fetch();
         
         // Hero visual: 4 books (different from bestsellers, for decoration)
         $heroProducts = $pdo->query('SELECT p.*, c.name category FROM products p JOIN categories c ON c.id=p.category_id WHERE p.status="active" ORDER BY RAND() LIMIT 4')->fetchAll();
@@ -844,6 +846,58 @@ function page_data(PDO $pdo, string $page): array
             return ['categories' => $stmt->fetchAll(), 'q' => $q];
         }
         return ['categories' => $pdo->query('SELECT * FROM categories ORDER BY id DESC')->fetchAll(), 'q' => ''];
+    }
+    if ($page === 'admin_products') {
+        $q = trim($_GET['q'] ?? '');
+        $sql = '
+            SELECT p.*, c.name AS category, u.name AS seller_name,
+                   COALESCE((SELECT SUM(oi.qty) FROM order_items oi WHERE oi.product_id = p.id), 0) AS sold_count
+            FROM products p
+            JOIN categories c ON c.id = p.category_id
+            JOIN users u ON u.id = p.seller_id
+        ';
+        $params = [];
+        if ($q !== '') {
+            $sql .= ' WHERE p.name LIKE ? OR c.name LIKE ? OR u.name LIKE ?';
+            $params = ["%$q%", "%$q%", "%$q%"];
+        }
+        $sql .= ' ORDER BY p.id DESC';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return ['products' => $stmt->fetchAll(), 'q' => $q];
+    }
+    if ($page === 'admin_orders') {
+        $q = trim($_GET['q'] ?? '');
+        $sql = '
+            SELECT o.*, u.name AS buyer_name, pay.method AS payment_method, pay.status AS payment_status
+            FROM orders o
+            JOIN users u ON u.id = o.buyer_id
+            LEFT JOIN payments pay ON pay.order_id = o.id
+        ';
+        $params = [];
+        if ($q !== '') {
+            $sql .= ' WHERE o.invoice_number LIKE ? OR u.name LIKE ? OR o.status LIKE ?';
+            $params = ["%$q%", "%$q%", "%$q%"];
+        }
+        $sql .= ' ORDER BY o.id DESC';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $orders = $stmt->fetchAll();
+
+        $sellerStmt = $pdo->prepare('
+            SELECT DISTINCT u.name
+            FROM order_items oi
+            JOIN products p ON p.id = oi.product_id
+            JOIN users u ON u.id = p.seller_id
+            WHERE oi.order_id = ?
+        ');
+        foreach ($orders as &$order) {
+            $sellerStmt->execute([$order['id']]);
+            $order['seller_names'] = implode(', ', $sellerStmt->fetchAll(PDO::FETCH_COLUMN));
+        }
+        unset($order);
+
+        return ['orders' => $orders, 'q' => $q];
     }
     if ($page === 'admin_analytics') {
         // ── PERIOD FILTER (4 options only) ──

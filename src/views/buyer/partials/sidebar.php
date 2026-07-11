@@ -1,6 +1,6 @@
 <?php
 $buyerMenu = $buyerMenu ?? 'buyer';
-$user = current_user();
+$user = $user ?? current_user();
 $sidebar = $buyerSidebar ?? ['cartCount' => 0, 'unreadNotifications' => 0];
 $firstName = explode(' ', trim($user['name'] ?? 'Pembeli'))[0];
 ?>

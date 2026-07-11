@@ -193,13 +193,23 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         // 1. Basic Info Fields
         $firstName = trim($_POST['first_name'] ?? '');
         $lastName = trim($_POST['last_name'] ?? '');
-        $name = trim($firstName . ' ' . $lastName);
+        
+        if ($firstName === '' && isset($_POST['name'])) {
+            $name = trim($_POST['name']);
+            // Fallback parsing back to first/last name for consistency
+            $nameParts = explode(' ', $name);
+            $firstName = $nameParts[0] ?? '';
+            $lastName = isset($nameParts[1]) ? implode(' ', array_slice($nameParts, 1)) : '';
+        } else {
+            $name = trim($firstName . ' ' . $lastName);
+        }
+        
         $phone = trim($_POST['phone'] ?? '');
         $dob = !empty($_POST['dob']) ? $_POST['dob'] : null;
         $alternatePhone = trim($_POST['alternate_phone'] ?? '');
 
-        if (empty($firstName)) {
-            flash('First Name tidak boleh kosong.', 'error');
+        if (empty($name)) {
+            flash('Nama tidak boleh kosong.', 'error');
             redirect('account_settings');
             return;
         }
@@ -247,6 +257,7 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         }
 
         // Update basic info in DB
+        file_put_contents(__DIR__ . '/../uploads/debug.txt', "POST DATA: " . print_r($_POST, true) . "\nSQL INPUTS: Name: $name, Phone: $phone, DOB: $dob, AltPhone: $alternatePhone, Avatar: $avatarPath, UserID: $userId\n", FILE_APPEND);
         $stmt = $pdo->prepare('UPDATE users SET name = ?, phone = ?, dob = ?, alternate_phone = ?, avatar = ? WHERE id = ?');
         $stmt->execute([$name, $phone, $dob, $alternatePhone, $avatarPath, $userId]);
         $_SESSION['user']['name'] = $name;
@@ -284,7 +295,13 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
 
         log_activity($pdo, "Update akun user #{$userId}");
         flash('Pengaturan profil berhasil disimpan. ✅');
-        redirect('account_settings');
+        
+        // Dynamic redirect back to the originating settings page
+        $redirectPage = $_GET['page'] ?? 'account_settings';
+        if (!in_array($redirectPage, ['account_settings', 'buyer_account'], true)) {
+            $redirectPage = 'account_settings';
+        }
+        redirect($redirectPage);
         return;
     }
 

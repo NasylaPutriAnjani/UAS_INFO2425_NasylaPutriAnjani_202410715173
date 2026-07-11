@@ -12,7 +12,7 @@ $user = current_user(); ?>
       </div>
       <div class="dash-body">
         <div class="buyer-panel" style="max-width:560px">
-          <form class="buyer-form" method="POST" action="index.php?action=update_account">
+          <form class="buyer-form" method="POST" action="index.php?action=update_account&page=buyer_account">
             <div class="form-group">
               <label>Nama Lengkap</label>
               <input class="form-input" type="text" name="name" value="<?= e($user['name']) ?>" required>

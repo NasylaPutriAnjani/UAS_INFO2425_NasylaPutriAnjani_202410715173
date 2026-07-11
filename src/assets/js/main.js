@@ -51,6 +51,8 @@ const ROLE_CONFIG = {
       { icon:'🖥️', label:'Panel Admin',     action:"_showPageDirect('admin');closeUserDropdown()" },
       { icon:'👥', label:'Manajemen User',  action:"_showPageDirect('admin_users');closeUserDropdown()" },
       { icon:'🏷️', label:'Kategori',        action:"_showPageDirect('admin_categories');closeUserDropdown()" },
+      { icon:'📚', label:'Produk',          action:"_showPageDirect('admin_products');closeUserDropdown()" },
+      { icon:'🛒', label:'Pesanan',         action:"_showPageDirect('admin_orders');closeUserDropdown()" },
       { divider: true },
       { icon:'⚙️', label:'Pengaturan Akun', action:"_showPageDirect('account_settings');closeUserDropdown()" },
       { icon:'⚙️', label:'Pengaturan Sistem', action:"_showPageDirect('admin_settings');closeUserDropdown()" },
@@ -69,7 +71,7 @@ const PAGE_ACCESS = {
   guest:  ['home', 'catalog'],
   buyer:  ['home', 'catalog', 'checkout', 'tracking', 'buyer', 'buyer_account', 'buyer_wishlist', 'buyer_cart', 'buyer_orders', 'buyer_reviews', 'buyer_notifications', 'cart', 'account_settings'],
   seller: ['home', 'catalog', 'seller', 'seller_products', 'seller_orders', 'seller_reviews', 'seller_notifications', 'seller_report', 'account_settings'],
-  admin:  ['home', 'catalog', 'admin', 'admin_users', 'admin_analytics', 'admin_categories', 'admin_notifications', 'account_settings', 'admin_settings']
+  admin:  ['home', 'catalog', 'admin', 'admin_users', 'admin_analytics', 'admin_categories', 'admin_products', 'admin_orders', 'admin_notifications', 'account_settings', 'admin_settings']
 };
 
 
@@ -98,6 +100,8 @@ const PAGE_NAMES = {
   admin_users:          'Manajemen User',
   admin_analytics:      'Analitik Performa',
   admin_categories:     'Manajemen Kategori',
+  admin_products:       'Manajemen Produk',
+  admin_orders:         'Semua Pesanan',
   admin_notifications:  'Notifikasi Admin',
   admin_settings:       'Pengaturan Sistem'
 };
@@ -794,4 +798,4 @@ document.addEventListener('click', function(e) {
   if (e.target.closest('form') || e.target.closest('button')) return;
   const pid = card.dataset.productId;
   if (pid) openPD(pid);
-});
+});

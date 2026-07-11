@@ -1,58 +1,8 @@
-<div id="page-admin" class="page active">
-  <div class="dash-layout">
+<div id="page-admin" class="page active admin-page">
+  <div class="dash-layout admin-layout">
 
     <!-- SIDEBAR -->
-    <aside class="dash-sidebar admin-sidebar">
-      <div class="sidebar-store-profile">
-        <div class="sidebar-store-avatar" style="background:linear-gradient(135deg,var(--accent),var(--accent-deep));font-size:18px">🖥️</div>
-        <div>
-          <div class="sidebar-store-name">Control Center</div>
-          <div class="sidebar-store-status">Super Admin · v2.0</div>
-        </div>
-      </div>
-
-      <nav class="sidebar-nav" style="flex:1">
-        <div class="sidebar-group">
-          <div class="sidebar-group-label">Overview</div>
-          <button class="sidebar-item active">
-            <span class="si">📊</span> Dashboard
-          </button>
-          <button class="sidebar-item" onclick="showPage('admin_analytics')">
-            <span class="si">📈</span> Analitik
-          </button>
-        </div>
-        <div class="sidebar-group">
-          <div class="sidebar-group-label">Manajemen</div>
-          <button class="sidebar-item" onclick="showPage('admin_users')">
-            <span class="si">👥</span> Kelola User
-          </button>
-          <button class="sidebar-item" onclick="showPage('admin_categories')">
-            <span class="si">🏷️</span> Kelola Kategori
-          </button>
-          <button class="sidebar-item" onclick="showToast('📚 Kelola Produk')">
-            <span class="si">📚</span> Kelola Produk
-          </button>
-          <button class="sidebar-item" onclick="showToast('🛒 Semua Pesanan')">
-            <span class="si">🛒</span> Semua Pesanan
-          </button>
-        </div>
-        <div class="sidebar-group">
-          <div class="sidebar-group-label">Sistem</div>
-          <button class="sidebar-item" onclick="showPage('account_settings')">
-            <span class="si">⚙️</span> Pengaturan Akun
-          </button>
-          <button class="sidebar-item" onclick="showPage('admin_settings')">
-            <span class="si">🛠️</span> Pengaturan Sistem
-          </button>
-        </div>
-      </nav>
-
-      <div class="sidebar-footer">
-        <button class="sidebar-item" onclick="doLogout()" style="width:100%">
-          <span class="si">🚪</span> Keluar
-        </button>
-      </div>
-    </aside>
+    <?php $adminActivePage = 'admin'; require __DIR__ . '/partials/sidebar.php'; ?>
 
     <!-- MAIN CONTENT -->
     <div class="dash-content">
@@ -62,13 +12,13 @@
         <div class="admin-topbar-left">
           <div class="admin-topbar-title">
             <h2>🖥️ Platform Control Center</h2>
-            <p>Statistik &amp; Manajemen Platform RubbyBooks &middot; Jumat, 5 Juni 2026</p>
+            <p>Statistik &amp; Manajemen Platform RubbyBooks &middot; <?= date('l, d F Y') ?></p>
           </div>
         </div>
         <div class="admin-topbar-right">
-          <button class="btn-admin-ghost" onclick="showToast('📊 Laporan diunduh!')">
+          <button class="btn-admin-ghost" onclick="showPage('admin_analytics')">
             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export Laporan
+            Lihat Analitik
           </button>
         </div>
       </div>
