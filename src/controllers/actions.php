@@ -448,6 +448,31 @@ function handle_action(PDO $pdo, ?string $action, string $page): void
         redirect('seller_orders');
     }
 
+    if ($action === 'complete_order') {
+        require_role('buyer');
+        $orderId = (int)$_POST['order_id'];
+        $userId = current_user()['id'];
+        
+        $stmt = $pdo->prepare('UPDATE orders SET status = "delivered" WHERE id = ? AND buyer_id = ? AND status = "shipped"');
+        $stmt->execute([$orderId, $userId]);
+        
+        if ($stmt->rowCount() > 0) {
+            flash('Pesanan berhasil diselesaikan. Terima kasih!');
+            log_activity($pdo, "Pembeli #{$userId} menyelesaikan pesanan #{$orderId}");
+            
+            // Notify seller
+            $stmtSeller = $pdo->prepare('SELECT p.seller_id FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE oi.order_id = ? LIMIT 1');
+            $stmtSeller->execute([$orderId]);
+            $sellerId = $stmtSeller->fetchColumn();
+            
+            if ($sellerId) {
+                $pdo->prepare('INSERT INTO notifications (user_id, message) VALUES (?, ?)')
+                    ->execute([$sellerId, "Pesanan #{$orderId} telah diterima dan diselesaikan oleh pembeli."]);
+            }
+        }
+        redirect('buyer_orders');
+    }
+
     if ($action === 'mark_read_seller') {
         require_role('seller');
         $notifId = (int)($_POST['notification_id'] ?? 0);

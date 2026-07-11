@@ -39,6 +39,11 @@
                       <td>
                         <?php if ($order['status'] === 'delivered'): ?>
                           <button type="button" class="btn-dash-primary" style="padding: 4px 12px; font-size: 12px;" onclick="openReviewModal(<?= htmlspecialchars(json_encode($order['items'])) ?>)">Beri Review</button>
+                        <?php elseif ($order['status'] === 'shipped'): ?>
+                          <form method="POST" action="index.php?action=complete_order" style="display:inline;" onsubmit="return confirm('Apakah Anda yakin pesanan sudah diterima?');">
+                            <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
+                            <button type="submit" class="btn-dash-primary" style="padding: 4px 12px; font-size: 12px; background: #16a34a;">Pesanan Diterima</button>
+                          </form>
                         <?php else: ?>
                           <span style="color:#999;font-size:13px">Menunggu Selesai</span>
                         <?php endif; ?>
