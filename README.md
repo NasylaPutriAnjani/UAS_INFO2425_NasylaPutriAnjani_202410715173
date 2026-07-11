@@ -6,7 +6,7 @@ RubbyBooks adalah platform e-commerce khusus untuk jual beli buku baru maupun be
 
 *   **Frontend:** HTML5, CSS3 murni (Native) terstruktur, Vanilla JavaScript
 *   **Backend:** PHP 8 (Native) dengan arsitektur MVC (Model-View-Controller)
-*   **Database:** MySQL (minimum 8 tabel spesifikasi, total 13 tabel pada implementasi aktual)
+*   **Database:** MySQL (minimum 8 tabel spesifikasi, total 14 tabel pada implementasi aktual)
 *   **Security:** Password Hashing (Bcrypt), proteksi SQL Injection dengan PDO Prepared Statements, validasi file upload
 
 ## Skema 4 Role User
