@@ -23,7 +23,7 @@
         <div class="sidebar-group">
           <div class="sidebar-group-label">Menu Utama</div>
           <button class="sidebar-item<?= $currentSellerPage === 'seller' ? ' active' : '' ?>" onclick="showPage('seller')">
-            <span class="si">Dashboard
+            <span class="si">📊</span> Dashboard
           </button>
           <button class="sidebar-item<?= $currentSellerPage === 'seller_products' ? ' active' : '' ?>" onclick="showPage('seller_products')">
             <span class="si">📦</span> Produk Saya
@@ -99,28 +99,30 @@
               <input type="text" name="q" placeholder="Cari produk..." value="<?= e($filters['q'] ?? '') ?>" onchange="this.form.submit()">
             </div>
 
-            <div class="filter-button-wrapper">
-              <span class="filter-btn-icon">📁</span>
-              <select name="category" onchange="this.form.submit()" class="filter-select-input">
-                <option value="">Semua Kategori</option>
-                <?php foreach ($categories as $cat): ?>
-                  <option value="<?= $cat['id'] ?>" <?= (string)($filters['category'] ?? '') === (string)$cat['id'] ? 'selected' : '' ?>>
-                    <?= e($cat['name']) ?>
-                  </option>
-                <?php endforeach; ?>
-              </select>
-            </div>
+            <div class="filter-selects-group">
+              <div class="filter-button-wrapper">
+                <span class="filter-btn-icon">📁</span>
+                <select name="category" onchange="this.form.submit()" class="filter-select-input">
+                  <option value="">Semua Kategori</option>
+                  <?php foreach ($categories as $cat): ?>
+                    <option value="<?= $cat['id'] ?>" <?= (string)($filters['category'] ?? '') === (string)$cat['id'] ? 'selected' : '' ?>>
+                      <?= e($cat['name']) ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
 
-            <div class="filter-button-wrapper">
-              <span class="filter-btn-icon">⇅</span>
-              <select name="sort" onchange="this.form.submit()" class="filter-select-input">
-                <option value="Terbaru" <?= ($filters['sort'] ?? '') === 'Terbaru' ? 'selected' : '' ?>>Urutkan: Terbaru</option>
-                <option value="Harga Terendah" <?= ($filters['sort'] ?? '') === 'Harga Terendah' ? 'selected' : '' ?>>Harga Terendah</option>
-                <option value="Harga Tertinggi" <?= ($filters['sort'] ?? '') === 'Harga Tertinggi' ? 'selected' : '' ?>>Harga Tertinggi</option>
-                <option value="Stok Terendah" <?= ($filters['sort'] ?? '') === 'Stok Terendah' ? 'selected' : '' ?>>Stok Terendah</option>
-                <option value="Stok Tertinggi" <?= ($filters['sort'] ?? '') === 'Stok Tertinggi' ? 'selected' : '' ?>>Stok Tertinggi</option>
-                <option value="Terlaris" <?= ($filters['sort'] ?? '') === 'Terlaris' ? 'selected' : '' ?>>Terlaris</option>
-              </select>
+              <div class="filter-button-wrapper">
+                <span class="filter-btn-icon">↕️</span>
+                <select name="sort" onchange="this.form.submit()" class="filter-select-input">
+                  <option value="Terbaru" <?= ($filters['sort'] ?? '') === 'Terbaru' ? 'selected' : '' ?>>Urutkan: Terbaru</option>
+                  <option value="Harga Terendah" <?= ($filters['sort'] ?? '') === 'Harga Terendah' ? 'selected' : '' ?>>Harga Terendah</option>
+                  <option value="Harga Tertinggi" <?= ($filters['sort'] ?? '') === 'Harga Tertinggi' ? 'selected' : '' ?>>Harga Tertinggi</option>
+                  <option value="Stok Terendah" <?= ($filters['sort'] ?? '') === 'Stok Terendah' ? 'selected' : '' ?>>Stok Terendah</option>
+                  <option value="Stok Tertinggi" <?= ($filters['sort'] ?? '') === 'Stok Tertinggi' ? 'selected' : '' ?>>Stok Tertinggi</option>
+                  <option value="Terlaris" <?= ($filters['sort'] ?? '') === 'Terlaris' ? 'selected' : '' ?>>Terlaris</option>
+                </select>
+              </div>
             </div>
           </form>
         </div>
@@ -173,7 +175,7 @@
                           <img src="<?= e(asset($product['image'])) ?>" class="product-cell-img" alt="<?= e($product['name']) ?>">
                         <?php else: ?>
                           <div class="product-cell-cover-placeholder <?= $bcClass ?>">
-                            <?= e(substr($product['name'], 0, 2)) ?>
+                            <span><?= e(strtoupper(substr($product['name'], 0, 2))) ?></span>
                           </div>
                         <?php endif; ?>
                         <div class="product-cell-details">

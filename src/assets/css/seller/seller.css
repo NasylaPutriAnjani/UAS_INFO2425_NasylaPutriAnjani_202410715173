@@ -883,6 +883,66 @@ textarea.form-input { resize:vertical; min-height:90px; }
   }
 
 /* Seller products page */
+
+/* Filter section */
+.filter-section-card {
+  background: #fff;
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+
+.seller-filter-form {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 200px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  color: #94a3b8;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.search-input-wrapper input[type="text"] {
+  width: 100%;
+  padding: 9px 14px 9px 38px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  background: #f8fafc;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.search-input-wrapper input[type="text"]:focus {
+  border-color: var(--accent-light);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.08);
+}
+
+.filter-selects-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
 .product-info-cell {
   display: flex;
   align-items: center;
@@ -890,27 +950,30 @@ textarea.form-input { resize:vertical; min-height:90px; }
 }
 
 .product-cell-img {
-  width: 44px;
-  height: 56px;
+  width: 52px;
+  height: 68px;
   object-fit: cover;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
 }
 
 .product-cell-cover-placeholder {
-  width: 44px;
-  height: 56px;
+  width: 52px;
+  height: 68px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-serif);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   color: #fff;
   text-align: center;
   padding: 4px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
 }
 
 .product-cell-details {
@@ -952,6 +1015,18 @@ textarea.form-input { resize:vertical; min-height:90px; }
   font-size: 13px;
   font-weight: 600;
   color: #64748b;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
 }
 
 .status-badge.s-aktif {
