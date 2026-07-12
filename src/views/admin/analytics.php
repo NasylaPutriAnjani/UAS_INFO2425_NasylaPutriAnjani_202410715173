@@ -29,10 +29,10 @@ $buildUrl = fn(array $params): string => 'index.php?' . http_build_query(array_m
     <?php $adminActivePage = 'admin_analytics'; require __DIR__ . '/partials/sidebar.php'; ?>
 
     <!-- MAIN CONTENT -->
-    <div class="dash-content" style="background:#f9fafb;padding:24px;overflow-y:auto;">
+    <div class="dash-content admin-analytics-content" style="background:#f9fafb;padding:24px;overflow-y:auto;">
 
       <!-- ── TOPBAR ── -->
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+      <div class="admin-analytics-head" style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
         <div>
           <h2 style="font-size:22px;font-weight:700;color:#111827;display:flex;align-items:center;gap:10px;">
             <span style="background:var(--accent);color:#fff;padding:6px 8px;border-radius:8px;font-size:16px;">📊</span>
@@ -42,7 +42,7 @@ $buildUrl = fn(array $params): string => 'index.php?' . http_build_query(array_m
         </div>
 
         <!-- ── Period filter + Export ── -->
-        <div style="display:flex;align-items:center;gap:10px;">
+        <div class="admin-analytics-actions" style="display:flex;align-items:center;gap:10px;">
           <!-- Period dropdown -->
           <div style="position:relative;">
             <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'"
@@ -60,6 +60,9 @@ $buildUrl = fn(array $params): string => 'index.php?' . http_build_query(array_m
           </div>
 
           <!-- Export -->
+          <a href="<?= $buildUrl(['period' => $period, 'export' => 'csv']) ?>" class="admin-analytics-export" style="display:flex;align-items:center;gap:7px;padding:9px 16px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:13px;font-weight:500;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.05);text-decoration:none;">
+            Export CSV
+          </a>
           <button onclick="showToast('📥 Fitur export akan segera tersedia!')" style="display:flex;align-items:center;gap:7px;padding:9px 16px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:13px;font-weight:500;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
             📥 Export
           </button>
@@ -67,7 +70,7 @@ $buildUrl = fn(array $params): string => 'index.php?' . http_build_query(array_m
       </div>
 
       <!-- ── KPI CARDS ── -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+      <div class="admin-analytics-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
 
         <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,0.07);position:relative;overflow:hidden;">
           <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#ec4899,#be185d);"></div>
@@ -117,7 +120,7 @@ $buildUrl = fn(array $params): string => 'index.php?' . http_build_query(array_m
       </div>
 
       <!-- ── TREND CHART ── -->
-      <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:24px;">
+      <div class="admin-analytics-card" style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:24px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
           <div>
             <h3 style="font-size:16px;font-weight:700;color:#111827;margin-bottom:2px;">Tren Penjualan & Pendapatan</h3>
@@ -158,7 +161,7 @@ $buildUrl = fn(array $params): string => 'index.php?' . http_build_query(array_m
       </div>
 
       <!-- ── BOTTOM GRID ── -->
-      <div style="display:grid;grid-template-columns:1fr 2fr;gap:24px;">
+      <div class="admin-analytics-bottom" style="display:grid;grid-template-columns:1fr 2fr;gap:24px;">
 
         <!-- Kategori Terlaris -->
         <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.07);">

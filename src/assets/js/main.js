@@ -80,7 +80,7 @@ function ensureDropdownCountItems() {
   if (!buyerItems.some(item => item.label === 'Keranjang')) {
     const wishlistIndex = buyerItems.findIndex(item => item.label === 'Wishlist');
     buyerItems.splice(wishlistIndex + 1, 0, {
-      icon: 'Cart',
+      icon: '🛒',
       label: 'Keranjang',
       action: "_showPageDirect('buyer_cart');closeUserDropdown()",
       badgeKey: 'cart'
@@ -154,18 +154,20 @@ function toggleMobileMenu() {
   const panel = document.getElementById('mobileNavPanel');
   const overlay = document.getElementById('mobileMenuOverlay');
   if (!panel || !overlay) return;
+  const button = document.querySelector('.mobile-menu-btn');
   const willOpen = !panel.classList.contains('open');
   panel.classList.toggle('open', willOpen);
   overlay.classList.toggle('open', willOpen);
-  document.body.style.overflow = willOpen ? 'hidden' : '';
+  if (button) button.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
 }
 
 function closeMobileMenu() {
   const panel = document.getElementById('mobileNavPanel');
   const overlay = document.getElementById('mobileMenuOverlay');
+  const button = document.querySelector('.mobile-menu-btn');
   if (panel) panel.classList.remove('open');
   if (overlay) overlay.classList.remove('open');
-  document.body.style.overflow = '';
+  if (button) button.setAttribute('aria-expanded', 'false');
 }
 
 document.addEventListener('keydown', e => {

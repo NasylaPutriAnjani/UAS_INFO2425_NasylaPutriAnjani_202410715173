@@ -32,7 +32,7 @@ $navCounts = user_nav_counts($pdo);
       Rubby<span class="b2">Books<span class="dot">.</span></span>
     </div>
 
-    <button class="mobile-menu-btn" type="button" onclick="toggleMobileMenu()" aria-label="Buka menu">
+    <button class="mobile-menu-btn" type="button" onclick="toggleMobileMenu()" aria-label="Buka menu" aria-expanded="false" aria-controls="mobileNavPanel">
       <span></span>
       <span></span>
       <span></span>

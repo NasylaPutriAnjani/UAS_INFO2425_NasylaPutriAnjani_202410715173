@@ -22,25 +22,25 @@ $s = $sysSettings ?? [];
       <div class="admin-body">
         <form method="POST" action="index.php?action=save_system_settings">
 
-          <div style="display: flex; gap: 24px; align-items: flex-start; max-width: 960px; width: 100%;">
+          <div class="system-settings-layout" style="display: flex; gap: 24px; align-items: flex-start; max-width: 960px; width: 100%;">
 
             <!-- LEFT SETTINGS SIDEBAR (category nav) -->
-            <div style="flex: 0 0 220px; background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 12px; display: flex; flex-direction: column; gap: 4px;">
-              <div style="padding: 12px 16px; border-radius: 8px; background: var(--rose-blush); color: var(--rose-deep); font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px;">
+            <div class="system-settings-nav" style="flex: 0 0 220px; background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 12px; display: flex; flex-direction: column; gap: 4px;">
+              <div class="system-settings-nav-item active" style="padding: 12px 16px; border-radius: 8px; background: var(--rose-blush); color: var(--rose-deep); font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px;">
                 <span>🏪</span> Pengaturan Toko
               </div>
             </div>
 
             <!-- RIGHT CONTENT -->
-            <div style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
+            <div class="system-settings-content" style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
 
               <!-- ─── CARD 1: Mata Uang & Lokalisasi ─── -->
-              <div style="background:#fff; border-radius:12px; border:1px solid var(--border-soft); overflow:hidden;">
-                <div style="padding:16px 24px; border-bottom:1px solid var(--border-soft); border-top:3px solid var(--rose-deep); display:flex; align-items:center; gap:12px;">
+              <div class="system-settings-card is-featured" style="background:#fff; border-radius:12px; border:1px solid var(--border-soft); overflow:hidden;">
+                <div class="system-settings-card-head" style="padding:16px 24px; border-bottom:1px solid var(--border-soft); border-top:3px solid var(--rose-deep); display:flex; align-items:center; gap:12px;">
                   <span style="font-size:20px">🌐</span>
                   <h3 style="margin:0; font-size:16px; color:var(--ink-dark);">Mata Uang & Lokalisasi</h3>
                 </div>
-                <div style="padding:24px; display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                <div class="system-settings-card-body system-settings-fields" style="padding:24px; display:grid; grid-template-columns:1fr 1fr; gap:20px;">
                   <div>
                     <label style="display:block; font-size:11px; font-weight:600; color:var(--ink-muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">MATA UANG UTAMA</label>
                     <select name="currency" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:6px; color:var(--ink-dark); font-size:14px; outline:none; background:#fff;">
@@ -60,15 +60,15 @@ $s = $sysSettings ?? [];
               </div>
 
               <!-- ─── CARD 2: Manajemen Stok ─── -->
-              <div style="background:#fff; border-radius:12px; border:1px solid var(--border-soft); overflow:hidden;">
-                <div style="padding:16px 24px; border-bottom:1px solid var(--border-soft); display:flex; align-items:center; gap:12px;">
+              <div class="system-settings-card" style="background:#fff; border-radius:12px; border:1px solid var(--border-soft); overflow:hidden;">
+                <div class="system-settings-card-head" style="padding:16px 24px; border-bottom:1px solid var(--border-soft); display:flex; align-items:center; gap:12px;">
                   <span style="font-size:20px">📦</span>
                   <h3 style="margin:0; font-size:16px; color:var(--ink-dark);">Manajemen Stok</h3>
                 </div>
-                <div style="padding:24px; display:flex; flex-direction:column; gap:24px;">
+                <div class="system-settings-card-body" style="padding:24px; display:flex; flex-direction:column; gap:24px;">
 
                   <!-- Toggle: low stock alert -->
-                  <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                  <div class="system-settings-toggle-row" style="display:flex; justify-content:space-between; align-items:flex-start;">
                     <div>
                       <div style="font-size:14px; font-weight:600; color:var(--ink-dark); margin-bottom:4px;">Peringatan Stok Rendah Otomatis</div>
                       <div style="font-size:13px; color:var(--ink-muted);">Kirim notifikasi ke admin ketika stok produk mencapai batas minimum.</div>
@@ -80,7 +80,7 @@ $s = $sysSettings ?? [];
                   </div>
 
                   <!-- Threshold input -->
-                  <div style="max-width:280px;">
+                  <div class="system-settings-narrow-field" style="max-width:280px;">
                     <label style="display:block; font-size:11px; font-weight:600; color:var(--ink-muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">AMBANG BATAS STOK RENDAH</label>
                     <div style="position:relative; display:flex; align-items:center;">
                       <input type="number" name="low_stock_threshold" min="1" value="<?= (int)($s['low_stock_threshold'] ?? 10) ?>"
@@ -89,9 +89,9 @@ $s = $sysSettings ?? [];
                     </div>
                   </div>
 
-                  <div style="border-top:1px solid var(--border-soft); padding-top:24px;">
+                  <div class="system-settings-divider" style="border-top:1px solid var(--border-soft); padding-top:24px;">
                     <!-- Toggle: show stock display -->
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div class="system-settings-toggle-row" style="display:flex; justify-content:space-between; align-items:flex-start;">
                       <div>
                         <div style="font-size:14px; font-weight:600; color:var(--ink-dark); margin-bottom:4px;">Tampilkan Sisa Stok di Toko</div>
                         <div style="font-size:13px; color:var(--ink-muted);">Pelanggan dapat melihat jumlah sisa buku saat stok menipis (dibawah 5 unit).</div>
@@ -107,14 +107,14 @@ $s = $sysSettings ?? [];
               </div>
 
               <!-- ─── CARD 3: Pengaturan Transaksi ─── -->
-              <div style="background:#fff; border-radius:12px; border:1px solid var(--border-soft); overflow:hidden;">
-                <div style="padding:16px 24px; border-bottom:1px solid var(--border-soft); display:flex; align-items:center; gap:12px;">
+              <div class="system-settings-card" style="background:#fff; border-radius:12px; border:1px solid var(--border-soft); overflow:hidden;">
+                <div class="system-settings-card-head" style="padding:16px 24px; border-bottom:1px solid var(--border-soft); display:flex; align-items:center; gap:12px;">
                   <span style="font-size:20px">🧾</span>
                   <h3 style="margin:0; font-size:16px; color:var(--ink-dark);">Pengaturan Transaksi</h3>
                 </div>
-                <div style="padding:24px; display:flex; flex-direction:column; gap:24px;">
+                <div class="system-settings-card-body" style="padding:24px; display:flex; flex-direction:column; gap:24px;">
 
-                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                  <div class="system-settings-fields" style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
                     <div>
                       <label style="display:block; font-size:11px; font-weight:600; color:var(--ink-muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">MINIMUM NILAI PESANAN</label>
                       <div style="position:relative;">
@@ -134,9 +134,9 @@ $s = $sysSettings ?? [];
                     </div>
                   </div>
 
-                  <div style="border-top:1px solid var(--border-soft); padding-top:24px;">
+                  <div class="system-settings-divider" style="border-top:1px solid var(--border-soft); padding-top:24px;">
                     <!-- Toggle: ppn included -->
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div class="system-settings-toggle-row" style="display:flex; justify-content:space-between; align-items:flex-start;">
                       <div>
                         <div style="font-size:14px; font-weight:600; color:var(--ink-dark); margin-bottom:4px;">Harga Termasuk Pajak</div>
                         <div style="font-size:13px; color:var(--ink-muted);">Jika diaktifkan, harga produk di etalase sudah meliputi kalkulasi PPN.</div>
@@ -152,7 +152,7 @@ $s = $sysSettings ?? [];
               </div>
 
               <!-- ─── SAVE BUTTON ─── -->
-              <div style="display:flex; gap:12px; padding:4px 0 32px;">
+              <div class="system-settings-actions" style="display:flex; gap:12px; padding:4px 0 32px;">
                 <button type="submit"
                   style="background: var(--rose-deep); color:#fff; border:none; padding:12px 28px; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px; transition:0.2s; box-shadow:0 2px 8px rgba(var(--rose-rgb,200,50,80),0.25);"
                   onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">

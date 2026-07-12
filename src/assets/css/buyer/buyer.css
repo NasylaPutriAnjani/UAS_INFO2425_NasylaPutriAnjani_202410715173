@@ -41,7 +41,13 @@
 .buyer-quick-card span { font-size:22px; }
 .buyer-quick-card strong { font-size:13px; color:var(--ink); }
 .buyer-quick-card small { font-size:11px; color:var(--ink-muted); }
-.buyer-table-wrap { overflow-x:auto; }
+.buyer-table-wrap {
+  display:block;
+  overflow-x:auto;
+  overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-x pan-y;
+}
 .buyer-table { width:100%; border-collapse:collapse; }
 .buyer-table th {
   text-align:left; font-size:10.5px; font-weight:700; text-transform:uppercase;
@@ -192,9 +198,13 @@
   .buyer-table-wrap {
     max-width:100%;
     overflow-x:auto;
+    overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-x pan-y;
   }
 
   .buyer-table {
+    width:max-content;
     min-width:640px;
   }
 }

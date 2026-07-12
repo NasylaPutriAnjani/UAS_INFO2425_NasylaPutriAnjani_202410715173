@@ -263,26 +263,36 @@ input, select, textarea { font-family:var(--font-body); }
   display:none;
   position:fixed;
   inset:0;
-  background:rgba(26,14,26,.34);
-  z-index:260;
+  background:transparent;
+  z-index:205;
 }
 .mobile-menu-overlay.open { display:block; }
 .mobile-nav-panel {
   position:fixed;
-  top:0;
-  left:0;
-  width:min(320px, 86vw);
-  height:100vh;
+  top:72px;
+  left:12px;
+  right:12px;
+  width:auto;
+  max-height:calc(100vh - 88px);
   background:#fff;
-  border-right:1px solid var(--border-soft);
+  border:1px solid var(--border-soft);
+  border-radius:18px;
   box-shadow:var(--shadow-lg);
   z-index:270;
   padding:16px;
-  transform:translateX(-105%);
-  transition:transform .22s ease;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translateY(-8px);
+  transition:opacity .18s ease, transform .18s ease, visibility .18s ease;
   overflow-y:auto;
 }
-.mobile-nav-panel.open { transform:translateX(0); }
+.mobile-nav-panel.open {
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0);
+}
 .mobile-nav-head {
   display:flex;
   align-items:center;
@@ -2016,6 +2026,19 @@ canvas {
   .book-grid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 16px;
+  }
+
+  .orders-card {
+    display: block;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+  }
+
+  .data-table {
+    width: max-content;
+    min-width: 720px;
   }
 }
 

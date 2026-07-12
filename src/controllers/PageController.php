@@ -1104,6 +1104,58 @@ function page_data(PDO $pdo, string $page): array
         $stmtProd->execute([$periodStart]);
         $topProducts = $stmtProd->fetchAll();
 
+        if (($_GET['export'] ?? '') === 'csv') {
+            $safePeriod = preg_replace('/[^a-z0-9_-]/i', '', $period);
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename=analitik_admin_' . $safePeriod . '_' . date('Ymd_His') . '.csv');
+
+            $output = fopen('php://output', 'w');
+            fputcsv($output, ['Analitik Performa & Penjualan']);
+            fputcsv($output, ['Periode', $periodLabel]);
+            fputcsv($output, ['Tanggal Export', date('Y-m-d H:i:s')]);
+            fputcsv($output, []);
+
+            fputcsv($output, ['Ringkasan KPI']);
+            fputcsv($output, ['Total Revenue', $totalRevenue]);
+            fputcsv($output, ['Avg. Order Value', $avgOrderVal]);
+            fputcsv($output, ['Active Users', $activeUsers]);
+            fputcsv($output, ['Orders This Month', $ordersThisMonth]);
+            fputcsv($output, ['Revenue This Month', $revenueThisMonth]);
+            fputcsv($output, ['Revenue Trend (%)', $revTrend]);
+            fputcsv($output, ['Order Trend (%)', $orderTrend]);
+            fputcsv($output, []);
+
+            fputcsv($output, ['Tren Pendapatan']);
+            fputcsv($output, ['Label', 'Pendapatan']);
+            foreach ($chartData as $row) {
+                fputcsv($output, [$row['label'], (int)$row['total']]);
+            }
+            fputcsv($output, []);
+
+            fputcsv($output, ['Kategori Terlaris']);
+            fputcsv($output, ['Kategori', 'Item Terjual']);
+            foreach ($topCategories as $cat) {
+                fputcsv($output, [$cat['name'], (int)$cat['sold']]);
+            }
+            fputcsv($output, []);
+
+            fputcsv($output, ['Penjual Teratas']);
+            fputcsv($output, ['Penjual', 'Item Terjual', 'Pendapatan']);
+            foreach ($topSellers as $seller) {
+                fputcsv($output, [$seller['name'], (int)$seller['sold'], (int)$seller['revenue']]);
+            }
+            fputcsv($output, []);
+
+            fputcsv($output, ['Produk Terlaris']);
+            fputcsv($output, ['Produk', 'Kategori', 'Item Terjual']);
+            foreach ($topProducts as $product) {
+                fputcsv($output, [$product['name'], $product['category'], (int)$product['sold_this_month']]);
+            }
+
+            fclose($output);
+            exit;
+        }
+
         return compact(
             'period','periodLabel',
             'totalRevenue','avgOrderVal','activeUsers',
