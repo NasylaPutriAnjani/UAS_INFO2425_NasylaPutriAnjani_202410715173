@@ -233,7 +233,12 @@ CREATE TABLE `products` (
 
 LOCK TABLES `products` WRITE;
 /*!40000 ALTER TABLE `products` DISABLE KEYS */;
-INSERT INTO `products` VALUES (1,2,1,'Laskar Pelangi','Novel inspiratif karya Andrea Hirata tentang mimpi, pendidikan, dan persahabatan.',65000,17,'new','uploads/products/rb_6a51e804cb8315.88536020.jpg','active','2026-07-11 06:01:57'),(2,2,2,'Naruto, Vol. 1: Uzumaki Naruto','Manga pembuka kisah Naruto karya Masashi Kishimoto.',55000,25,'new','uploads/products/rb_6a51e8184136e9.77046482.jpg','active','2026-07-11 06:01:57'),(3,2,3,'Clean Code: A Handbook of Agile Software Craftsmanship','Panduan klasik untuk menulis kode yang bersih, mudah dibaca, dan terawat.',125000,14,'new','uploads/products/rb_6a51e82deb3525.47685094.jpg','active','2026-07-11 06:01:57'),(4,2,4,'Rich Dad Poor Dad','Buku finansial populer tentang pola pikir dan literasi keuangan.',75000,20,'new','uploads/products/rb_6a51e83cb85b70.16165874.jpg','active','2026-07-11 06:01:57'),(5,2,5,'The Purpose Driven Life','Buku rohani populer tentang tujuan hidup dan refleksi spiritual.',99000,12,'new','uploads/products/rb_6a51e84a5b4674.13541459.jpg','active','2026-07-11 06:01:57'),(6,2,6,'Sapiens: A Brief History of Humankind','Buku sejarah populer yang merangkum perjalanan peradaban manusia.',115000,9,'new','uploads/products/rb_6a51e7d62edc62.95640556.jpg','active','2026-07-11 06:01:57'),(7,4,1,'Malice','Novelis laris Hidaka Kunihiko ditemukan tewas di rumahnya pada malam sebelum ia meninggalkan Jepang untuk pindah ke Kanada. Tubuhnya ditemukan di ruang kerjanya yang terkunci di rumahnya yang juga terkunci oleh istri dan sahabatnya. Keduanya punya alibi kuat. Mungkin.',74000,11,'new','uploads/products/rb_6a521d2e40d6e7.40130141.jpg','active','2026-07-11 07:12:07');
+INSERT INTO `products` VALUES (1,2,1,'Laskar Pelangi','Novel inspiratif karya Andrea Hirata tentang mimpi, pendidikan, dan persahabatan.',65000,17,'new','uploads/products/rb_6a51e804cb8315.88536020.jpg','active','2026-07-11 06:01:57'),
+(2,2,2,'Naruto, Vol. 1: Uzumaki Naruto','Manga pembuka kisah Naruto karya Masashi Kishimoto.',55000,25,'new','uploads/products/rb_6a51e8184136e9.77046482.jpg','active','2026-07-11 06:01:57'),
+(3,2,3,'Clean Code: A Handbook of Agile Software Craftsmanship','Panduan klasik untuk menulis kode yang bersih, mudah dibaca, dan terawat.',125000,14,'new','uploads/products/rb_6a51e82deb3525.47685094.jpg','active','2026-07-11 06:01:57'),
+(4,2,4,'Rich Dad Poor Dad','Buku finansial populer tentang pola pikir dan literasi keuangan.',75000,20,'new','uploads/products/rb_6a51e83cb85b70.16165874.jpg','active','2026-07-11 06:01:57'),
+(5,2,5,'The Purpose Driven Life','Buku rohani populer tentang tujuan hidup dan refleksi spiritual.',99000,12,'new','uploads/products/rb_6a51e84a5b4674.13541459.jpg','active','2026-07-11 06:01:57'),(6,2,6,'Sapiens: A Brief History of Humankind','Buku sejarah populer yang merangkum perjalanan peradaban manusia.',115000,9,'new','uploads/products/rb_6a51e7d62edc62.95640556.jpg','active','2026-07-11 06:01:57'),
+(7,4,1,'Malice','Novelis laris Hidaka Kunihiko ditemukan tewas di rumahnya pada malam sebelum ia meninggalkan Jepang untuk pindah ke Kanada. Tubuhnya ditemukan di ruang kerjanya yang terkunci di rumahnya yang juga terkunci oleh istri dan sahabatnya. Keduanya punya alibi kuat. Mungkin.',74000,11,'new','uploads/products/rb_6a521d2e40d6e7.40130141.jpg','active','2026-07-11 07:12:07');
 /*!40000 ALTER TABLE `products` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -267,7 +272,8 @@ CREATE TABLE `reviews` (
 
 LOCK TABLES `reviews` WRITE;
 /*!40000 ALTER TABLE `reviews` DISABLE KEYS */;
-INSERT INTO `reviews` VALUES (1,1,3,5,'Cerita yang hangat, inspiratif, dan sangat cocok untuk presentasi demo aplikasi.','Terima kasih atas ulasannya!',NULL,'2026-07-11 06:01:57'),(2,1,7,5,'mantapp jos gandos','anjay mabar',NULL,'2026-07-11 06:54:41');
+INSERT INTO `reviews` VALUES (1,1,3,5,'Cerita yang hangat, inspiratif.','Terima kasih atas ulasannya!',NULL,'2026-07-11 06:01:57'),
+(2,1,7,5,'mantapp jos gandos','anjay mabar',NULL,'2026-07-11 06:54:41');
 /*!40000 ALTER TABLE `reviews` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -298,7 +304,11 @@ CREATE TABLE `seller_verifications` (
 
 LOCK TABLES `seller_verifications` WRITE;
 /*!40000 ALTER TABLE `seller_verifications` DISABLE KEYS */;
-INSERT INTO `seller_verifications` VALUES (1,2,'approved',1,'2026-07-11 06:01:57'),(2,4,'approved',1,'2026-07-11 06:01:57'),(3,5,'approved',1,'2026-07-11 06:01:57'),(4,8,'pending',NULL,NULL),(5,9,'pending',NULL,NULL),(6,10,'pending',NULL,NULL);
+INSERT INTO `seller_verifications` VALUES (1,2,'approved',1,'2026-07-11 06:01:57'),
+(2,4,'approved',1,'2026-07-11 06:01:57'),(3,5,'approved',1,'2026-07-11 06:01:57'),
+(4,8,'pending',NULL,NULL),
+(5,9,'pending',NULL,NULL),
+(6,10,'pending',NULL,NULL);
 /*!40000 ALTER TABLE `seller_verifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -329,7 +339,9 @@ CREATE TABLE `shipping_addresses` (
 
 LOCK TABLES `shipping_addresses` WRITE;
 /*!40000 ALTER TABLE `shipping_addresses` DISABLE KEYS */;
-INSERT INTO `shipping_addresses` VALUES (1,3,'Buyer Demo RubbyBooks','081234567890','Jl. Merdeka No. 10, Bandung','Bandung','40111'),(2,7,'Rafli Aryadika','085171076449','Jl. Perjuangan','jakarta','17121'),(3,6,'Nasyla Putri','082110201926','jl mekarsari kampung mede','Kota Bekasi','17121');
+INSERT INTO `shipping_addresses` VALUES (1,3,'Buyer Demo RubbyBooks','081234567890','Jl. Merdeka No. 10, Bandung','Bandung','40111'),
+(2,7,'Rafli Aryadika','085171076449','Jl. Perjuangan','jakarta','17121'),
+(3,6,'Nasyla Putri','082110201926','jl mekarsari kampung mede','Kota Bekasi','17121');
 /*!40000 ALTER TABLE `shipping_addresses` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -354,7 +366,42 @@ CREATE TABLE `system_logs` (
 
 LOCK TABLES `system_logs` WRITE;
 /*!40000 ALTER TABLE `system_logs` DISABLE KEYS */;
-INSERT INTO `system_logs` VALUES (1,'Login seller: keigoofficial@gmail.com','2026-07-11 06:07:49'),(2,'Login seller: keigoofficial@gmail.com','2026-07-11 06:07:49'),(3,'Login seller: keigoofficial@gmail.com','2026-07-11 06:07:49'),(4,'Login seller: keigoofficial@gmail.com','2026-07-11 06:16:05'),(5,'Login admin: admindemo@rubbybooks.com','2026-07-11 06:16:15'),(6,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 06:16:58'),(7,'Login admin: admindemo@rubbybooks.com','2026-07-11 06:18:55'),(8,'Login admin: admindemo@rubbybooks.com','2026-07-11 06:18:55'),(9,'Admin memperbarui pengaturan sistem.','2026-07-11 06:19:02'),(10,'Admin memperbarui pengaturan sistem.','2026-07-11 06:19:18'),(11,'Login admin: admindemo@rubbybooks.com','2026-07-11 06:22:16'),(12,'Login buyer: rinaamelia@gmail.com','2026-07-11 06:29:22'),(13,'Login buyer: rinaamelia@gmail.com','2026-07-11 06:29:22'),(14,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 06:29:40'),(15,'Login buyer: rinaamelia@gmail.com','2026-07-11 06:29:57'),(16,'Login seller: keigoofficial@gmail.com','2026-07-11 06:31:54'),(17,'Login buyer: dimasprasetyo@gmail.com','2026-07-11 06:33:52'),(18,'Login buyer: dimasprasetyo@gmail.com','2026-07-11 06:33:52'),(19,'Checkout invoice INV-20260711-002','2026-07-11 06:41:40'),(20,'Login seller: keigoofficial@gmail.com','2026-07-11 06:47:19'),(21,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 06:48:32'),(22,'Login buyer: dimasprasetyo@gmail.com','2026-07-11 06:48:56'),(23,'Login buyer: dimasprasetyo@gmail.com','2026-07-11 06:48:56'),(24,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 06:50:09'),(25,'Login buyer: dimasprasetyo@gmail.com','2026-07-11 06:54:29'),(26,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 06:55:04'),(27,'Login seller: keigoofficial@gmail.com','2026-07-11 07:07:44'),(28,'Update akun user #4','2026-07-11 07:07:50'),(29,'Update akun user #4','2026-07-11 07:13:57'),(30,'Login admin: admindemo@rubbybooks.com','2026-07-11 07:15:33'),(31,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 07:20:30'),(32,'Update akun user #2','2026-07-11 07:22:40'),(33,'Login admin: admindemo@rubbybooks.com','2026-07-11 07:23:43'),(34,'Update akun user #1','2026-07-11 07:25:09'),(35,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 07:25:25'),(36,'Login buyer: rinaamelia@gmail.com','2026-07-11 07:30:37'),(37,'Update akun user #6','2026-07-11 07:40:40'),(38,'Update akun user #6','2026-07-11 07:40:58'),(39,'Login buyer: nasylaputri@gmail.com','2026-07-11 07:55:54'),(40,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 08:06:33'),(41,'Login buyer: nasylaputri@gmail.com','2026-07-11 08:07:29'),(42,'Checkout invoice INV-20260711-003','2026-07-11 08:09:44'),(43,'Login seller: keigoofficial@gmail.com','2026-07-11 08:16:56'),(44,'Update akun user #4','2026-07-11 08:20:04'),(45,'Login buyer: nasylaputri@gmail.com','2026-07-11 08:20:20'),(46,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 08:20:37'),(47,'Update akun user #2','2026-07-11 08:20:47'),(48,'Login admin: admindemo@rubbybooks.com','2026-07-11 08:20:54'),(49,'Login seller: keigoofficial@gmail.com','2026-07-11 08:27:42'),(50,'Login buyer: buyerdemo@rubbybooks.com','2026-07-11 08:31:30'),(51,'Login admin: admindemo@rubbybooks.com','2026-07-11 08:33:21'),(52,'Login seller: keigoofficial@gmail.com','2026-07-11 08:43:18'),(53,'Login buyer: nasylaputri@gmail.com','2026-07-11 08:54:33'),(54,'Login seller: keigoofficial@gmail.com','2026-07-11 10:33:56'),(55,'Update akun user #4','2026-07-11 10:38:50'),(56,'Registrasi seller: testseller@example.com','2026-07-11 10:42:16'),(57,'Registrasi seller: seller2@example.com','2026-07-11 10:43:04'),(58,'Registrasi seller: seller3@example.com','2026-07-11 10:44:00'),(59,'Update akun user #4','2026-07-11 10:46:37'),(60,'Update akun user #4','2026-07-11 10:46:43'),(61,'Update akun user #4','2026-07-11 10:46:52');
+INSERT INTO `system_logs` VALUES (1,'Login seller: keigoofficial@gmail.com','2026-07-11 06:07:49'),
+(2,'Login seller: keigoofficial@gmail.com','2026-07-11 06:07:49'),
+(3,'Login seller: keigoofficial@gmail.com','2026-07-11 06:07:49'),
+(4,'Login seller: keigoofficial@gmail.com','2026-07-11 06:16:05'),
+(5,'Login admin: admindemo@rubbybooks.com','2026-07-11 06:16:15'),
+(6,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 06:16:58'),
+(7,'Login admin: admindemo@rubbybooks.com','2026-07-11 06:18:55'),
+(8,'Login admin: admindemo@rubbybooks.com','2026-07-11 06:18:55'),
+(9,'Admin memperbarui pengaturan sistem.','2026-07-11 06:19:02'),
+(10,'Admin memperbarui pengaturan sistem.','2026-07-11 06:19:18'),
+(11,'Login admin: admindemo@rubbybooks.com','2026-07-11 06:22:16'),
+(12,'Login buyer: rinaamelia@gmail.com','2026-07-11 06:29:22'),
+(13,'Login buyer: rinaamelia@gmail.com','2026-07-11 06:29:22'),
+(14,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 06:29:40'),
+(15,'Login buyer: rinaamelia@gmail.com','2026-07-11 06:29:57'),
+(16,'Login seller: keigoofficial@gmail.com','2026-07-11 06:31:54'),
+(17,'Login buyer: dimasprasetyo@gmail.com','2026-07-11 06:33:52'),
+(18,'Login buyer: dimasprasetyo@gmail.com','2026-07-11 06:33:52'),
+(19,'Checkout invoice INV-20260711-002','2026-07-11 06:41:40'),
+(20,'Login seller: keigoofficial@gmail.com','2026-07-11 06:47:19'),
+(21,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 06:48:32'),
+(22,'Login buyer: dimasprasetyo@gmail.com','2026-07-11 06:48:56'),
+(23,'Login buyer: dimasprasetyo@gmail.com','2026-07-11 06:48:56'),
+(24,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 06:50:09'),
+(25,'Login buyer: dimasprasetyo@gmail.com','2026-07-11 06:54:29'),
+(26,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 06:55:04'),
+(27,'Login seller: keigoofficial@gmail.com','2026-07-11 07:07:44'),
+(28,'Update akun user #4','2026-07-11 07:07:50'),
+(29,'Update akun user #4','2026-07-11 07:13:57'),
+(30,'Login admin: admindemo@rubbybooks.com','2026-07-11 07:15:33'),
+(31,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 07:20:30'),
+(32,'Update akun user #2','2026-07-11 07:22:40'),
+(33,'Login admin: admindemo@rubbybooks.com','2026-07-11 07:23:43'),
+(34,'Update akun user #1','2026-07-11 07:25:09'),
+(35,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 07:25:25'),
+(36,'Login buyer: rinaamelia@gmail.com','2026-07-11 07:30:37'),(37,'Update akun user #6','2026-07-11 07:40:40'),(38,'Update akun user #6','2026-07-11 07:40:58'),(39,'Login buyer: nasylaputri@gmail.com','2026-07-11 07:55:54'),(40,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 08:06:33'),(41,'Login buyer: nasylaputri@gmail.com','2026-07-11 08:07:29'),(42,'Checkout invoice INV-20260711-003','2026-07-11 08:09:44'),(43,'Login seller: keigoofficial@gmail.com','2026-07-11 08:16:56'),(44,'Update akun user #4','2026-07-11 08:20:04'),(45,'Login buyer: nasylaputri@gmail.com','2026-07-11 08:20:20'),(46,'Login seller: sellerdemo@rubbybooks.com','2026-07-11 08:20:37'),(47,'Update akun user #2','2026-07-11 08:20:47'),(48,'Login admin: admindemo@rubbybooks.com','2026-07-11 08:20:54'),(49,'Login seller: keigoofficial@gmail.com','2026-07-11 08:27:42'),(50,'Login buyer: buyerdemo@rubbybooks.com','2026-07-11 08:31:30'),(51,'Login admin: admindemo@rubbybooks.com','2026-07-11 08:33:21'),(52,'Login seller: keigoofficial@gmail.com','2026-07-11 08:43:18'),(53,'Login buyer: nasylaputri@gmail.com','2026-07-11 08:54:33'),(54,'Login seller: keigoofficial@gmail.com','2026-07-11 10:33:56'),(55,'Update akun user #4','2026-07-11 10:38:50'),(56,'Registrasi seller: testseller@example.com','2026-07-11 10:42:16'),(57,'Registrasi seller: seller2@example.com','2026-07-11 10:43:04'),(58,'Registrasi seller: seller3@example.com','2026-07-11 10:44:00'),(59,'Update akun user #4','2026-07-11 10:46:37'),(60,'Update akun user #4','2026-07-11 10:46:43'),(61,'Update akun user #4','2026-07-11 10:46:52');
 /*!40000 ALTER TABLE `system_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -414,7 +461,15 @@ CREATE TABLE `users` (
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` VALUES (1,'Admin Demo','admindemo@rubbybooks.com','$2y$12$xHqU3v/45UMrZHQBKyjBt.qjGyGfTzAnX9FwxxgBA.L1LcRlcdXCG','admin','active','uploads/avatars/avatar_1_1783754709.png','',NULL,'',0,'2026-07-11 06:01:57'),
-(2,'Seller Demo','sellerdemo@rubbybooks.com','$2y$12$xHqU3v/45UMrZHQBKyjBt.qjGyGfTzAnX9FwxxgBA.L1LcRlcdXCG','seller','active','uploads/avatars/avatar_2_1783758047.jpg','',NULL,'',0,'2026-07-11 06:01:57'),(3,'Buyer Demo','buyerdemo@rubbybooks.com','$2y$12$xHqU3v/45UMrZHQBKyjBt.qjGyGfTzAnX9FwxxgBA.L1LcRlcdXCG','buyer','active',NULL,NULL,NULL,NULL,0,'2026-07-11 06:01:57'),(4,'Keigo Official','keigoofficial@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','seller','active','uploads/avatars/avatar_4_1783766330.jpg','082129571824',NULL,'',0,'2026-07-11 06:01:57'),(5,'Literasi Jaya','literasijaya@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','seller','active',NULL,NULL,NULL,NULL,0,'2026-07-11 06:01:57'),(6,'Nasyla Putri','nasylaputri@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','buyer','active','uploads/avatars/avatar_6_1783755658.jpg','086219285212','2006-04-02','',0,'2026-07-11 06:01:57'),(7,'Dimas Prasetyo','dimasprasetyo@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','buyer','active',NULL,NULL,NULL,NULL,0,'2026-07-11 06:01:57'),(8,'Test Seller','testseller@example.com','$2y$10$R08OtfJeZDvg9zEm7gqCAOAKVSQJrxISqBOxn9EP5zjHndtEjeEF2','seller','pending',NULL,NULL,NULL,NULL,0,'2026-07-11 10:42:16'),(9,'Seller Two','seller2@example.com','$2y$10$iiqEd9OQGNB5bpUdBFTdselxfTxdRp6oLF8nH1tXulNRC5bL7CPju','seller','pending',NULL,NULL,NULL,NULL,0,'2026-07-11 10:43:04'),(10,'Seller Three','seller3@example.com','$2y$10$tKad8nalOt38oEapSsB8kOdycMzMdFTynicEt7CRd88.dSH7Fl/w.','seller','pending',NULL,NULL,NULL,NULL,0,'2026-07-11 10:44:00');
+(2,'Seller Demo','sellerdemo@rubbybooks.com','$2y$12$xHqU3v/45UMrZHQBKyjBt.qjGyGfTzAnX9FwxxgBA.L1LcRlcdXCG','seller','active','uploads/avatars/avatar_2_1783758047.jpg','',NULL,'',0,'2026-07-11 06:01:57'),
+(3,'Buyer Demo','buyerdemo@rubbybooks.com','$2y$12$xHqU3v/45UMrZHQBKyjBt.qjGyGfTzAnX9FwxxgBA.L1LcRlcdXCG','buyer','active',NULL,NULL,NULL,NULL,0,'2026-07-11 06:01:57'),
+(4,'Keigo Official','keigoofficial@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','seller','active','uploads/avatars/avatar_4_1783766330.jpg','082129571824',NULL,'',0,'2026-07-11 06:01:57'),
+(5,'Literasi Jaya','literasijaya@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','seller','active',NULL,NULL,NULL,NULL,0,'2026-07-11 06:01:57'),
+(6,'Nasyla Putri','nasylaputri@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','buyer','active','uploads/avatars/avatar_6_1783755658.jpg','086219285212','2006-04-02','',0,'2026-07-11 06:01:57'),
+(7,'Dimas Prasetyo','dimasprasetyo@gmail.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','buyer','active',NULL,NULL,NULL,NULL,0,'2026-07-11 06:01:57'),
+(8,'Test Seller','testseller@example.com','$2y$10$R08OtfJeZDvg9zEm7gqCAOAKVSQJrxISqBOxn9EP5zjHndtEjeEF2','seller','pending',NULL,NULL,NULL,NULL,0,'2026-07-11 10:42:16'),
+(9,'Seller Two','seller2@example.com','$2y$10$iiqEd9OQGNB5bpUdBFTdselxfTxdRp6oLF8nH1tXulNRC5bL7CPju','seller','pending',NULL,NULL,NULL,NULL,0,'2026-07-11 10:43:04'),
+(10,'Seller Three','seller3@example.com','$2y$10$tKad8nalOt38oEapSsB8kOdycMzMdFTynicEt7CRd88.dSH7Fl/w.','seller','pending',NULL,NULL,NULL,NULL,0,'2026-07-11 10:44:00');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -444,7 +499,11 @@ CREATE TABLE `wishlists` (
 
 LOCK TABLES `wishlists` WRITE;
 /*!40000 ALTER TABLE `wishlists` DISABLE KEYS */;
-INSERT INTO `wishlists` VALUES (1,7,6,'2026-07-11 06:33:56'),(2,7,1,'2026-07-11 06:34:03'),(3,7,5,'2026-07-11 06:43:43'),(4,6,7,'2026-07-11 07:37:13'),(5,6,5,'2026-07-11 07:37:14');
+INSERT INTO `wishlists` VALUES (1,7,6,'2026-07-11 06:33:56'),
+(2,7,1,'2026-07-11 06:34:03'),
+(3,7,5,'2026-07-11 06:43:43'),
+(4,6,7,'2026-07-11 07:37:13'),
+(5,6,5,'2026-07-11 07:37:14');
 /*!40000 ALTER TABLE `wishlists` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
